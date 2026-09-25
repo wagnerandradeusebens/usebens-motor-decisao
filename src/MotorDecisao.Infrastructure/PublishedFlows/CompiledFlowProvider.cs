@@ -1,6 +1,10 @@
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MotorDecisao.Application.Execution;
 using MotorDecisao.Application.PublishedFlows;
+using MotorDecisao.Domain.Enums;
+using MotorDecisao.Infrastructure.Persistence;
 
 namespace MotorDecisao.Infrastructure.PublishedFlows;
 
@@ -14,17 +18,42 @@ namespace MotorDecisao.Infrastructure.PublishedFlows;
 /// handles TTL + multi-replica stamp revalidation), and only re-compiles when the
 /// underlying published version id changes.
 /// </summary>
-public sealed class CompiledFlowProvider : ICompiledFlowProvider
+public sealed class CompiledFlowProvider : ICompiledFlowProvider, IPolicyByNameProvider
 {
     private readonly IPublishedFlowCache _snapshots;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     // flowId -> (published version id, compiled flow). Recompiled when the
     // version id no longer matches what the snapshot cache returns.
     private readonly ConcurrentDictionary<Guid, (Guid VersionId, CompiledFlow Flow)> _compiled = new();
 
-    public CompiledFlowProvider(IPublishedFlowCache snapshots)
+    public CompiledFlowProvider(IPublishedFlowCache snapshots, IServiceScopeFactory scopeFactory)
     {
         _snapshots = snapshots;
+        _scopeFactory = scopeFactory;
+    }
+
+    /// <summary>
+    /// Resolve uma política publicada pelo nome. Descobre o flowId (com versão
+    /// publicada) no banco e reusa o pipeline de compilação/cache por id.
+    /// </summary>
+    public async Task<CompiledFlow?> GetByNameAsync(string policyName, CancellationToken cancellationToken = default)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MotorDecisaoDbContext>();
+
+        // Política com pelo menos uma versão publicada, casada pelo nome.
+        var flowId = await db.DecisionFlows
+            .Where(f => f.Name == policyName && f.Versions.Any(v => v.Status == FlowVersionStatus.Published))
+            .Select(f => (Guid?)f.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (flowId is null)
+        {
+            return null;
+        }
+
+        return await GetAsync(flowId.Value, cancellationToken);
     }
 
     public async Task<CompiledFlow?> GetAsync(Guid flowId, CancellationToken cancellationToken = default)

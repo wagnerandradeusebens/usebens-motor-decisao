@@ -2,7 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../api/api.service';
 import type { FlowSummary } from '../../api/models';
@@ -11,7 +10,7 @@ import { apiErrorMessage, fmtDate } from '../../shared/format';
 /** Detalhe de uma política: lista de versões e ações (nova/duplicar/abrir). */
 @Component({
   selector: 'app-policy-detail',
-  imports: [RouterLink, MatButtonModule, MatCardModule, MatChipsModule, MatIconModule],
+  imports: [RouterLink, MatButtonModule, MatCardModule, MatIconModule],
   templateUrl: './policy-detail.html',
   styleUrl: './policy-detail.scss',
 })

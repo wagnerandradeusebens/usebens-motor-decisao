@@ -9,32 +9,222 @@
   height: 100%;
 }
 
-// --- Paleta ---
+// ===========================================================================
+// Paleta (menu lateral) — densidade compacta e consistente entre os grupos.
+// Fonte base menor e itens em lista uniforme (nome + ações), para não destoar
+// do resto da página nem entre as seções.
+// ===========================================================================
 .palette {
   border-right: 1px solid var(--cor-borda);
-  padding: 0.9rem;
+  padding: 0.75rem;
   overflow-y: auto;
   background: #fff;
-}
-.palette__hint {
-  font-size: 0.75rem;
-  color: var(--mat-sys-on-surface-variant);
-  margin: 0.5rem 0;
-}
-.palette-item {
-  border: 1px solid var(--cor-borda);
-  border-radius: 8px;
-  padding: 0.5rem 0.6rem;
-  margin-bottom: 0.4rem;
-  background: var(--cor-fundo);
-  cursor: grab;
-  font-size: 0.85rem;
-}
-.palette-item:hover {
-  border-color: var(--marca-teal);
+  font-size: 0.8rem;
 }
 .palette__accordion {
   display: block;
+}
+
+// Itens arrastáveis (seção "Regra") — lista uniforme, um por linha.
+.palette-item {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.3rem;
+  background: var(--cor-fundo);
+  cursor: grab;
+  font-size: 0.8rem;
+  color: var(--cor-texto);
+  transition: var(--transition);
+}
+.palette-item:last-child { margin-bottom: 0; }
+.palette-item:hover {
+  border-color: var(--marca-teal);
+  background: #fff;
+}
+
+// Estado vazio das seções.
+.palette__empty {
+  font-size: 0.78rem;
+  color: var(--cor-texto-claro);
+  padding: 0.15rem 0;
+}
+
+// --- Painéis de referência (Fontes, Operadores, Funções) --------------
+.ref-source {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+.ref-source:last-child { border-bottom: none; }
+.ref-source__name {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--marca-azul);
+}
+.ref-source__product {
+  font-size: 0.75rem;
+  color: var(--cor-texto-claro);
+  margin-top: 0.3rem;
+}
+.ref-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.2rem;
+}
+.ref-chip {
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.7rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+.ref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3rem 0.1rem;
+  border-bottom: 1px solid var(--cor-borda);
+}
+.ref-row:last-child { border-bottom: none; }
+.ref-row__symbol {
+  font-size: 0.8rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--marca-azul);
+}
+.ref-row__desc {
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+  flex-shrink: 0;
+}
+.ref-fn {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+.ref-fn:last-child { border-bottom: none; }
+.ref-fn__sig {
+  font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--marca-azul);
+}
+.ref-fn__desc {
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+  margin-top: 0.1rem;
+}
+
+// --- Acordeão (mat-expansion-panel) no estilo chapado do React ---------
+.palette ::ng-deep .mat-expansion-panel {
+  box-shadow: none !important;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm) !important;
+  margin-bottom: 0.5rem;
+  background: #fff;
+}
+.palette ::ng-deep .mat-expansion-panel:last-of-type { margin-bottom: 0; }
+
+// Cabeçalho compacto.
+.palette ::ng-deep .mat-expansion-panel-header {
+  height: auto;
+  min-height: 0;
+  padding: 0.4rem 0.6rem;
+  background: var(--cor-fundo);
+}
+.palette ::ng-deep .mat-expansion-panel-header .mat-content {
+  align-items: center;
+}
+.palette ::ng-deep .mat-expansion-panel-header:hover {
+  background: #eef2f7 !important;
+}
+.palette ::ng-deep .mat-expansion-panel-header.mat-expanded {
+  background: var(--cor-fundo);
+}
+.palette ::ng-deep .mat-panel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--marca-azul);
+  margin: 0;
+}
+.palette ::ng-deep .mat-expansion-indicator {
+  transform: scale(0.8);
+}
+.palette ::ng-deep .mat-expansion-indicator::after {
+  color: var(--cor-texto-claro);
+}
+.palette ::ng-deep .mat-expansion-panel-body {
+  padding: 0.6rem;
+  border-top: 1px solid var(--cor-borda);
+}
+
+// Botão "+" no cabeçalho do grupo: pequeno, discreto, antes da seta.
+.palette ::ng-deep .palette__add.mat-mdc-icon-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: auto;
+  margin-right: 0.15rem;
+  color: var(--marca-azul);
+}
+.palette ::ng-deep .palette__add .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+// --- Linha de item (variável / campo / conjunto) — MESMO estilo em todos --
+.var-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  padding: 0.15rem 0.15rem 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.25rem;
+  min-height: 32px;
+}
+.var-row:hover {
+  background: var(--cor-fundo);
+}
+.var-row:last-child { margin-bottom: 0; }
+.var-row__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.8rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--cor-texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.var-row__actions {
+  display: flex;
+  flex-shrink: 0;
+}
+// Botões de ação (lápis/X) compactos e uniformes.
+.var-row__actions ::ng-deep .mat-mdc-icon-button {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  color: var(--cor-texto-claro);
+}
+.var-row__actions ::ng-deep .mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+.var-row__actions ::ng-deep .mat-mdc-icon-button:hover {
+  color: var(--marca-azul);
+}
+.var-row__actions {
+  display: flex;
+  flex-shrink: 0;
 }
 .palette__back {
   margin-top: 0.75rem;
@@ -45,16 +235,17 @@
   width: 100%;
   display: block;
 }
-.side-item,
 .side-rule {
   border: 1px solid var(--cor-borda);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 0.5rem;
   margin-bottom: 0.5rem;
+  background: var(--cor-fundo);
 }
 .side-ruleset {
   margin-bottom: 0.75rem;
 }
+.side-ruleset:last-child { margin-bottom: 0; }
 .side-row {
   display: flex;
   align-items: center;
@@ -62,15 +253,25 @@
 }
 .side-row .type {
   flex: 1;
-  min-width: 90px;
+  min-width: 80px;
 }
 
-// Compacta os form-fields densos no menu lateral estreito.
+// Compacta os form-fields densos no menu lateral estreito (fonte menor,
+// sem a área de subscript/hint que aumenta a altura).
 .palette ::ng-deep .mat-mdc-form-field {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+  width: 100%;
 }
 .palette ::ng-deep .mat-mdc-form-field-subscript-wrapper {
   display: none;
+}
+.palette ::ng-deep .mat-mdc-text-field-wrapper {
+  padding: 0 0.5rem;
+}
+.palette ::ng-deep .mat-mdc-form-field-infix {
+  min-height: 36px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 // --- Canvas ---

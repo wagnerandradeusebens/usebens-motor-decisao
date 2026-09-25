@@ -28,6 +28,18 @@ public sealed class CompiledFlow
     /// <summary>Compiled actions per Action node key (in order).</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<CompiledAction>> ActionsByNode { get; }
 
+    /// <summary>
+    /// Compiled actions attached to any non-Condition node (Computation, Decision,
+    /// DataSource…), applied when the executor passes through the node.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<CompiledAction>> NodeActionsByNode { get; }
+
+    /// <summary>
+    /// Compiled actions attached to a Condition node, per branch. Applied after
+    /// the condition is evaluated, before following the chosen edge.
+    /// </summary>
+    public IReadOnlyDictionary<string, CompiledBranchActions> ConditionActionsByNode { get; }
+
     /// <summary>Compiled matrix (config + row/col expressions) per Matrix node key.</summary>
     public IReadOnlyDictionary<string, CompiledMatrix> MatrixByNode { get; }
 
@@ -57,6 +69,8 @@ public sealed class CompiledFlow
         IReadOnlyDictionary<string, CompiledFormula> conditionByNode,
         IReadOnlyDictionary<string, IReadOnlyList<CompiledAssignment>> computationByNode,
         IReadOnlyDictionary<string, IReadOnlyList<CompiledAction>> actionsByNode,
+        IReadOnlyDictionary<string, IReadOnlyList<CompiledAction>> nodeActionsByNode,
+        IReadOnlyDictionary<string, CompiledBranchActions> conditionActionsByNode,
         IReadOnlyDictionary<string, CompiledMatrix> matrixByNode,
         IReadOnlyDictionary<Guid, IReadOnlyList<CompiledRule>> rulesByRulesetId,
         string startNodeKey,
@@ -68,6 +82,8 @@ public sealed class CompiledFlow
         ConditionByNode = conditionByNode;
         ComputationByNode = computationByNode;
         ActionsByNode = actionsByNode;
+        NodeActionsByNode = nodeActionsByNode;
+        ConditionActionsByNode = conditionActionsByNode;
         MatrixByNode = matrixByNode;
         RulesByRulesetId = rulesByRulesetId;
         StartNodeKey = startNodeKey;
@@ -99,7 +115,21 @@ public sealed class CompiledFlow
         var conditionByNode = new Dictionary<string, CompiledFormula>(StringComparer.Ordinal);
         var computationByNode = new Dictionary<string, IReadOnlyList<CompiledAssignment>>(StringComparer.Ordinal);
         var actionsByNode = new Dictionary<string, IReadOnlyList<CompiledAction>>(StringComparer.Ordinal);
+        var nodeActionsByNode = new Dictionary<string, IReadOnlyList<CompiledAction>>(StringComparer.Ordinal);
+        var conditionActionsByNode = new Dictionary<string, CompiledBranchActions>(StringComparer.Ordinal);
         var matrixByNode = new Dictionary<string, CompiledMatrix>(StringComparer.Ordinal);
+
+        // Compila uma lista de ações (pode ser null/vazia) atrelada a um nó.
+        List<CompiledAction> CompileActions(IReadOnlyList<ActionItem>? items, string where)
+        {
+            var list = new List<CompiledAction>();
+            if (items is null) return list;
+            foreach (var a in items)
+            {
+                list.Add(new CompiledAction(a.Type, a.Name, CompileOrThrow(a.Expression, where)));
+            }
+            return list;
+        }
 
         foreach (var node in snapshot.Nodes)
         {
@@ -109,6 +139,9 @@ public sealed class CompiledFlow
                 {
                     var cfg = NodeConfig.Deserialize<ConditionConfig>(node.Config);
                     conditionByNode[node.NodeKey] = CompileOrThrow(cfg.Expression, node.NodeKey);
+                    conditionActionsByNode[node.NodeKey] = new CompiledBranchActions(
+                        CompileActions(cfg.TrueActions, $"ações (verdadeiro) em '{node.Label}'"),
+                        CompileActions(cfg.FalseActions, $"ações (falso) em '{node.Label}'"));
                     break;
                 }
                 case FlowNodeKind.Computation:
@@ -120,17 +153,25 @@ public sealed class CompiledFlow
                         list.Add(new CompiledAssignment(a.TargetField, CompileOrThrow(a.Expression, node.NodeKey)));
                     }
                     computationByNode[node.NodeKey] = list;
+                    nodeActionsByNode[node.NodeKey] = CompileActions(cfg.Actions, $"ações em '{node.Label}'");
+                    break;
+                }
+                case FlowNodeKind.Decision:
+                {
+                    var cfg = NodeConfig.Deserialize<DecisionConfig>(node.Config);
+                    nodeActionsByNode[node.NodeKey] = CompileActions(cfg.Actions, $"ações em '{node.Label}'");
+                    break;
+                }
+                case FlowNodeKind.DataSource:
+                {
+                    var cfg = NodeConfig.Deserialize<DataSourceConfig>(node.Config);
+                    nodeActionsByNode[node.NodeKey] = CompileActions(cfg.Actions, $"ações em '{node.Label}'");
                     break;
                 }
                 case FlowNodeKind.Action:
                 {
                     var cfg = NodeConfig.Deserialize<ActionsConfig>(node.Config);
-                    var list = new List<CompiledAction>();
-                    foreach (var a in cfg.Actions)
-                    {
-                        list.Add(new CompiledAction(a.Type, a.Name, CompileOrThrow(a.Expression, $"ação em '{node.Label}'")));
-                    }
-                    actionsByNode[node.NodeKey] = list;
+                    actionsByNode[node.NodeKey] = CompileActions(cfg.Actions, $"ação em '{node.Label}'");
                     break;
                 }
                 case FlowNodeKind.Matrix:
@@ -180,6 +221,13 @@ public sealed class CompiledFlow
             foreach (var a in list) Collect(a.Formula);
         foreach (var list in actionsByNode.Values)
             foreach (var a in list) Collect(a.Formula);
+        foreach (var list in nodeActionsByNode.Values)
+            foreach (var a in list) Collect(a.Formula);
+        foreach (var branch in conditionActionsByNode.Values)
+        {
+            foreach (var a in branch.TrueActions) Collect(a.Formula);
+            foreach (var a in branch.FalseActions) Collect(a.Formula);
+        }
         foreach (var m in matrixByNode.Values)
         {
             Collect(m.RowFormula);
@@ -190,7 +238,8 @@ public sealed class CompiledFlow
         foreach (var v in orderedVariables) Collect(v.Formula);
 
         return new CompiledFlow(
-            snapshot, nodesByKey, conditionByNode, computationByNode, actionsByNode, matrixByNode,
+            snapshot, nodesByKey, conditionByNode, computationByNode, actionsByNode,
+            nodeActionsByNode, conditionActionsByNode, matrixByNode,
             rulesByRulesetId, starts[0].NodeKey, externalRefs, orderedVariables);
     }
 
@@ -264,6 +313,11 @@ public sealed record CompiledAssignment(string TargetField, CompiledFormula Form
 
 /// <summary>A single action with its compiled expression.</summary>
 public sealed record CompiledAction(ActionType Type, string? Name, CompiledFormula Formula);
+
+/// <summary>Actions attached to a Condition node, split by branch (V/F).</summary>
+public sealed record CompiledBranchActions(
+    IReadOnlyList<CompiledAction> TrueActions,
+    IReadOnlyList<CompiledAction> FalseActions);
 
 /// <summary>A matrix node's config with its compiled row/column expressions.</summary>
 public sealed record CompiledMatrix(MatrixConfig Config, CompiledFormula RowFormula, CompiledFormula ColFormula);

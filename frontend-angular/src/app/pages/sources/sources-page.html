@@ -20,9 +20,9 @@
   } @else {
     @for (s of sources(); track s.name) {
       <mat-card class="source" appearance="outlined">
-        <div class="row spread">
-          <strong>{{ s.name }}</strong>
-          <mat-chip-set><mat-chip highlighted>integração</mat-chip></mat-chip-set>
+        <div class="row spread source__head">
+          <span class="source__name">{{ s.name }}</span>
+          <span class="badge Published">integração</span>
         </div>
         @if (s.description) {
           <div class="muted desc">{{ s.description }}</div>
@@ -30,7 +30,14 @@
 
         @for (p of s.products; track p.name) {
           <div class="product">
-            <div class="product__name">{{ p.name }}</div>
+            <div class="row spread">
+              <div class="product__name">{{ p.name }}</div>
+              @if (p.keyField) {
+                <span class="product__key" title="Campo obrigatório da proposta usado como chave da consulta e do cache">
+                  chave: <code>{{ p.keyField }}</code>
+                </span>
+              }
+            </div>
             @if (p.description) {
               <div class="muted">{{ p.description }}</div>
             }
@@ -43,6 +50,35 @@
             </div>
           </div>
         }
+
+        <!-- Parâmetros operacionais da fonte -->
+        <div class="source__params">
+          <div class="source__params-title">Parâmetros de consulta</div>
+          <div class="source__params-row">
+            <mat-form-field appearance="outline" class="param">
+              <mat-label>Tentativas</mat-label>
+              <input matInput type="number" min="1" [ngModel]="config(s.name).maxAttempts"
+                (ngModelChange)="patchConfig(s.name, { maxAttempts: toNumber($event) })" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="param">
+              <mat-label>Timeout (s)</mat-label>
+              <input matInput type="number" min="1" [ngModel]="config(s.name).timeoutSeconds"
+                (ngModelChange)="patchConfig(s.name, { timeoutSeconds: toNumber($event) })" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="param">
+              <mat-label>Cache (h)</mat-label>
+              <input matInput type="number" min="0" [ngModel]="config(s.name).cacheTtlHours"
+                (ngModelChange)="patchConfig(s.name, { cacheTtlHours: toNumber($event) })" />
+            </mat-form-field>
+            <button matButton="filled" (click)="saveConfig(s.name)">
+              <mat-icon>save</mat-icon> Salvar
+            </button>
+          </div>
+          <div class="muted source__params-hint">
+            Cache 0 = permanente. Timeout por tentativa. O cache é por fonte/produto e
+            chaveado pelo campo obrigatório da consulta, compartilhado entre execuções.
+          </div>
+        </div>
       </mat-card>
     }
   }

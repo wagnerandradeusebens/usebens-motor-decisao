@@ -3,33 +3,56 @@
   grid-template-columns: 320px 1fr;
   gap: 1rem;
   margin-top: 1rem;
+  align-items: start;
 }
 
+// Lista: sem padding no card (as linhas controlam o espaçamento).
 .exec-list {
   max-height: 72vh;
   overflow-y: auto;
-  padding: 0;
+  padding: 0.25rem !important;
 }
 .empty {
   padding: 1rem;
 }
 .exec-row {
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid var(--cor-borda);
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
+  transition: background 0.12s ease;
 }
-.exec-row:hover,
-.exec-row--active {
+.exec-row + .exec-row {
+  border-top: 1px solid var(--cor-borda);
+}
+.exec-row:hover {
   background: var(--cor-fundo);
 }
+.exec-row--active {
+  background: color-mix(in srgb, var(--marca-teal) 10%, #fff);
+}
 
+// Detalhe: respiro interno como o `.card` do React.
 .exec-detail {
   max-height: 72vh;
   overflow-y: auto;
+  padding: 1.25rem !important;
 }
 
 .small { font-size: 0.8rem; }
-.tiny { font-size: 0.72rem; margin-top: 0.6rem; }
+.tiny {
+  font-size: 0.72rem;
+  margin-top: 0.85rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--cor-borda);
+}
+
+// Cabeçalho do detalhe (desfecho + pontos/limite/status).
+.exec-detail > .row.spread:first-child {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--cor-borda);
+  margin-bottom: 0.25rem;
+}
+.exec-detail .outcome { font-size: 1.05rem; }
 
 .field {
   margin-top: 0.85rem;
@@ -81,6 +104,21 @@
 }
 .step-result {
   font-size: 0.8rem;
+}
+
+// Suaviza o mat-expansion-panel: sem sombra/elevação, integrado ao "trace".
+.step-panel {
+  box-shadow: none !important;
+  background: transparent;
+  border-radius: 0 !important;
+}
+.step-panel ::ng-deep .mat-expansion-panel-header {
+  padding: 0 0.4rem;
+  height: auto;
+  min-height: 2.2rem;
+}
+.step-panel ::ng-deep .mat-expansion-panel-body {
+  padding: 0 0.4rem 0.5rem;
 }
 
 .detail {

@@ -25,8 +25,8 @@ public static class FormulaEngine
         }
 
         var ast = Parser.Parse(expression);
-        var (fields, external, variables) = FieldCollector.Collect(ast);
-        return new CompiledFormula(ast, fields, external, variables);
+        var (fields, external, variables, policies) = FieldCollector.Collect(ast);
+        return new CompiledFormula(ast, fields, external, variables, policies);
     }
 
     /// <summary>

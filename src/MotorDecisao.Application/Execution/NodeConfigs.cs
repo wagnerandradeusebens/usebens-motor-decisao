@@ -5,11 +5,14 @@ using MotorDecisao.Domain.Enums;
 namespace MotorDecisao.Application.Execution;
 
 /// <summary>
-/// Config payload for a <see cref="FlowNodeKind.Condition"/> node: a single
-/// boolean formula whose result selects the outgoing edge ("true"/"false").
+/// Config payload for a <see cref="FlowNodeKind.Condition"/> node: a boolean
+/// formula whose result selects the outgoing edge ("true"/"false"), plus optional
+/// actions applied per branch (Crivo-style: "SE condição ENTÃO ações").
 /// </summary>
 public sealed record ConditionConfig(
-    [property: JsonPropertyName("expression")] string Expression);
+    [property: JsonPropertyName("expression")] string Expression,
+    [property: JsonPropertyName("trueActions")] IReadOnlyList<ActionItem>? TrueActions = null,
+    [property: JsonPropertyName("falseActions")] IReadOnlyList<ActionItem>? FalseActions = null);
 
 /// <summary>
 /// Config payload for a <see cref="FlowNodeKind.Computation"/> node: an ordered
@@ -17,7 +20,8 @@ public sealed record ConditionConfig(
 /// named field that later nodes can reference.
 /// </summary>
 public sealed record ComputationConfig(
-    [property: JsonPropertyName("assignments")] IReadOnlyList<ComputationAssignment> Assignments);
+    [property: JsonPropertyName("assignments")] IReadOnlyList<ComputationAssignment> Assignments,
+    [property: JsonPropertyName("actions")] IReadOnlyList<ActionItem>? Actions = null);
 
 public sealed record ComputationAssignment(
     [property: JsonPropertyName("targetField")] string TargetField,
@@ -29,7 +33,8 @@ public sealed record ComputationAssignment(
 /// </summary>
 public sealed record DecisionConfig(
     [property: JsonPropertyName("outcome")] DecisionOutcome Outcome,
-    [property: JsonPropertyName("message")] string? Message = null);
+    [property: JsonPropertyName("message")] string? Message = null,
+    [property: JsonPropertyName("actions")] IReadOnlyList<ActionItem>? Actions = null);
 
 /// <summary>
 /// Config payload for a <see cref="FlowNodeKind.DataSource"/> node. Kept minimal
@@ -38,7 +43,8 @@ public sealed record DecisionConfig(
 /// </summary>
 public sealed record DataSourceConfig(
     [property: JsonPropertyName("source")] string Source,
-    [property: JsonPropertyName("parameters")] Dictionary<string, string>? Parameters = null);
+    [property: JsonPropertyName("parameters")] Dictionary<string, string>? Parameters = null,
+    [property: JsonPropertyName("actions")] IReadOnlyList<ActionItem>? Actions = null);
 
 /// <summary>The kind of action an <see cref="Domain.Enums.FlowNodeKind.Action"/> node runs.</summary>
 public enum ActionType
@@ -49,7 +55,8 @@ public enum ActionType
     SetLimit,           // define o limite
     AddJustification,   // adiciona à justificativa
     SetJustification,   // define a justificativa (apaga as anteriores)
-    SetOutput           // define um parâmetro de saída nomeado
+    SetOutput,          // define um parâmetro de saída nomeado
+    SetResposta         // define a "resposta" (string) da política, legível em fórmulas via 'resposta'
 }
 
 /// <summary>

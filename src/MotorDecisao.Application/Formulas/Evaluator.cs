@@ -73,6 +73,13 @@ public sealed class Evaluator : IFormulaNodeVisitor<FormulaValue>
         return _context.ResolveVariable(node.Name);
     }
 
+    public FormulaValue VisitPolicyRef(PolicyRefNode node)
+    {
+        // A política alvo é executada pela camada de execução (sob demanda) e o
+        // valor é semeado no contexto; aqui apenas lemos.
+        return _context.ResolvePolicy(node.Policy, node.Category, node.Variable);
+    }
+
     public FormulaValue VisitFunction(FunctionNode node)
     {
         var name = node.Name;

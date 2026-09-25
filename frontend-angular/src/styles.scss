@@ -3,36 +3,64 @@
 // system variables so we don't have to author full tonal palettes by hand.
 @use '@angular/material' as mat;
 
+// Estilos base do editor de grafo (@foblex/flow). Sem isto, os nós, conectores
+// e estados (seleção/arraste) renderizam quebrados — os nós apareciam como
+// retângulos pretos. Emite os tokens e o tema padrão da lib.
+@use '@foblex/flow/styles/index' as flow-theme;
+@include flow-theme.theme-tokens();
+@include flow-theme.theme-all();
+
 // --- Brand tokens (Usebens / OKR) ---------------------------------------
+// Alinhados 1:1 com o design system do front React (frontend/src/styles.css)
+// para que o Angular Material fique o mais parecido possível com aquele visual.
 :root {
   --marca-azul: #1b3760;        // primária
   --marca-azul-2: #24487a;      // hover/gradiente
   --marca-teal: #31b6a5;        // acento
-  --marca-azul-medio: #2f5c9e;
+  --marca-azul-medio: #4c6d99;  // (React usa #4C6D99)
+  --marca-verde: #00d992;
 
-  --cor-borda: #e6ebf2;
-  --cor-fundo: #f4f6fa;
+  --cor-primaria: var(--marca-azul);
+  --cor-secundaria: var(--marca-azul-medio);
+  --cor-texto: #333333;
+  --cor-texto-claro: #666666;
+  --cor-borda: #e0e0e0;         // (React: #E0E0E0)
+  --cor-fundo: #f5f7fa;         // (React: #F5F7FA)
   --cor-superficie: #ffffff;
-  --cor-alerta: #d97706;
-  --cor-perigo: #dc2626;
-  --cor-ok: #15803d;
+  --cor-branco: #ffffff;
+  --cor-alerta: #ffc107;        // (React: #FFC107)
+  --cor-perigo: #dc3545;        // (React: #DC3545)
+  --cor-negativo: #dc3545;
+  --cor-ok: #31b6a5;            // React usa o teal como "positivo"
 
-  --raio: 14px;
-  --raio-sm: 10px;
-  --sombra-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.08);
-  --sombra-elev: 0 6px 16px rgba(16, 24, 40, 0.12);
+  // Raios/sombras iguais aos do React.
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --raio: 8px;                  // cards no React usam --radius-md (8px)
+  --raio-sm: 4px;
+  --sidebar-width: 240px;
+  --topbar-height: 60px;
+  --sombra-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --sombra-elev: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --transition: all 0.2s ease;
 }
 
 html {
   height: 100%;
   color-scheme: light;
+  // Base de 14px como no React (frontend/src/styles.css: `html { font-size: 14px }`).
+  // Assim os `rem` usados nas telas resultam nas mesmas medidas dos dois lados.
+  font-size: 14px;
+  line-height: 1.5;
   @include mat.theme(
     (
       color: (
         primary: mat.$azure-palette,
         tertiary: mat.$cyan-palette,
       ),
-      typography: Roboto,
+      // React usa a stack de fontes do sistema, não Roboto.
+      typography: (-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif),
       density: -1,
     )
   );
@@ -45,18 +73,27 @@ html {
   --mat-sys-surface-container: #ffffff;
   --mat-sys-surface-container-low: #fbfcfe;
   --mat-sys-outline-variant: var(--cor-borda);
+  --mat-sys-on-surface: var(--cor-texto);
+  --mat-sys-on-surface-variant: var(--cor-texto-claro);
   --mat-sys-corner-medium: var(--raio);
   --mat-sys-corner-large: var(--raio);
 }
 
 body {
   background-color: var(--cor-fundo);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  color: var(--cor-texto);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   margin: 0;
   height: 100%;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+// Ícones: usamos a fonte "Material Symbols Outlined" (carregada no index.html e
+// registrada como fontSet default). Garante o glyph correto e o alinhamento.
+.material-symbols-outlined,
+.mat-icon {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
 // --- Layout / utilitários globais ---------------------------------------
@@ -89,11 +126,30 @@ body {
   max-width: 68ch;
 }
 
-// Cartões com um respiro e sombra suave por padrão.
+// Badges (soft tags) — mesmo visual do React (frontend/src/styles.css).
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.badge.Draft { background-color: rgba(204, 204, 204, 0.28); color: #5f6b6b; }
+.badge.Published { background-color: rgba(49, 182, 165, 0.14); color: #1f7d72; }
+.badge.Archived { background-color: rgba(27, 55, 96, 0.1); color: var(--cor-primaria); }
+
+// Cartões espelhando o `.card` do React: raio 8px, sombra suave, hover elevado.
 .mat-mdc-card {
-  border-radius: var(--raio) !important;
+  border-radius: var(--radius-md) !important;
   box-shadow: var(--sombra-card) !important;
   border: 1px solid var(--cor-borda);
+  transition: var(--transition);
+}
+.mat-mdc-card:hover {
+  box-shadow: var(--sombra-elev) !important;
 }
 .mat-mdc-card.mat-mdc-card-outlined {
   box-shadow: none !important;
@@ -159,66 +215,214 @@ f-canvas {
   // deixa o padrão de fundo (pontos) do f-background visível
 }
 
-// Nós no canvas (espelham o visual do editor React Flow).
+// Nós no canvas (espelham o visual do editor React Flow: compacto, centralizado).
 .rf-node {
   position: relative;
-  min-width: 132px;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
+  min-width: 150px;
+  max-width: 240px;
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-md);
   border: 2px solid var(--cor-borda);
   background: #ffffff;
-  color: var(--mat-sys-on-surface);
-  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+  color: var(--cor-texto);
+  box-shadow: var(--sombra-card);
   cursor: pointer;
   user-select: none;
-  font: var(--mat-sys-body-medium);
+  text-align: center;
+  font-size: 0.82rem;
+}
+// Cabeçalho do nó: ícone + tipo (pt-BR). A cor do ícone/tipo segue o tipo.
+.rf-node__head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-bottom: 2px;
+}
+.rf-node__icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  line-height: 15px;
 }
 .rf-node .kind {
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--mat-sys-on-surface-variant);
-  margin-bottom: 2px;
+  letter-spacing: 0.04em;
+  color: var(--cor-texto-claro);
+  font-weight: 600;
 }
 .rf-node .node-label {
-  font-size: 0.92rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+// Resumo do que o nó faz (expressão da condição, desfecho, fonte, etc.).
+.rf-node__summary {
+  margin-top: 4px;
+  padding: 2px 6px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: auto;
+  margin-right: auto;
+}
+// Nó selecionado: realce azul.
+.rf-node.f-selected,
+.rf-node.selected {
+  box-shadow: 0 0 0 3px rgba(27, 55, 96, 0.14);
 }
 
+// --- Cor da borda e do ícone/tipo por tipo de nó ----------------------
 .rf-node.Start { border-color: var(--marca-teal); }
+.rf-node.Start .rf-node__icon, .rf-node.Start .kind { color: var(--marca-teal); }
+
 .rf-node.Decision { border-color: #7c3aed; }
+.rf-node.Decision .rf-node__icon, .rf-node.Decision .kind { color: #7c3aed; }
+
 .rf-node.Condition { border-color: var(--cor-alerta); }
+.rf-node.Condition .rf-node__icon, .rf-node.Condition .kind { color: #b45309; }
+
 .rf-node.Ruleset { border-color: var(--marca-azul-medio); }
+.rf-node.Ruleset .rf-node__icon, .rf-node.Ruleset .kind { color: var(--marca-azul-medio); }
+
 .rf-node.Computation { border-color: #64748b; }
+.rf-node.Computation .rf-node__icon, .rf-node.Computation .kind { color: #64748b; }
+
 .rf-node.DataSource { border-color: #db2777; }
+.rf-node.DataSource .rf-node__icon, .rf-node.DataSource .kind { color: #db2777; }
+
 .rf-node.Action { border-color: #0891b2; }
+.rf-node.Action .rf-node__icon, .rf-node.Action .kind { color: #0891b2; }
+
 .rf-node.Matrix { border-color: #ca8a04; }
+.rf-node.Matrix .rf-node__icon, .rf-node.Matrix .kind { color: #ca8a04; }
+
+// --- Formas por tipo (baseadas em fluxograma / Crivo) -----------------
+// Início: forma de "pílula" (start terminal).
+.rf-node.Start {
+  border-radius: 999px;
+  border-width: 2px;
+  background: #f0fdfa;
+}
+// Condição: destaque de decisão — borda mais grossa e fundo âmbar. (Evitamos
+// clip-path de losango porque ele recortaria os conectores que ficam nas bordas.)
+.rf-node.Condition {
+  border-radius: 4px;
+  border-width: 2.5px;
+  background: #fffbeb;
+}
+// Decisão: terminal de saída — cantos bem arredondados, fundo lilás.
+.rf-node.Decision {
+  border-radius: 18px;
+  background: #faf5ff;
+}
+// Fonte de dados: topo/rodapé arredondados sugerindo cilindro (banco de dados).
+.rf-node.DataSource {
+  border-radius: 40% 40% 12px 12px / 18px 18px 12px 12px;
+  background: #fdf2f8;
+}
+// Conjunto de regras: faixa lateral colorida (accent bar).
+.rf-node.Ruleset { border-left-width: 5px; }
+// Ação: faixa lateral ciano.
+.rf-node.Action { border-left-width: 5px; }
+// Cálculo / Matriz: retângulo com accent lateral.
+.rf-node.Computation { border-left-width: 5px; }
+.rf-node.Matrix { border-left-width: 5px; background: #fefce8; }
+
+// Comentário: nota adesiva tracejada.
 .rf-node.Comment {
   border-color: #eab308;
   border-style: dashed;
   background: #fefce8;
   box-shadow: none;
   max-width: 230px;
+  text-align: left;
 }
+.rf-node.Comment .rf-node__head { justify-content: flex-start; }
 .rf-node.Comment .comment-text {
   font-size: 0.82rem;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-// Conectores (bolinhas de entrada/saída).
-.rf-node .conn {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--marca-azul);
-  border: 2px solid #fff;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
+// Conectores: o @foblex/flow desenha a bolinha no PRÓPRIO elemento com diretiva
+// fNodeInput/fNodeOutput, aplicando as classes .f-node-input / .f-node-output.
+// Não desenhamos bolinha própria (isso duplicava/desalinhava); apenas ajustamos
+// os tokens da lib para o visual pequeno do React Flow e colorimos os sockets.
+f-flow {
+  --ff-connector-size: 9px;
+  --ff-connector-border-width: 2px;
+  --ff-connector-border-color: #ffffff;
+  --ff-connector-background-color: var(--marca-azul);
+  --ff-connector-connected-color: var(--marca-azul);
+  --ff-connection-width: 1.5px;
+  --ff-connection-color: var(--marca-azul-medio);
+  --ff-connection-selected-color: var(--marca-teal);
+  --ff-connection-hover-color: var(--marca-azul);
 }
-.rf-node .conn--in { top: -7px; }
-.rf-node .conn--out { bottom: -7px; }
-.rf-node .conn--true { left: 30%; background: #22c55e; }
-.rf-node .conn--false { left: 70%; background: #ef4444; }
+
+// Esconde os círculos de reatribuição das pontas das conexões
+// (.f-connection-drag-handle) — eram o "círculo azul vazado" que poluía os
+// pontos de conexão. As conexões ficam limpas, ligando socket a socket.
+f-flow .f-connection .f-connection-drag-handle {
+  stroke: transparent !important;
+  fill: transparent !important;
+}
+
+// Socket de ENTRADA (topo) fica invisível: no React o destino da conexão é a
+// borda do nó marcada pela seta, sem bolinha. Some com o "borrão" onde a linha
+// encontrava o topo do nó. O elemento continua funcional (área de conexão).
+.rf-node .f-node-input {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+// A seta de chegada em tom escuro, para destacar sobre o fundo e a borda do nó.
+f-flow {
+  --ff-marker-color: var(--marca-azul);
+}
+
+// Saídas coloridas da Condition (Verdadeiro = verde, Falso = vermelho), como no
+// React. Os sockets têm a classe `.bottom` (lib) que os centraliza em left:50%;
+// deslocamos para 30%/70% mantendo translateX(-50%) para não se sobreporem.
+// !important para vencer o `left` do `.bottom` da lib. Cobrimos também o estado
+// conectado para a cor não voltar ao azul quando a aresta é criada.
+.rf-node.Condition .conn--true.f-node-output,
+.rf-node.Condition .conn--true.f-node-output-connected {
+  left: 30% !important;
+  background: #22c55e;
+  border-color: #ffffff;
+}
+.rf-node.Condition .conn--false.f-node-output,
+.rf-node.Condition .conn--false.f-node-output-connected {
+  left: 70% !important;
+  background: #ef4444;
+  border-color: #ffffff;
+}
+
+
+// Modais redimensionáveis/arrastáveis (variável, campo): o container interno
+// .resizable controla a largura/altura, então o painel do overlay não deve
+// limitar nem cortar o resize. Remove o padding padrão do mat-dialog.
+.resizable-dialog .mat-mdc-dialog-surface {
+  padding: 0;
+  overflow: visible;
+  resize: none;
+}
+.resizable-dialog .mat-mdc-dialog-container {
+  max-width: 92vw;
+}
+// O container .resizable tem seu próprio padding interno.
+.resizable-dialog .resizable {
+  padding: 1.25rem 1.5rem 0.75rem;
+  box-sizing: border-box;
+}

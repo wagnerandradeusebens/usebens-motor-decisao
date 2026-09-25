@@ -19,14 +19,19 @@
       @if (!readOnly) {
         <div class="branch-actions">
           <button matButton="outlined" (click)="configureBranch('true')">
-            <mat-icon>call_split</mat-icon> Configurar Verdadeiro
+            <mat-icon>call_split</mat-icon> Destino Verdadeiro
           </button>
           <button matButton="outlined" (click)="configureBranch('false')">
-            <mat-icon>call_split</mat-icon> Configurar Falso
+            <mat-icon>call_split</mat-icon> Destino Falso
           </button>
         </div>
         <p class="hint muted">Defina o destino de cada saída (ir para um nó ou desfecho final).</p>
       }
+
+      <div class="section-label">Ações — quando VERDADEIRO</div>
+      <ng-container *ngTemplateOutlet="actionsEditor; context: { $implicit: trueActions }"></ng-container>
+      <div class="section-label">Ações — quando FALSO</div>
+      <ng-container *ngTemplateOutlet="actionsEditor; context: { $implicit: falseActions }"></ng-container>
     }
 
     @case ('Computation') {
@@ -54,6 +59,9 @@
         <button matButton="outlined" (click)="addAssignment()">+ Adicionar cálculo</button>
       }
       <p class="hint muted">{{ hint }}</p>
+
+      <div class="section-label">Ações</div>
+      <ng-container *ngTemplateOutlet="actionsEditor; context: { $implicit: nodeActions }"></ng-container>
     }
 
     @case ('Decision') {
@@ -69,6 +77,9 @@
         <mat-label>Mensagem</mat-label>
         <input matInput [(ngModel)]="message" [disabled]="readOnly" placeholder="Opcional" />
       </mat-form-field>
+
+      <div class="section-label">Ações</div>
+      <ng-container *ngTemplateOutlet="actionsEditor; context: { $implicit: nodeActions }"></ng-container>
     }
 
     @case ('DataSource') {
@@ -77,6 +88,9 @@
         <input matInput [(ngModel)]="source" [disabled]="readOnly" placeholder="ex.: bureau_serasa" />
       </mat-form-field>
       <p class="hint muted">Integração externa é resolvida no backend.</p>
+
+      <div class="section-label">Ações</div>
+      <ng-container *ngTemplateOutlet="actionsEditor; context: { $implicit: nodeActions }"></ng-container>
     }
 
     @case ('Comment') {
@@ -90,39 +104,7 @@
 
     @case ('Action') {
       <div class="section-label">Ações (executadas em ordem)</div>
-      @for (a of actions(); track $index) {
-        <div class="item">
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Tipo</mat-label>
-            <mat-select [ngModel]="a.type" [disabled]="readOnly"
-              (ngModelChange)="setAction($index, { type: $event })">
-              @for (t of actionTypes; track t.value) {
-                <mat-option [value]="t.value">{{ t.label }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
-          @if (a.type === 'SetOutput') {
-            <mat-form-field appearance="outline" class="full">
-              <mat-label>Nome do parâmetro</mat-label>
-              <input matInput [ngModel]="a.name" [disabled]="readOnly"
-                (ngModelChange)="setAction($index, { name: $event })" placeholder="ex.: taxa" />
-            </mat-form-field>
-          }
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Expressão</mat-label>
-            <textarea matInput rows="2" [ngModel]="a.expression" [disabled]="readOnly"
-              (ngModelChange)="setAction($index, { expression: $event })"
-              placeholder='ex.: 30  ou  "cliente ok"'></textarea>
-          </mat-form-field>
-          @if (!readOnly) {
-            <button matButton (click)="removeAction($index)">Remover</button>
-          }
-        </div>
-      }
-      @if (!readOnly) {
-        <button matButton="outlined" (click)="addAction()">+ Adicionar ação</button>
-      }
-      <p class="hint muted">Contadores: leia nas fórmulas como <code>'pontos'</code> e <code>'limite'</code>.</p>
+      <ng-container *ngTemplateOutlet="actionsEditor; context: { $implicit: actions }"></ng-container>
     }
 
     @case ('Matrix') {
@@ -242,3 +224,40 @@
     <button matButton="filled" (click)="save()">Salvar</button>
   }
 </mat-dialog-actions>
+
+<!-- Editor de ações reutilizável. Recebe o signal da lista de ações no contexto
+     ($implicit) e opera sobre ele via os helpers genéricos. -->
+<ng-template #actionsEditor let-list>
+  @for (a of list(); track $index) {
+    <div class="item">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Tipo</mat-label>
+        <mat-select [ngModel]="a.type" [disabled]="readOnly"
+          (ngModelChange)="setAction(list, $index, { type: $event })">
+          @for (t of actionTypes; track t.value) {
+            <mat-option [value]="t.value">{{ t.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (a.type === 'SetOutput') {
+        <mat-form-field appearance="outline" class="full">
+          <mat-label>Nome do parâmetro</mat-label>
+          <input matInput [ngModel]="a.name" [disabled]="readOnly"
+            (ngModelChange)="setAction(list, $index, { name: $event })" placeholder="ex.: taxa" />
+        </mat-form-field>
+      }
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Expressão</mat-label>
+        <textarea matInput rows="2" [ngModel]="a.expression" [disabled]="readOnly"
+          (ngModelChange)="setAction(list, $index, { expression: $event })"
+          placeholder='ex.: 30  ou  "cliente ok"  ou  "NOK"'></textarea>
+      </mat-form-field>
+      @if (!readOnly) {
+        <button matButton (click)="removeAction(list, $index)">Remover</button>
+      }
+    </div>
+  }
+  @if (!readOnly) {
+    <button matButton="outlined" (click)="addAction(list)">+ Adicionar ação</button>
+  }
+</ng-template>

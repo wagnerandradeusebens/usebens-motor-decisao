@@ -1,5 +1,18 @@
+// Espelha o `.card` do React: cada fonte é um cartão com respiro interno,
+// espaçamento entre eles e hierarquia clara (fonte > produto > dados).
 .source {
-  margin-bottom: 0.85rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+// Cabeçalho do cartão: nome da fonte + chip "integração".
+.source__head {
+  margin-bottom: 0.35rem;
+}
+.source__name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--cor-primaria);
 }
 
 .desc {
@@ -7,27 +20,72 @@
 }
 
 .product {
-  margin-top: 0.6rem;
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--cor-borda);
+}
+.product:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 .product__name {
   font-weight: 600;
+  color: var(--cor-texto);
+}
+.product__key {
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+}
+.product__key code {
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-sm);
+  padding: 0.05rem 0.35rem;
 }
 .product__data {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-  margin-top: 0.35rem;
+  margin-top: 0.4rem;
 }
 
 .datum {
   background: var(--cor-fundo);
   border: 1px solid var(--cor-borda);
-  border-radius: 6px;
-  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
   font-size: 0.8rem;
-  font-family: ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--cor-texto);
+  white-space: nowrap;
 }
 
 code {
-  font-family: ui-monospace, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Parâmetros operacionais da fonte */
+.source__params {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--cor-borda);
+}
+.source__params-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cor-primaria);
+  margin-bottom: 0.5rem;
+}
+.source__params-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.source__params-row .param {
+  width: 120px;
+}
+.source__params-hint {
+  font-size: 0.72rem;
+  margin-top: 0.35rem;
 }

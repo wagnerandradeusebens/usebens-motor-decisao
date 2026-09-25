@@ -16,12 +16,14 @@ public sealed class CompiledFormula
         FormulaNode root,
         IReadOnlySet<string> referencedFields,
         IReadOnlyList<ExternalRef> externalRefs,
-        IReadOnlySet<string> referencedVariables)
+        IReadOnlySet<string> referencedVariables,
+        IReadOnlyList<PolicyRef> policyRefs)
     {
         _root = root;
         ReferencedFields = referencedFields;
         ExternalReferences = externalRefs;
         ReferencedVariables = referencedVariables;
+        PolicyReferences = policyRefs;
     }
 
     /// <summary>
@@ -41,6 +43,12 @@ public sealed class CompiledFormula
     /// order variable resolution and to detect cycles.
     /// </summary>
     public IReadOnlySet<string> ReferencedVariables { get; }
+
+    /// <summary>
+    /// As referências a outras políticas (<c>(Política;Categoria;Variável)</c>)
+    /// que esta fórmula usa. A camada de execução as resolve sob demanda.
+    /// </summary>
+    public IReadOnlyList<PolicyRef> PolicyReferences { get; }
 
     /// <summary>Evaluates the formula against the given context.</summary>
     public FormulaValue Evaluate(IFormulaContext context) => Evaluator.Evaluate(_root, context);
@@ -62,12 +70,13 @@ internal sealed class FieldCollector : IFormulaNodeVisitor<bool>
     private readonly HashSet<string> _fields = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<ExternalRef> _external = new();
     private readonly HashSet<string> _variables = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<PolicyRef> _policies = new();
 
-    public static (IReadOnlySet<string> Fields, IReadOnlyList<ExternalRef> External, IReadOnlySet<string> Variables) Collect(FormulaNode node)
+    public static (IReadOnlySet<string> Fields, IReadOnlyList<ExternalRef> External, IReadOnlySet<string> Variables, IReadOnlyList<PolicyRef> Policies) Collect(FormulaNode node)
     {
         var collector = new FieldCollector();
         node.Accept(collector);
-        return (collector._fields, collector._external, collector._variables);
+        return (collector._fields, collector._external, collector._variables, collector._policies);
     }
 
     public bool VisitLiteral(LiteralNode node) => true;
@@ -109,6 +118,16 @@ internal sealed class FieldCollector : IFormulaNodeVisitor<bool>
     public bool VisitVariableRef(VariableRefNode node)
     {
         _variables.Add(node.Name);
+        return true;
+    }
+
+    public bool VisitPolicyRef(PolicyRefNode node)
+    {
+        var reference = new PolicyRef(node.Policy, node.Category, node.Variable);
+        if (!_policies.Contains(reference))
+        {
+            _policies.Add(reference);
+        }
         return true;
     }
 }

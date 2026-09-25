@@ -10,7 +10,7 @@ public class BacenFakeSourceTests
     private static DictionaryFormulaContext CtxWithCpf(string cpf)
         => new DictionaryFormulaContext().Set("cpf", FormulaValue.Text(cpf));
 
-    private static async Task<FormulaValue> Resolve(BacenFakeSource src, string datum, string cpf)
+    private static async Task<FormulaValue> Resolve(IExternalSource src, string datum, string cpf)
         => await src.ResolveAsync("SCR", datum, CtxWithCpf(cpf));
 
     [Fact]
@@ -82,7 +82,7 @@ public class BacenFakeSourceTests
     [Fact]
     public async Task Unknown_product_is_name_error()
     {
-        var source = new BacenFakeSource();
+        IExternalSource source = new BacenFakeSource();
         var value = await source.ResolveAsync("Outro", "TempoInicioSFN", CtxWithCpf("1"));
         Assert.True(value.IsError);
         Assert.Equal(FormulaErrorKind.Name, value.ErrorKind);
@@ -91,7 +91,7 @@ public class BacenFakeSourceTests
     [Fact]
     public async Task Unknown_datum_is_name_error()
     {
-        var source = new BacenFakeSource();
+        IExternalSource source = new BacenFakeSource();
         var value = await source.ResolveAsync("SCR", "NaoExiste", CtxWithCpf("1"));
         Assert.True(value.IsError);
         Assert.Equal(FormulaErrorKind.Name, value.ErrorKind);
@@ -118,7 +118,7 @@ public class BacenFakeSourceTests
     [Fact]
     public void Catalog_lists_bacen_alongside_serasa()
     {
-        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource(), new BacenFakeSource() });
+        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource(), new BacenFakeSource() }, new NullSourceCache(), new NullSourceConfigProvider());
         var list = catalog.List();
         Assert.Contains(list, s => s.Name == "BACEN");
         Assert.Contains(list, s => s.Name == "SERASA");

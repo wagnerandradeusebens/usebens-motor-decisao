@@ -32,6 +32,14 @@ public interface IFormulaContext
     /// has not been resolved (e.g. unknown name).
     /// </summary>
     FormulaValue ResolveVariable(string name);
+
+    /// <summary>
+    /// Resolve uma referência a outra política <c>(Política;Categoria;Variável)</c>.
+    /// A execução da política alvo é feita pela camada de execução (sob demanda) e
+    /// o valor é semeado no contexto antes da avaliação. Retorna <c>#N/D</c> se não
+    /// tiver sido resolvido.
+    /// </summary>
+    FormulaValue ResolvePolicy(string policy, string category, string variable);
 }
 
 /// <summary>
@@ -91,6 +99,24 @@ public sealed class DictionaryFormulaContext : IFormulaContext
             ? v
             : FormulaValue.Error(FormulaErrorKind.NotAvailable);
 
+    private readonly Dictionary<string, FormulaValue> _policies =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Armazena o valor resolvido de uma referência de política.</summary>
+    public DictionaryFormulaContext SetPolicy(string policy, string category, string variable, FormulaValue value)
+    {
+        _policies[PolicyKey(policy, category, variable)] = value;
+        return this;
+    }
+
+    public FormulaValue ResolvePolicy(string policy, string category, string variable)
+        => _policies.TryGetValue(PolicyKey(policy, category, variable), out var v)
+            ? v
+            : FormulaValue.Error(FormulaErrorKind.NotAvailable);
+
     private static string ExternalKey(string source, string product, string datum)
         => $"{source}\u0001{product}\u0001{datum}";
+
+    private static string PolicyKey(string policy, string category, string variable)
+        => $"{policy}\u0001{category}\u0001{variable}";
 }

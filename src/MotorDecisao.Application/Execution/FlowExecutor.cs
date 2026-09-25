@@ -26,6 +26,14 @@ public sealed class FlowExecutor
     private readonly ISourceCatalog _sources;
     private readonly int _maxSteps;
 
+    /// <summary>
+    /// Provedor das políticas referenciadas por <c>(Política;...)</c>. Opcional:
+    /// injetado na composição real; nulo em testes que não exercitam referência
+    /// entre políticas. Definido após a construção para evitar dependência
+    /// circular na composição (o provider pode depender do executor).
+    /// </summary>
+    public ICompiledFlowProvider? PolicyProvider { get; set; }
+
     public FlowExecutor(IDataSourceResolver dataSources, ISourceCatalog sources, int maxSteps = 1000)
     {
         _dataSources = dataSources;
@@ -36,52 +44,228 @@ public sealed class FlowExecutor
     public async Task<DecisionResult> ExecuteAsync(
         CompiledFlow flow,
         DecisionRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<Guid>? policyStack = null)
     {
         var context = new DictionaryFormulaContext(request.Input);
 
         var trace = new List<TraceStep>();
         var sequence = 0;
 
-        // Pre-fetch every external reference the flow uses ([Fonte;Produto;Dado])
-        // once, before evaluating, since formula evaluation is synchronous. Each
-        // ref is resolved a single time per decision (deduplicated in CompiledFlow).
-        // Recorded in the trace so "everything consulted" is visible in the log.
-        foreach (var reference in flow.ExternalReferences)
+        // Pilha de políticas em execução (detecção de ciclo em (Política;...)).
+        var stack = policyStack is null
+            ? new HashSet<Guid> { flow.Snapshot.FlowId }
+            : new HashSet<Guid>(policyStack) { flow.Snapshot.FlowId };
+        // Cache por decisão: cada política referenciada é executada uma única vez.
+        var policyResults = new Dictionary<Guid, DecisionResult>();
+        // Variáveis avaliadas nesta execução (expostas no resultado p/ (Pol;Variaveis;x)).
+        var evaluatedVariables = new Dictionary<string, Formulas.FormulaValue>(StringComparer.OrdinalIgnoreCase);
+
+        // Resolução SOB DEMANDA (lazy): fontes e variáveis NÃO são resolvidas no
+        // início. São resolvidas apenas quando uma fórmula efetivamente executada
+        // as referencia — assim, se o fluxo recusa numa regra inicial, as fontes
+        // das regras seguintes nunca são consultadas (não se paga por elas).
+        var variablesByName = new Dictionary<string, CompiledVariable>(StringComparer.OrdinalIgnoreCase);
+        foreach (var v in flow.OrderedVariables) variablesByName[v.Name] = v;
+
+        var resolvedExternals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var resolvedVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Garante que as fontes e variáveis que ESTA fórmula usa estejam no
+        // contexto, resolvendo recursivamente (variável pode depender de fontes e
+        // de outras variáveis). Cada fonte/variável é resolvida no máximo uma vez
+        // por decisão. Chamada imediatamente antes de avaliar cada fórmula do nó.
+        async Task EnsureResolvedAsync(Formulas.CompiledFormula formula)
         {
-            var value = await _sources.ResolveAsync(reference, context, cancellationToken);
-            context.SetExternal(reference.Source, reference.Product, reference.Datum, value);
-            trace.Add(new TraceStep(sequence++, "(fonte)", reference.Source,
-                reference.ToString(), value.ToString(),
-                $"Consulta à fonte {reference}")
-            { Category = TraceCategory.Fonte });
+            // Variáveis referenciadas (recursivo: resolve dependências primeiro).
+            foreach (var varName in formula.ReferencedVariables)
+            {
+                if (resolvedVariables.Contains(varName)) continue;
+                if (!variablesByName.TryGetValue(varName, out var variable)) continue;
+                resolvedVariables.Add(varName); // marca antes para evitar recursão em ciclo (já barrado na compilação)
+                await EnsureResolvedAsync(variable.Formula);
+                var (value, steps) = variable.Formula.EvaluateTraced(context);
+                context.SetVariable(variable.Name, value);
+                evaluatedVariables[variable.Name] = value;
+                trace.Add(new TraceStep(sequence++, "(variável)", variable.Name,
+                    null, $"{{{variable.Name}}} = {value}", "Variável calculada")
+                { Category = TraceCategory.Variavel, Detail = steps });
+            }
+
+            // Fontes referenciadas ([Fonte;Produto;Dado]).
+            foreach (var reference in formula.ExternalReferences)
+            {
+                var key = $"{reference.Source}\u0001{reference.Product}\u0001{reference.Datum}";
+                if (!resolvedExternals.Add(key)) continue;
+                var value = await _sources.ResolveAsync(reference, context, cancellationToken);
+                context.SetExternal(reference.Source, reference.Product, reference.Datum, value);
+                trace.Add(new TraceStep(sequence++, "(fonte)", reference.Source,
+                    reference.ToString(), value.ToString(),
+                    $"Consulta à fonte {reference}")
+                { Category = TraceCategory.Fonte });
+            }
+
+            // Referências a outras políticas ((Política;Categoria;Variável)):
+            // executa a política alvo sob demanda e semeia o valor no contexto.
+            foreach (var pref in formula.PolicyReferences)
+            {
+                var value = await ResolvePolicyRefAsync(pref);
+                context.SetPolicy(pref.Policy, pref.Category, pref.Variable, value);
+                trace.Add(new TraceStep(sequence++, "(política)", pref.Policy,
+                    pref.ToString(), value.ToString(),
+                    $"Referência a política {pref}")
+                { Category = TraceCategory.Fonte });
+            }
         }
 
-        // Resolve variables in dependency order (a variable may use fields,
-        // external refs, functions, and other already-resolved variables). Traced
-        // deeply so the full resolution tree is visible in the log.
-        foreach (var variable in flow.OrderedVariables)
+        // Executa a política referenciada (uma vez por decisão), detecta ciclo,
+        // e extrai o valor pedido (Pontos/Limite/Resposta/Variável).
+        async Task<FormulaValue> ResolvePolicyRefAsync(Sources.PolicyRef pref)
         {
-            var (value, steps) = variable.Formula.EvaluateTraced(context);
-            context.SetVariable(variable.Name, value);
-            trace.Add(new TraceStep(sequence++, "(variável)", variable.Name,
-                null, $"{{{variable.Name}}} = {value}", "Variável calculada")
-            { Category = TraceCategory.Variavel, Detail = steps });
+            if (PolicyProvider is null)
+            {
+                return FormulaValue.Error(FormulaErrorKind.NotAvailable);
+            }
+
+            // Resolve o alvo pelo nome (case-insensitive) via o provider? O provider
+            // é por id; então usamos o nome comparando com o snapshot. Para manter
+            // simples e robusto, o alvo é resolvido por nome no provider estendido.
+            var targetFlow = await ResolveTargetByNameAsync(pref.Policy);
+            if (targetFlow is null)
+            {
+                return FormulaValue.Error(FormulaErrorKind.Name); // política não encontrada/publicada
+            }
+
+            // Ciclo: A → B → A.
+            if (stack.Contains(targetFlow.Snapshot.FlowId))
+            {
+                return FormulaValue.Error(FormulaErrorKind.NotAvailable);
+            }
+
+            // Cache por decisão.
+            if (!policyResults.TryGetValue(targetFlow.Snapshot.FlowId, out var sub))
+            {
+                var subRequest = new DecisionRequest(targetFlow.Snapshot.FlowId, request.ProposalReference, request.Input);
+                sub = await ExecuteAsync(targetFlow, subRequest, cancellationToken, stack);
+                policyResults[targetFlow.Snapshot.FlowId] = sub;
+            }
+
+            var cat = pref.Category.Trim().ToLowerInvariant();
+            return cat switch
+            {
+                "pontos" => FormulaValue.Number(sub.Score),
+                "limite" => FormulaValue.Number(sub.Limit),
+                "resposta" => FormulaValue.Text(sub.Resposta),
+                "variaveis" or "variáveis" => sub.Variables.TryGetValue(pref.Variable, out var vv)
+                    ? vv
+                    : FormulaValue.Error(FormulaErrorKind.NotAvailable),
+                _ => FormulaValue.Error(FormulaErrorKind.Name),
+            };
+        }
+
+        // Resolve a política alvo pelo nome. Percorre os flows publicados via o
+        // provider (que expõe por id); aqui usamos o nome do snapshot.
+        async Task<CompiledFlow?> ResolveTargetByNameAsync(string name)
+        {
+            if (PolicyProvider is not IPolicyByNameProvider byName)
+            {
+                return null;
+            }
+            return await byName.GetByNameAsync(name, cancellationToken);
         }
 
         decimal score = 0m;
         decimal limit = 0m;
+        var resposta = string.Empty;
         var justifications = new List<string>();
         var outputs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        // Exposes the accumulated counters as the fields 'pontos' and 'limite' so
-        // formulas/actions can read them mid-run (Crivo's [Criterio Atual;...]).
+        // Exposes the accumulated counters/state as the fields 'pontos', 'limite'
+        // and 'resposta' so formulas/actions can read them mid-run (like Crivo's
+        // [Criterio Atual;...]). 'resposta' is a free string a rule can set and a
+        // later rule can test (e.g. 'resposta' = "NOK").
         void SyncCounters()
         {
             context.Set("pontos", FormulaValue.Number(score));
             context.Set("limite", FormulaValue.Number(limit));
+            context.Set("resposta", FormulaValue.Text(resposta));
         }
         SyncCounters();
+
+        // Helpers de resultado como funções locais: capturam os acumuladores
+        // (incluindo resposta e as variáveis avaliadas) para expô-los no resultado.
+        DecisionResult Completed(DecisionOutcome outcome)
+            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, outcome, score, ExecutionStatus.Completed, null, trace)
+            { Limit = limit, Justifications = justifications, Outputs = outputs, Resposta = resposta, Variables = evaluatedVariables };
+
+        DecisionResult ManualReview()
+            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.ManualReview, score, ExecutionStatus.Completed, null, trace)
+            { Limit = limit, Justifications = justifications, Outputs = outputs, Resposta = resposta, Variables = evaluatedVariables };
+
+        DecisionResult Failed(string error)
+            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.Pending, score, ExecutionStatus.Failed, error, trace)
+            { Limit = limit, Justifications = justifications, Outputs = outputs, Resposta = resposta, Variables = evaluatedVariables };
+
+        // Aplica uma lista de ações (pontos/limite/justificativa/resposta/saída) de
+        // um nó, atualizando os acumuladores e registrando cada uma na trilha.
+        // Retorna true se alguma ação resultou em erro (o chamador deve encerrar
+        // em revisão manual). Reaproveitada pelo nó Action e por qualquer nó com
+        // ações anexadas (Condition por ramo, Decision, Computation, DataSource).
+        async Task<bool> ApplyActions(PublishedNode node, IReadOnlyList<CompiledAction> actions)
+        {
+            foreach (var action in actions)
+            {
+                await EnsureResolvedAsync(action.Formula);
+                var (value, steps) = action.Formula.EvaluateTraced(context);
+                if (value.IsError)
+                {
+                    trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
+                        null, value.ToString(), "Erro em ação → revisão manual.")
+                    { Category = TraceCategory.Acao, Detail = steps });
+                    return true;
+                }
+
+                switch (action.Type)
+                {
+                    case ActionType.AddPoints:
+                        score += ToNumber(value);
+                        trace.Add(Step(ref sequence, node, $"pontos += {value} (total {score})", "Adiciona aos pontos", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.SetPoints:
+                        score = ToNumber(value);
+                        trace.Add(Step(ref sequence, node, $"pontos = {score}", "Define pontos", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.AddLimit:
+                        limit += ToNumber(value);
+                        trace.Add(Step(ref sequence, node, $"limite += {value} (total {limit})", "Adiciona ao limite", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.SetLimit:
+                        limit = ToNumber(value);
+                        trace.Add(Step(ref sequence, node, $"limite = {limit}", "Define limite", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.AddJustification:
+                        justifications.Add(value.AsText());
+                        trace.Add(Step(ref sequence, node, value.AsText(), "Adiciona à justificativa", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.SetJustification:
+                        justifications.Clear();
+                        justifications.Add(value.AsText());
+                        trace.Add(Step(ref sequence, node, value.AsText(), "Define justificativa", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.SetOutput:
+                        var name = action.Name ?? string.Empty;
+                        outputs[name] = value.ToString();
+                        trace.Add(Step(ref sequence, node, $"{name} = {value}", "Define parâmetro de saída", TraceCategory.Acao, steps));
+                        break;
+                    case ActionType.SetResposta:
+                        resposta = value.AsText();
+                        trace.Add(Step(ref sequence, node, $"resposta = \"{resposta}\"", "Define resposta", TraceCategory.Acao, steps));
+                        break;
+                }
+                SyncCounters();
+            }
+            return false;
+        }
 
         var currentKey = flow.StartNodeKey;
         var visitedSteps = 0;
@@ -92,14 +276,12 @@ public sealed class FlowExecutor
 
             if (++visitedSteps > _maxSteps)
             {
-                return Failed(flow, score, limit, justifications, outputs, trace,
-                    "Limite de passos excedido; possível ciclo no fluxo.");
+                return Failed("Limite de passos excedido; possível ciclo no fluxo.");
             }
 
             if (!flow.NodesByKey.TryGetValue(currentKey, out var node))
             {
-                return Failed(flow, score, limit, justifications, outputs, trace,
-                    $"Nó '{currentKey}' não encontrado no fluxo.");
+                return Failed($"Nó '{currentKey}' não encontrado no fluxo.");
             }
 
             switch (node.Kind)
@@ -119,6 +301,7 @@ public sealed class FlowExecutor
                     var assignments = flow.ComputationByNode[node.NodeKey];
                     foreach (var a in assignments)
                     {
+                        await EnsureResolvedAsync(a.Formula);
                         var (value, steps) = a.Formula.EvaluateTraced(context);
                         if (value.IsError)
                         {
@@ -126,64 +309,27 @@ public sealed class FlowExecutor
                                 null, value.ToString(),
                                 $"Erro ao calcular '{a.TargetField}' → revisão manual.")
                             { Detail = steps });
-                            return ManualReview(flow, score, limit, justifications, outputs, trace);
+                            return ManualReview();
                         }
                         context.Set(a.TargetField, value);
                         trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                             null, $"{a.TargetField} = {value}", "Cálculo")
                         { Detail = steps });
                     }
+                    // Ações anexadas ao nó de cálculo.
+                    if (flow.NodeActionsByNode.TryGetValue(node.NodeKey, out var compActions)
+                        && await ApplyActions(node, compActions))
+                    {
+                        return ManualReview();
+                    }
                     break;
                 }
 
                 case FlowNodeKind.Action:
                 {
-                    var actions = flow.ActionsByNode[node.NodeKey];
-                    foreach (var action in actions)
+                    if (await ApplyActions(node, flow.ActionsByNode[node.NodeKey]))
                     {
-                        var (value, steps) = action.Formula.EvaluateTraced(context);
-                        if (value.IsError)
-                        {
-                            trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
-                                null, value.ToString(), "Erro em ação → revisão manual.")
-                            { Category = TraceCategory.Acao, Detail = steps });
-                            return ManualReview(flow, score, limit, justifications, outputs, trace);
-                        }
-
-                        switch (action.Type)
-                        {
-                            case ActionType.AddPoints:
-                                score += ToNumber(value);
-                                trace.Add(Step(ref sequence, node, $"pontos += {value} (total {score})", "Adiciona aos pontos", TraceCategory.Acao, steps));
-                                break;
-                            case ActionType.SetPoints:
-                                score = ToNumber(value);
-                                trace.Add(Step(ref sequence, node, $"pontos = {score}", "Define pontos", TraceCategory.Acao, steps));
-                                break;
-                            case ActionType.AddLimit:
-                                limit += ToNumber(value);
-                                trace.Add(Step(ref sequence, node, $"limite += {value} (total {limit})", "Adiciona ao limite", TraceCategory.Acao, steps));
-                                break;
-                            case ActionType.SetLimit:
-                                limit = ToNumber(value);
-                                trace.Add(Step(ref sequence, node, $"limite = {limit}", "Define limite", TraceCategory.Acao, steps));
-                                break;
-                            case ActionType.AddJustification:
-                                justifications.Add(value.AsText());
-                                trace.Add(Step(ref sequence, node, value.AsText(), "Adiciona à justificativa", TraceCategory.Acao, steps));
-                                break;
-                            case ActionType.SetJustification:
-                                justifications.Clear();
-                                justifications.Add(value.AsText());
-                                trace.Add(Step(ref sequence, node, value.AsText(), "Define justificativa", TraceCategory.Acao, steps));
-                                break;
-                            case ActionType.SetOutput:
-                                var name = action.Name ?? string.Empty;
-                                outputs[name] = value.ToString();
-                                trace.Add(Step(ref sequence, node, $"{name} = {value}", "Define parâmetro de saída", TraceCategory.Acao, steps));
-                                break;
-                        }
-                        SyncCounters();
+                        return ManualReview();
                     }
                     break;
                 }
@@ -191,6 +337,8 @@ public sealed class FlowExecutor
                 case FlowNodeKind.Matrix:
                 {
                     var matrix = flow.MatrixByNode[node.NodeKey];
+                    await EnsureResolvedAsync(matrix.RowFormula);
+                    await EnsureResolvedAsync(matrix.ColFormula);
                     var (rowVal, rowSteps) = matrix.RowFormula.EvaluateTraced(context);
                     var (colVal, colSteps) = matrix.ColFormula.EvaluateTraced(context);
                     var matrixSteps = new List<EvalStep>(rowSteps.Count + colSteps.Count);
@@ -199,7 +347,7 @@ public sealed class FlowExecutor
                     if (rowVal.IsError || colVal.IsError)
                     {
                         trace.Add(Step(ref sequence, node, "erro", "Erro na expressão da matriz → revisão manual.", TraceCategory.Matriz, matrixSteps));
-                        return ManualReview(flow, score, limit, justifications, outputs, trace);
+                        return ManualReview();
                     }
 
                     var rowNum = ToNumber(rowVal);
@@ -219,7 +367,7 @@ public sealed class FlowExecutor
                     if (cell is null)
                     {
                         trace.Add(Step(ref sequence, node, $"({rowNum}, {colNum}) sem célula", "Matriz sem valor para o cruzamento → revisão manual.", TraceCategory.Matriz, matrixSteps));
-                        return ManualReview(flow, score, limit, justifications, outputs, trace);
+                        return ManualReview();
                     }
 
                     switch (matrix.Config.Mode)
@@ -235,7 +383,7 @@ public sealed class FlowExecutor
                         case MatrixMode.Decision:
                             var outcome = Enum.TryParse<DecisionOutcome>(cell, out var o) ? o : DecisionOutcome.ManualReview;
                             trace.Add(Step(ref sequence, node, $"({rowNum}, {colNum}) → {outcome}", "Matriz (decisão)", TraceCategory.Matriz, matrixSteps));
-                            return Completed(flow, outcome, score, limit, justifications, outputs, trace);
+                            return Completed(outcome);
                     }
                     SyncCounters();
                     break;
@@ -244,13 +392,14 @@ public sealed class FlowExecutor
                 case FlowNodeKind.Condition:
                 {
                     var formula = flow.ConditionByNode[node.NodeKey];
+                    await EnsureResolvedAsync(formula);
                     var (result, condSteps) = formula.EvaluateTraced(context);
                     if (result.IsError)
                     {
                         trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                             null, result.ToString(), "Erro na condição → revisão manual.")
                         { Category = TraceCategory.Regra, Detail = condSteps });
-                        return ManualReview(flow, score, limit, justifications, outputs, trace);
+                        return ManualReview();
                     }
 
                     var boolResult = FormulaCoercion.ToBoolean(result);
@@ -259,7 +408,7 @@ public sealed class FlowExecutor
                         trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                             null, result.ToString(), "Condição não booleana → revisão manual.")
                         { Category = TraceCategory.Regra, Detail = condSteps });
-                        return ManualReview(flow, score, limit, justifications, outputs, trace);
+                        return ManualReview();
                     }
 
                     var branch = boolResult.AsBoolean();
@@ -267,11 +416,20 @@ public sealed class FlowExecutor
                         null, branch ? "VERDADEIRO" : "FALSO", $"Desvio: {(branch ? "true" : "false")}")
                     { Category = TraceCategory.Regra, Detail = condSteps });
 
+                    // Ações do ramo escolhido (Crivo: "SE condição ENTÃO ações").
+                    if (flow.ConditionActionsByNode.TryGetValue(node.NodeKey, out var branchActions))
+                    {
+                        var chosen = branch ? branchActions.TrueActions : branchActions.FalseActions;
+                        if (await ApplyActions(node, chosen))
+                        {
+                            return ManualReview();
+                        }
+                    }
+
                     var next = FindNext(flow, node.NodeKey, branch ? "true" : "false");
                     if (next is null)
                     {
-                        return Failed(flow, score, limit, justifications, outputs, trace,
-                            $"Condição '{node.Label}' sem aresta de saída para '{(branch ? "true" : "false")}'.");
+                        return Failed($"Condição '{node.Label}' sem aresta de saída para '{(branch ? "true" : "false")}'.");
                     }
                     currentKey = next;
                     continue;
@@ -281,20 +439,20 @@ public sealed class FlowExecutor
                 {
                     if (node.RulesetId is null || !flow.RulesByRulesetId.TryGetValue(node.RulesetId.Value, out var rules))
                     {
-                        return Failed(flow, score, limit, justifications, outputs, trace,
-                            $"Nó de regras '{node.Label}' sem conjunto de regras associado.");
+                        return Failed($"Nó de regras '{node.Label}' sem conjunto de regras associado.");
                     }
 
                     foreach (var compiled in rules)
                     {
                         var rule = compiled.Rule;
+                        await EnsureResolvedAsync(compiled.Condition);
                         var matched = compiled.Condition.Evaluate(context);
                         if (matched.IsError)
                         {
                             trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                                 null, matched.ToString(),
                                 $"Erro na regra '{rule.Name}' → revisão manual."));
-                            return ManualReview(flow, score, limit, justifications, outputs, trace);
+                            return ManualReview();
                         }
 
                         var boolMatched = FormulaCoercion.ToBoolean(matched);
@@ -317,7 +475,7 @@ public sealed class FlowExecutor
                                 trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                                     null, forced.ToString(),
                                     $"Regra '{rule.Name}' forçou desfecho: {rule.Message}"));
-                                return Completed(flow, forced, score, limit, justifications, outputs, trace);
+                                return Completed(forced);
 
                             case RuleEffect.Annotation:
                                 trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
@@ -338,15 +496,27 @@ public sealed class FlowExecutor
                     }
                     trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                         null, $"{fields.Count} campo(s)", $"Fonte de dados: {cfg.Source}"));
+                    // Ações anexadas ao nó de fonte de dados.
+                    if (flow.NodeActionsByNode.TryGetValue(node.NodeKey, out var dsActions)
+                        && await ApplyActions(node, dsActions))
+                    {
+                        return ManualReview();
+                    }
                     break;
                 }
 
                 case FlowNodeKind.Decision:
                 {
                     var cfg = NodeConfig.Deserialize<DecisionConfig>(node.Config);
+                    // Ações anexadas ao nó de decisão (aplicadas antes de encerrar).
+                    if (flow.NodeActionsByNode.TryGetValue(node.NodeKey, out var decActions)
+                        && await ApplyActions(node, decActions))
+                    {
+                        return ManualReview();
+                    }
                     trace.Add(new TraceStep(sequence++, node.NodeKey, node.Label,
                         null, cfg.Outcome.ToString(), cfg.Message ?? "Desfecho final"));
-                    return Completed(flow, cfg.Outcome, score, limit, justifications, outputs, trace);
+                    return Completed(cfg.Outcome);
                 }
             }
 
@@ -354,8 +524,7 @@ public sealed class FlowExecutor
             var following = FindNext(flow, currentKey, sourceHandle: null);
             if (following is null)
             {
-                return Failed(flow, score, limit, justifications, outputs, trace,
-                    $"Nó '{node.Label}' sem próximo nó (aresta de saída ausente).");
+                return Failed($"Nó '{node.Label}' sem próximo nó (aresta de saída ausente).");
             }
             currentKey = following;
         }
@@ -417,21 +586,4 @@ public sealed class FlowExecutor
         => new(sequence++, node.NodeKey, node.Label, null, result, message)
         { Category = category, Detail = detail ?? Array.Empty<EvalStep>() };
 
-    private static DecisionResult Completed(
-        CompiledFlow flow, DecisionOutcome outcome, decimal score, decimal limit,
-        List<string> justifications, Dictionary<string, string> outputs, List<TraceStep> trace)
-        => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, outcome, score, ExecutionStatus.Completed, null, trace)
-        { Limit = limit, Justifications = justifications, Outputs = outputs };
-
-    private static DecisionResult ManualReview(
-        CompiledFlow flow, decimal score, decimal limit,
-        List<string> justifications, Dictionary<string, string> outputs, List<TraceStep> trace)
-        => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.ManualReview, score, ExecutionStatus.Completed, null, trace)
-        { Limit = limit, Justifications = justifications, Outputs = outputs };
-
-    private static DecisionResult Failed(
-        CompiledFlow flow, decimal score, decimal limit,
-        List<string> justifications, Dictionary<string, string> outputs, List<TraceStep> trace, string error)
-        => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.Pending, score, ExecutionStatus.Failed, error, trace)
-        { Limit = limit, Justifications = justifications, Outputs = outputs };
 }

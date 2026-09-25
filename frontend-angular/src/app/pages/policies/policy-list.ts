@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -23,7 +22,6 @@ import { NewPolicyDialog, NewPolicyResult } from './new-policy-dialog';
     RouterLink,
     MatButtonModule,
     MatCardModule,
-    MatChipsModule,
     MatIconModule,
     MatTableModule,
     MatDialogModule,

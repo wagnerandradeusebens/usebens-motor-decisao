@@ -20,8 +20,9 @@ public class SourceAvailabilityTests
 
         public bool IsAvailable(IFormulaContext context) => true;
 
-        public Task<FormulaValue> ResolveAsync(string product, string datum, IFormulaContext context, CancellationToken ct = default)
-            => Task.FromResult(FormulaValue.Number(1));
+        public Task<IReadOnlyDictionary<string, FormulaValue>> ResolveProductAsync(string product, IFormulaContext context, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyDictionary<string, FormulaValue>>(
+                new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase) { ["Dado"] = FormulaValue.Number(1) });
     }
 
     private sealed class AlwaysDownSource : IExternalSource
@@ -32,14 +33,15 @@ public class SourceAvailabilityTests
 
         public bool IsAvailable(IFormulaContext context) => false;
 
-        public Task<FormulaValue> ResolveAsync(string product, string datum, IFormulaContext context, CancellationToken ct = default)
-            => Task.FromResult(FormulaValue.Number(1));
+        public Task<IReadOnlyDictionary<string, FormulaValue>> ResolveProductAsync(string product, IFormulaContext context, CancellationToken ct = default)
+            => Task.FromResult<IReadOnlyDictionary<string, FormulaValue>>(
+                new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase) { ["Dado"] = FormulaValue.Number(1) });
     }
 
     [Fact]
     public async Task Availability_datum_returns_boolean_true_when_up()
     {
-        var catalog = new SourceCatalog(new IExternalSource[] { new AlwaysUpSource() });
+        var catalog = new SourceCatalog(new IExternalSource[] { new AlwaysUpSource() }, new NullSourceCache(), new NullSourceConfigProvider());
         var value = await catalog.ResolveAsync(new ExternalRef("TESTE", "Prod", "Disponibilidade"), new DictionaryFormulaContext());
         Assert.Equal(FormulaValueType.Boolean, value.Type);
         Assert.True(value.AsBoolean());
@@ -48,7 +50,7 @@ public class SourceAvailabilityTests
     [Fact]
     public async Task Availability_datum_returns_boolean_false_when_down()
     {
-        var catalog = new SourceCatalog(new IExternalSource[] { new AlwaysDownSource() });
+        var catalog = new SourceCatalog(new IExternalSource[] { new AlwaysDownSource() }, new NullSourceCache(), new NullSourceConfigProvider());
         var value = await catalog.ResolveAsync(new ExternalRef("OFFLINE", "Prod", "Disponibilidade"), new DictionaryFormulaContext());
         Assert.Equal(FormulaValueType.Boolean, value.Type);
         Assert.False(value.AsBoolean());
@@ -57,7 +59,7 @@ public class SourceAvailabilityTests
     [Fact]
     public void Catalog_advertises_availability_datum_on_every_product()
     {
-        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource(), new BacenFakeSource() });
+        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource(), new BacenFakeSource() }, new NullSourceCache(), new NullSourceConfigProvider());
         foreach (var source in catalog.List())
         {
             foreach (var product in source.Products)
@@ -70,7 +72,7 @@ public class SourceAvailabilityTests
     [Fact]
     public async Task Fake_sources_answer_availability_as_boolean()
     {
-        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource(), new BacenFakeSource() });
+        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource(), new BacenFakeSource() }, new NullSourceCache(), new NullSourceConfigProvider());
         var ctx = new DictionaryFormulaContext().Set("cpf", FormulaValue.Text("11493903799"));
 
         var serasa = await catalog.ResolveAsync(new ExternalRef("SERASA", "Score", "Disponibilidade"), ctx);

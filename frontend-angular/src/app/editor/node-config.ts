@@ -7,10 +7,12 @@ export const RULE_PALETTE: { kind: FlowNodeKind; label: string }[] = [
   { kind: 'Ruleset', label: 'Conjunto de regras' },
   { kind: 'Computation', label: 'Cálculo' },
   { kind: 'DataSource', label: 'Fonte de dados' },
-  { kind: 'Action', label: 'Ação' },
   { kind: 'Decision', label: 'Decisão' },
   { kind: 'Comment', label: 'Comentário' },
 ];
+// Obs.: o bloco "Ação" foi aposentado da paleta — as ações (pontos/limite/
+// resposta/justificativa) agora são configuradas dentro de cada nó. O tipo
+// Action segue existindo no backend para não quebrar fluxos já salvos.
 
 export const OUTCOME_LABEL: Record<DecisionOutcome, string> = {
   Pending: 'Pendente',

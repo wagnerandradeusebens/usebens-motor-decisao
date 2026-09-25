@@ -43,7 +43,8 @@ public sealed class BacenFakeSource : IExternalSource
                     new SourceDatum(DividasAVencer3m12m, "Dívidas a vencer - 3 meses dividido por 12 meses."),
                     new SourceDatum(DividasAVencerMinimo12m, "Dívidas a vencer - mínimo dos últimos 12 meses (R$)."),
                     new SourceDatum(FlagDividasVencidas12m, "Indica dívidas vencidas nos últimos 12 meses (VERDADEIRO/FALSO).")
-                })
+                },
+                KeyField: "cpf")
         });
 
     /// <summary>
@@ -59,20 +60,21 @@ public sealed class BacenFakeSource : IExternalSource
         return rng.NextDouble() < 0.85;
     }
 
-    public Task<FormulaValue> ResolveAsync(
+    public Task<IReadOnlyDictionary<string, FormulaValue>> ResolveProductAsync(
         string product,
-        string datum,
         IFormulaContext context,
         CancellationToken cancellationToken = default)
     {
         if (!string.Equals(product, ProductScr, StringComparison.OrdinalIgnoreCase))
         {
-            return Task.FromResult(FormulaValue.Error(FormulaErrorKind.Name));
+            return Task.FromResult<IReadOnlyDictionary<string, FormulaValue>>(
+                new Dictionary<string, FormulaValue>());
         }
 
         // Reads cpf from the proposal context and uses it as a stable seed so the
         // same CPF always produces the same SCR snapshot. All figures are drawn
-        // from the same seed so a CPF's data is internally consistent.
+        // from the same seed so a CPF's data is internally consistent — exactly the
+        // whole-product snapshot the engine caches in one entry.
         context.TryGetField("cpf", out var cpfValue);
         var cpf = cpfValue.Type == FormulaValueType.Blank ? string.Empty : cpfValue.AsText();
         var rng = new Random(StableSeed(cpf));
@@ -90,21 +92,18 @@ public sealed class BacenFakeSource : IExternalSource
         var dividasMinimo12m = Math.Round(dividas12m * (decimal)(0.2 + rng.NextDouble() * 0.5), 2);
         var flagVencidas12m = rng.NextDouble() < 0.25;                             // ~25% com dívidas vencidas
 
-        return Task.FromResult(datum switch
+        var data = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase)
         {
-            _ when Is(datum, TempoInicioSfn) => FormulaValue.Number(tempoInicioSfn),
-            _ when Is(datum, LimiteMinimo6m) => FormulaValue.Number(limiteMinimo6m),
-            _ when Is(datum, LimiteAtualMedia6m) => FormulaValue.Number(limiteAtualMedia6m),
-            _ when Is(datum, LimiteMedia3m) => FormulaValue.Number(limiteMedia3m),
-            _ when Is(datum, DividasAVencer3m12m) => FormulaValue.Number(dividas3m12m),
-            _ when Is(datum, DividasAVencerMinimo12m) => FormulaValue.Number(dividasMinimo12m),
-            _ when Is(datum, FlagDividasVencidas12m) => FormulaValue.Boolean(flagVencidas12m),
-            _ => FormulaValue.Error(FormulaErrorKind.Name)
-        });
+            [TempoInicioSfn] = FormulaValue.Number(tempoInicioSfn),
+            [LimiteMinimo6m] = FormulaValue.Number(limiteMinimo6m),
+            [LimiteAtualMedia6m] = FormulaValue.Number(limiteAtualMedia6m),
+            [LimiteMedia3m] = FormulaValue.Number(limiteMedia3m),
+            [DividasAVencer3m12m] = FormulaValue.Number(dividas3m12m),
+            [DividasAVencerMinimo12m] = FormulaValue.Number(dividasMinimo12m),
+            [FlagDividasVencidas12m] = FormulaValue.Boolean(flagVencidas12m),
+        };
+        return Task.FromResult<IReadOnlyDictionary<string, FormulaValue>>(data);
     }
-
-    private static bool Is(string datum, string name)
-        => string.Equals(datum, name, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Turns a CPF into a stable, non-negative RNG seed. Empty CPFs share a seed,

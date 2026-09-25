@@ -26,6 +26,10 @@ public sealed class FormulaTextRenderer : IFormulaNodeVisitor<string>
 
     public string VisitExternalRef(ExternalRefNode node) => $"[{node.Source};{node.Product};{node.Datum}]";
 
+    public string VisitPolicyRef(PolicyRefNode node) => string.IsNullOrEmpty(node.Variable)
+        ? $"({node.Policy};{node.Category})"
+        : $"({node.Policy};{node.Category};{node.Variable})";
+
     public string VisitUnary(UnaryNode node)
     {
         var op = node.Operator == UnaryOperator.Negate ? "-" : "+";

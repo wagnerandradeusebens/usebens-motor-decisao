@@ -34,10 +34,11 @@ public class FlowExecutorTests
     private static PublishedFlowSnapshot Snapshot(
         IReadOnlyList<PublishedNode> nodes,
         IReadOnlyList<PublishedEdge> edges,
-        IReadOnlyList<PublishedRuleset>? rulesets = null)
+        IReadOnlyList<PublishedRuleset>? rulesets = null,
+        string flowName = "test")
         => new(
             FlowId: Guid.NewGuid(),
-            FlowName: "test",
+            FlowName: flowName,
             FlowVersionId: Guid.NewGuid(),
             VersionNumber: 1,
             PublishedAt: DateTime.UtcNow,
@@ -321,7 +322,251 @@ public class FlowExecutorTests
         Assert.Equal(DecisionOutcome.Approved, result.Outcome);
     }
 
+    // --- Ações anexadas a qualquer nó (não só ao nó Action) --------------
+
+    [Fact]
+    public async Task Condition_true_branch_actions_add_points()
+    {
+        // A condição pontua no ramo VERDADEIRO (Crivo: "SE ... ENTÃO ações").
+        var condCfg = "{\"expression\":\"idade >= 18\"," +
+            "\"trueActions\":[{\"type\":\"AddPoints\",\"expression\":\"30\"}]," +
+            "\"falseActions\":[{\"type\":\"AddPoints\",\"expression\":\"5\"}]}";
+        var snap = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("cond", FlowNodeKind.Condition, condCfg),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\"}"),
+                Node("ng", FlowNodeKind.Decision, "{\"outcome\":\"Denied\"}")
+            },
+            edges: new[]
+            {
+                Edge("start", "cond"),
+                Edge("cond", "ap", "true"),
+                Edge("cond", "ng", "false")
+            });
+        var flow = CompiledFlow.Compile(snap);
+
+        var maior = await Executor.ExecuteAsync(flow, Request(snap, ("idade", FormulaValue.Number(25))));
+        Assert.Equal(DecisionOutcome.Approved, maior.Outcome);
+        Assert.Equal(30m, maior.Score); // ramo verdadeiro
+
+        var menor = await Executor.ExecuteAsync(flow, Request(snap, ("idade", FormulaValue.Number(15))));
+        Assert.Equal(DecisionOutcome.Denied, menor.Outcome);
+        Assert.Equal(5m, menor.Score); // ramo falso
+    }
+
+    [Fact]
+    public async Task Decision_node_actions_apply_before_completing()
+    {
+        // A decisão define pontos e resposta antes de encerrar.
+        var decCfg = "{\"outcome\":\"Approved\"," +
+            "\"actions\":[" +
+            "{\"type\":\"SetPoints\",\"expression\":\"90\"}," +
+            "{\"type\":\"SetResposta\",\"expression\":\"\\\"OK\\\"\"}]}";
+        var snap = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("ap", FlowNodeKind.Decision, decCfg)
+            },
+            edges: new[] { Edge("start", "ap") });
+
+        var r = await Executor.ExecuteAsync(CompiledFlow.Compile(snap), Request(snap));
+        Assert.Equal(DecisionOutcome.Approved, r.Outcome);
+        Assert.Equal(90m, r.Score);
+    }
+
+    [Fact]
+    public async Task Resposta_set_in_condition_readable_by_later_condition()
+    {
+        // Uma condição define resposta="NOK" no ramo verdadeiro; uma condição
+        // posterior lê 'resposta' e nega.
+        var c1 = "{\"expression\":\"tem_restricao = VERDADEIRO\"," +
+            "\"trueActions\":[{\"type\":\"SetResposta\",\"expression\":\"\\\"NOK\\\"\"}]}";
+        var c2 = "{\"expression\":\"'resposta' = \\\"NOK\\\"\"}";
+        var snap = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("c1", FlowNodeKind.Condition, c1),
+                Node("c2", FlowNodeKind.Condition, c2),
+                Node("ng", FlowNodeKind.Decision, "{\"outcome\":\"Denied\"}"),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\"}")
+            },
+            edges: new[]
+            {
+                Edge("start", "c1"),
+                // Em qualquer ramo de c1, segue para c2 (V e F apontam para c2).
+                Edge("c1", "c2", "true"),
+                Edge("c1", "c2", "false"),
+                Edge("c2", "ng", "true"),
+                Edge("c2", "ap", "false")
+            });
+        var flow = CompiledFlow.Compile(snap);
+
+        var comRestricao = await Executor.ExecuteAsync(flow, Request(snap, ("tem_restricao", FormulaValue.Boolean(true))));
+        Assert.Equal(DecisionOutcome.Denied, comRestricao.Outcome);
+
+        var semRestricao = await Executor.ExecuteAsync(flow, Request(snap, ("tem_restricao", FormulaValue.Boolean(false))));
+        Assert.Equal(DecisionOutcome.Approved, semRestricao.Outcome);
+    }
+
     // --- External source lookups traced ----------------------------------
+
+    [Fact]
+    public async Task Lazy_source_not_consulted_when_its_branch_is_not_executed()
+    {
+        // A fonte só é usada num Cálculo APÓS uma condição. Se a condição manda
+        // para Denied (ramo falso), o cálculo com a fonte nunca roda → a fonte
+        // NÃO deve ser consultada (não se paga por ela).
+        var catalog = new CountingCatalog(800m);
+        var executor = new FlowExecutor(new NoOpDataSourceResolver(), catalog);
+
+        var snap = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("cond", FlowNodeKind.Condition, "{\"expression\":\"idade >= 18\"}"),
+                Node("calc", FlowNodeKind.Computation,
+                    "{\"assignments\":[{\"targetField\":\"s\",\"expression\":\"[SERASA;Score;Pontuacao]\"}]}"),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\"}"),
+                Node("ng", FlowNodeKind.Decision, "{\"outcome\":\"Denied\"}")
+            },
+            edges: new[]
+            {
+                Edge("start", "cond"),
+                Edge("cond", "calc", "true"),
+                Edge("calc", "ap"),
+                Edge("cond", "ng", "false")
+            });
+        var flow = CompiledFlow.Compile(snap);
+
+        // idade 16 → ramo falso → Denied; o cálculo com a fonte não executa.
+        var negado = await executor.ExecuteAsync(flow, Request(snap, ("idade", FormulaValue.Number(16))));
+        Assert.Equal(DecisionOutcome.Denied, negado.Outcome);
+        Assert.Equal(0, catalog.Calls); // FONTE NÃO consultada
+
+        // idade 25 → ramo verdadeiro → o cálculo roda e consulta a fonte 1 vez.
+        var aprovado = await executor.ExecuteAsync(flow, Request(snap, ("idade", FormulaValue.Number(25))));
+        Assert.Equal(DecisionOutcome.Approved, aprovado.Outcome);
+        Assert.Equal(1, catalog.Calls);
+    }
+
+    /// <summary>Catálogo que conta quantas vezes uma fonte foi consultada.</summary>
+    private sealed class CountingCatalog : MotorDecisao.Application.Sources.ISourceCatalog
+    {
+        private readonly decimal _value;
+        public int Calls { get; private set; }
+        public CountingCatalog(decimal value) => _value = value;
+        public IReadOnlyList<MotorDecisao.Application.Sources.SourceDescriptor> List() =>
+            System.Array.Empty<MotorDecisao.Application.Sources.SourceDescriptor>();
+        public Task<FormulaValue> ResolveAsync(
+            MotorDecisao.Application.Sources.ExternalRef reference,
+            MotorDecisao.Application.Formulas.IFormulaContext context,
+            System.Threading.CancellationToken cancellationToken = default)
+        {
+            Calls++;
+            return Task.FromResult(FormulaValue.Number(_value));
+        }
+    }
+
+    // --- Referência cross-política ((Política;Categoria;Var)) ------------
+
+    [Fact]
+    public async Task Policy_reference_executes_target_and_uses_its_score()
+    {
+        // Política B: pontua 70 e aprova.
+        var snapB = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\",\"actions\":[{\"type\":\"SetPoints\",\"expression\":\"70\"}]}")
+            },
+            edges: new[] { Edge("start", "ap") },
+            flowName: "POLITICA_B");
+        var flowB = CompiledFlow.Compile(snapB);
+
+        // Política A: usa os pontos de B — (POLITICA_B;Pontos) >= 50 → aprova.
+        var snapA = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("cond", FlowNodeKind.Condition, "{\"expression\":\"(POLITICA_B;Pontos) >= 50\"}"),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\"}"),
+                Node("ng", FlowNodeKind.Decision, "{\"outcome\":\"Denied\"}")
+            },
+            edges: new[]
+            {
+                Edge("start", "cond"),
+                Edge("cond", "ap", "true"),
+                Edge("cond", "ng", "false")
+            },
+            flowName: "POLITICA_A");
+        var flowA = CompiledFlow.Compile(snapA);
+
+        var executor = new FlowExecutor(new NoOpDataSourceResolver(), new EmptySourceCatalog())
+        {
+            PolicyProvider = new StubPolicyProvider(new() { ["POLITICA_B"] = flowB }),
+        };
+
+        var result = await executor.ExecuteAsync(flowA, Request(snapA));
+        Assert.Equal(DecisionOutcome.Approved, result.Outcome);
+    }
+
+    [Fact]
+    public async Task Policy_reference_reads_target_resposta()
+    {
+        // B define resposta = "NOK".
+        var snapB = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\",\"actions\":[{\"type\":\"SetResposta\",\"expression\":\"\\\"NOK\\\"\"}]}")
+            },
+            edges: new[] { Edge("start", "ap") },
+            flowName: "BUREAU");
+        var flowB = CompiledFlow.Compile(snapB);
+
+        // A nega se a resposta de B for "NOK".
+        var snapA = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("cond", FlowNodeKind.Condition, "{\"expression\":\"(BUREAU;Resposta) = \\\"NOK\\\"\"}"),
+                Node("ng", FlowNodeKind.Decision, "{\"outcome\":\"Denied\"}"),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\"}")
+            },
+            edges: new[]
+            {
+                Edge("start", "cond"),
+                Edge("cond", "ng", "true"),
+                Edge("cond", "ap", "false")
+            },
+            flowName: "PRINCIPAL");
+        var flowA = CompiledFlow.Compile(snapA);
+
+        var executor = new FlowExecutor(new NoOpDataSourceResolver(), new EmptySourceCatalog())
+        {
+            PolicyProvider = new StubPolicyProvider(new() { ["BUREAU"] = flowB }),
+        };
+
+        var result = await executor.ExecuteAsync(flowA, Request(snapA));
+        Assert.Equal(DecisionOutcome.Denied, result.Outcome);
+    }
+
+    /// <summary>Provider de política por nome, em memória, para os testes.</summary>
+    private sealed class StubPolicyProvider : ICompiledFlowProvider, IPolicyByNameProvider
+    {
+        private readonly Dictionary<string, CompiledFlow> _byName;
+        public StubPolicyProvider(Dictionary<string, CompiledFlow> byName) => _byName = byName;
+        public Task<CompiledFlow?> GetByNameAsync(string policyName, CancellationToken ct = default)
+            => Task.FromResult(_byName.TryGetValue(policyName, out var f) ? f : null);
+        public Task<CompiledFlow?> GetAsync(Guid flowId, CancellationToken ct = default)
+            => Task.FromResult<CompiledFlow?>(_byName.Values.FirstOrDefault(f => f.Snapshot.FlowId == flowId));
+        public void Invalidate(Guid flowId) { }
+        public void InvalidateAll() { }
+    }
 
     [Fact]
     public async Task External_source_lookup_appears_in_trace()

@@ -108,6 +108,26 @@ public sealed class VariableRefNode : FormulaNode
     public override T Accept<T>(IFormulaNodeVisitor<T> visitor) => visitor.VisitVariableRef(this);
 }
 
+/// <summary>
+/// Referência a OUTRA política, escrita como <c>(Política;Categoria;Variável)</c>.
+/// Categoria ∈ {Pontos, Limite, Resposta, Variaveis}. Quando avaliada, a política
+/// alvo é executada (sob demanda) e o valor pedido é extraído do resultado. O
+/// campo <see cref="Variable"/> só é usado quando a categoria é "Variaveis".
+/// </summary>
+public sealed class PolicyRefNode : FormulaNode
+{
+    public string Policy { get; }
+    public string Category { get; }
+    public string Variable { get; }
+    public PolicyRefNode(string policy, string category, string variable)
+    {
+        Policy = policy;
+        Category = category;
+        Variable = variable;
+    }
+    public override T Accept<T>(IFormulaNodeVisitor<T> visitor) => visitor.VisitPolicyRef(this);
+}
+
 /// <summary>Visitor over the AST.</summary>
 public interface IFormulaNodeVisitor<out T>
 {
@@ -118,4 +138,5 @@ public interface IFormulaNodeVisitor<out T>
     T VisitFunction(FunctionNode node);
     T VisitExternalRef(ExternalRefNode node);
     T VisitVariableRef(VariableRefNode node);
+    T VisitPolicyRef(PolicyRefNode node);
 }

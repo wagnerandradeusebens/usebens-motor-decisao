@@ -6,6 +6,55 @@ fórmulas no estilo Excel, scorecards e trilha de auditoria por decisão.
 
 Este repositório contém o **backend em C# (.NET Core / .NET 10)** e o front-end.
 
+## Início rápido
+
+Comandos mínimos para subir a aplicação em desenvolvimento. Detalhes e variações
+estão nas seções mais abaixo.
+
+Pré-requisitos: **.NET SDK 10**, **Node ≥ 22.22.3** e acesso ao **AWS SSO**.
+
+> Os `export PATH` abaixo são condicionais: só ajustam o PATH se o `dotnet`/`node`
+> estiverem instalados em `~/.dotnet` / `~/.node/bin` (caso de uma das máquinas de
+> dev). Se você instalou via Homebrew (`dotnet`/`node` já no PATH), essas linhas
+> não têm efeito e podem ser ignoradas.
+
+**1) Backend (.NET) contra o RDS compartilhado** — o token SSO expira; se o
+startup falhar por credencial, rode `aws sso login` e suba de novo. A API sobe em
+`http://localhost:5080` (valide com `/flows`, `/sources`, `/global-variables`).
+
+```bash
+[ -d "$HOME/.dotnet" ] && export PATH="$HOME/.dotnet:$PATH"
+unset DATABASE__HOST DATABASE__PORT DATABASE__NAME DATABASE__USER DATABASE__PASSWORD DATABASE__CONNECTIONSTRING
+export USE_SECRETS_MANAGER=true AWS_DEFAULT_REGION=us-east-1 \
+  POSTGRES_SECRET_NAME=databases/postgres-motor-decisao \
+  ASPNETCORE_URLS=http://localhost:5080 DOTNET_ENVIRONMENT=Production
+dotnet run --project src/MotorDecisao.Api/MotorDecisao.Api.csproj --no-launch-profile
+```
+
+**2) Front-end Angular (destino da migração)** — em outro terminal. Sobe em
+`http://localhost:4200` com proxy `/api` para `:5080`. Na primeira vez (ou após
+mudar dependências), rode `npm install` antes do `ng serve`.
+
+```bash
+[ -d "$HOME/.node/bin" ] && export PATH="$HOME/.node/bin:$PATH"
+export CI=true NG_CLI_ANALYTICS=false
+cd frontend-angular
+npm install
+npx ng serve --port 4200
+```
+
+**2b) Front-end React (alternativo, ainda mantido)** — em outro terminal. Sobe em
+`http://localhost:5173` com proxy `/api` para `:5080`. Rode `npm install` na
+primeira vez.
+
+```bash
+[ -d "$HOME/.node/bin" ] && export PATH="$HOME/.node/bin:$PATH"
+export VITE_API_TARGET=http://localhost:5080
+cd frontend
+npm install
+npm run dev -- --host
+```
+
 ## Stack
 
 | Camada | Tecnologia | Situação |

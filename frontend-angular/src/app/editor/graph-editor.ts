@@ -13,6 +13,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
   EFConnectableSide,
+  EFMarkerType,
   FCanvasComponent,
   FCreateConnectionEvent,
   FCreateNodeEvent,
@@ -32,12 +33,16 @@ import type {
   GraphInputField,
   InputFieldType,
   RuleEffect,
+  SourceDescriptorDto,
 } from '../api/models';
 import { apiErrorMessage } from '../shared/format';
 import { defaultConfig, OUTCOME_LABEL, RULE_PALETTE } from './node-config';
+import { FUNCTIONS } from './function-catalog';
 import { NodeConfigDialog, NodeConfigData, NodeConfigResult } from './node-config-dialog';
 import { BranchDialog, BranchData, BranchTarget } from './branch-dialog';
 import { DecisionRunnerDialog, DecisionRunnerData } from './decision-runner-dialog';
+import { VariableDialog, VariableDialogData, VariableResult } from './variable-dialog';
+import { FieldDialog, FieldDialogData, FieldResult } from './field-dialog';
 
 interface EditorNode {
   id: string;
@@ -98,11 +103,27 @@ export class GraphEditor {
   protected readonly error = signal<string | null>(null);
   protected readonly palette = RULE_PALETTE;
   protected readonly side = EFConnectableSide;
+  protected readonly markerType = EFMarkerType;
+  protected readonly functions = FUNCTIONS;
+
+  /** Referência dos operadores da linguagem de fórmulas (read-only). */
+  protected readonly operators: { symbol: string; description: string }[] = [
+    { symbol: '+  -  *  /', description: 'Aritméticos' },
+    { symbol: '^', description: 'Potência' },
+    { symbol: '&', description: 'Concatenação de texto' },
+    { symbol: '=  <>', description: 'Igual / diferente' },
+    { symbol: '<  <=  >  >=', description: 'Comparações' },
+    { symbol: ';', description: 'Separador de argumentos' },
+  ];
 
   // Partes do grafo que o editor visual não desenha, mas precisa preservar/editar.
   protected readonly rulesets = signal<GraphRuleset[]>([]);
   protected readonly inputFields = signal<GraphInputField[]>([]);
   protected readonly formulas = signal<GraphFormula[]>([]);
+  protected readonly sources = signal<SourceDescriptorDto[]>([]);
+  protected readonly policyName = signal<string>('Política atual');
+  /** Nomes de todas as políticas (para o autocomplete de referência com '('). */
+  protected readonly policies = signal<string[]>([]);
 
   // Opções para os selects dos editores laterais.
   protected readonly effects: RuleEffect[] = ['Score', 'Decision', 'Annotation'];
@@ -122,8 +143,18 @@ export class GraphEditor {
     this.load();
   }
 
+  /** Chamado quando o flow termina de renderizar (fFullRendered). */
   protected onLoaded(): void {
-    this.canvas()?.fitToScreen({ x: 60, y: 60 } as IPoint, false);
+    this.centerGraph();
+  }
+
+  /**
+   * Ajusta o zoom para caber todo o grafo e o centraliza na viewport. Precisa
+   * rodar depois que os nós estão renderizados/medidos — daí o defer por frame,
+   * usado tanto no fFullRendered quanto após carregar o grafo da API.
+   */
+  private centerGraph(): void {
+    setTimeout(() => this.canvas()?.fitToScreen({ x: 80, y: 80 } as IPoint, false), 0);
   }
 
   private load(): void {
@@ -131,6 +162,7 @@ export class GraphEditor {
       next: (flow) => {
         const v = flow.versions.find((x) => x.id === this.versionId);
         this.status.set(v?.status ?? 'Draft');
+        this.policyName.set(flow.name);
       },
     });
 
@@ -138,6 +170,27 @@ export class GraphEditor {
       next: (graph) => this.applyGraph(graph),
       error: (e) => this.error.set(apiErrorMessage(e, 'Falha ao carregar a versão.')),
     });
+
+    // Catálogo de fontes externas para o autocomplete ([Fonte;Produto;Dado]).
+    this.api.listSources().subscribe({
+      next: (list) => this.sources.set(list),
+      error: () => this.sources.set([]),
+    });
+
+    // Todas as políticas, para o autocomplete de referência cruzada com '('.
+    this.api.listFlows().subscribe({
+      next: (list) => this.policies.set(list.map((f) => f.name).filter((n) => !!n)),
+      error: () => this.policies.set([]),
+    });
+  }
+
+  /** Nomes das variáveis locais (para o autocomplete de {variavel}). */
+  private variableNames(): string[] {
+    return this.formulas().map((f) => f.key).filter((k) => !!k);
+  }
+  /** Nomes técnicos dos campos (para o autocomplete de 'campo'). */
+  private fieldNames(): string[] {
+    return this.inputFields().map((f) => f.name).filter((n) => !!n);
   }
 
   private applyGraph(graph: VersionGraph): void {
@@ -170,6 +223,10 @@ export class GraphEditor {
         label: e.label ?? e.sourceHandle,
       })),
     );
+
+    // Os dados chegam depois do fFullRendered inicial; recentraliza agora que os
+    // nós reais estão no canvas, para o grafo abrir enquadrado e centralizado.
+    this.centerGraph();
   }
 
   // --- Conectores por tipo de nó ---------------------------------------
@@ -181,6 +238,152 @@ export class GraphEditor {
   }
   protected isCondition(kind: FlowNodeKind): boolean {
     return kind === 'Condition';
+  }
+
+  /**
+   * Metadados visuais por tipo de nó: rótulo em pt-BR e ícone (Material Symbols).
+   * A forma é dada pela classe do kind no CSS. Baseado nos blocos do Crivo.
+   */
+  private static readonly NODE_META: Record<FlowNodeKind, { label: string; icon: string }> = {
+    Start: { label: 'Início', icon: 'play_circle' },
+    Condition: { label: 'Condição', icon: 'help' },
+    Ruleset: { label: 'Conjunto de regras', icon: 'rule' },
+    Computation: { label: 'Cálculo', icon: 'calculate' },
+    DataSource: { label: 'Fonte de dados', icon: 'cloud' },
+    Decision: { label: 'Decisão', icon: 'flag' },
+    Action: { label: 'Ação', icon: 'bolt' },
+    Matrix: { label: 'Regra matriz', icon: 'grid_on' },
+    Comment: { label: 'Comentário', icon: 'sticky_note_2' },
+  };
+
+  protected nodeLabel(kind: FlowNodeKind): string {
+    return GraphEditor.NODE_META[kind]?.label ?? kind;
+  }
+  protected nodeIcon(kind: FlowNodeKind): string {
+    return GraphEditor.NODE_META[kind]?.icon ?? 'crop_square';
+  }
+
+  /**
+   * Resumo legível do que o nó faz, extraído da sua config JSON, para exibir no
+   * próprio bloco (como no Crivo) sem o usuário precisar abrir o nó.
+   */
+  protected nodeSummary(node: EditorNode): string {
+    let cfg: Record<string, unknown> = {};
+    try {
+      cfg = JSON.parse(node.config || '{}');
+    } catch {
+      return '';
+    }
+    switch (node.kind) {
+      case 'Condition': {
+        const expr = (cfg['expression'] as string) ?? '';
+        return expr.trim() || 'sem condição';
+      }
+      case 'Decision': {
+        const outcome = cfg['outcome'] as DecisionOutcome | undefined;
+        return outcome ? `→ ${OUTCOME_LABEL[outcome] ?? outcome}` : 'sem desfecho';
+      }
+      case 'DataSource': {
+        const src = (cfg['source'] as string) ?? '';
+        return src.trim() || 'sem fonte';
+      }
+      case 'Computation': {
+        const assignments = (cfg['assignments'] as unknown[]) ?? [];
+        if (assignments.length === 0) return 'sem cálculo';
+        return `${assignments.length} atribuição(ões)`;
+      }
+      case 'Action': {
+        const actions = (cfg['actions'] as unknown[]) ?? [];
+        return actions.length === 0 ? 'sem ações' : `${actions.length} ação(ões)`;
+      }
+      case 'Matrix': {
+        const rows = (cfg['rowBands'] as unknown[])?.length ?? 0;
+        const cols = (cfg['colBands'] as unknown[])?.length ?? 0;
+        return rows && cols ? `${rows} × ${cols} faixas` : 'matriz vazia';
+      }
+      case 'Ruleset': {
+        return node.rulesetKey
+          ? this.rulesets().find((r) => r.rulesetKey === node.rulesetKey)?.name ?? 'conjunto'
+          : 'sem conjunto';
+      }
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Auto-organiza os nós numa árvore de cima para baixo (Start no topo), por
+   * níveis. Usa BFS a partir do Start para atribuir a linha de cada nó e
+   * distribui os irmãos horizontalmente centralizados. Nós sem caminho a partir
+   * do Start (soltos) vão para uma linha extra ao final. Não salva sozinho — o
+   * usuário revê e clica em "Salvar".
+   */
+  protected autoLayout(): void {
+    if (this.readOnly) return;
+
+    const nodes = this.nodes();
+    if (nodes.length === 0) return;
+
+    const V_GAP = 170; // distância vertical entre níveis
+    const H_GAP = 220; // distância horizontal entre irmãos
+
+    // Adjacência a partir das arestas (na ordem: true antes de false).
+    const children = new Map<string, string[]>();
+    for (const n of nodes) children.set(n.id, []);
+    const ordered = [...this.edges()].sort((a, b) => {
+      const rank = (h: string | null) => (h === 'true' ? 0 : h === 'false' ? 1 : 0);
+      return rank(a.sourceHandle) - rank(b.sourceHandle);
+    });
+    for (const e of ordered) {
+      if (children.has(e.source) && children.has(e.target)) {
+        children.get(e.source)!.push(e.target);
+      }
+    }
+
+    // Raiz: o Start; se não houver, o primeiro nó.
+    const start = nodes.find((n) => n.kind === 'Start') ?? nodes[0];
+
+    // BFS para atribuir níveis (evita ciclos com o visited).
+    const level = new Map<string, number>();
+    const queue: string[] = [start.id];
+    level.set(start.id, 0);
+    while (queue.length) {
+      const id = queue.shift()!;
+      const lvl = level.get(id)!;
+      for (const child of children.get(id) ?? []) {
+        if (!level.has(child)) {
+          level.set(child, lvl + 1);
+          queue.push(child);
+        }
+      }
+    }
+
+    // Nós não alcançados a partir do Start vão para um nível extra ao final.
+    let maxLevel = 0;
+    for (const l of level.values()) maxLevel = Math.max(maxLevel, l);
+    for (const n of nodes) {
+      if (!level.has(n.id)) level.set(n.id, maxLevel + 1);
+    }
+
+    // Agrupa por nível e posiciona: cada linha centralizada em torno de x=0.
+    const byLevel = new Map<number, string[]>();
+    for (const [id, lvl] of level) {
+      if (!byLevel.has(lvl)) byLevel.set(lvl, []);
+      byLevel.get(lvl)!.push(id);
+    }
+
+    const pos = new Map<string, { x: number; y: number }>();
+    for (const [lvl, ids] of [...byLevel.entries()].sort((a, b) => a[0] - b[0])) {
+      const count = ids.length;
+      const totalWidth = (count - 1) * H_GAP;
+      ids.forEach((id, i) => {
+        pos.set(id, { x: Math.round(i * H_GAP - totalWidth / 2), y: lvl * V_GAP });
+      });
+    }
+
+    this.nodes.update((ns) => ns.map((n) => ({ ...n, ...(pos.get(n.id) ?? { x: n.x, y: n.y }) })));
+    this.centerGraph();
+    this.snack.open('Grafo reorganizado. Clique em Salvar para manter.', 'ok', { duration: 3500 });
   }
 
   // --- Interações -------------------------------------------------------
@@ -333,20 +536,56 @@ export class GraphEditor {
   }
 
   // --- Editor lateral: Minhas Variáveis (locais) -----------------------
+
+  /** Abre o modal para criar uma nova variável. */
   protected addFormula(): void {
-    this.formulas.update((fs) => [...fs, { key: '', label: '', expression: '' }]);
+    this.openVariableDialog('create');
   }
-  protected patchFormula(i: number, patch: Partial<GraphFormula>): void {
-    this.formulas.update((fs) =>
-      fs.map((f, j) => {
-        if (j !== i) return f;
-        const next = { ...f, ...patch };
-        // O rótulo acompanha a chave por padrão (como no editor React).
-        if (patch.key !== undefined) next.label = patch.key;
-        return next;
-      }),
-    );
+
+  /** Abre o modal para editar a variável do índice informado. */
+  protected editFormula(i: number): void {
+    this.openVariableDialog('edit', i);
   }
+
+  /**
+   * Modal de variável: nome (linha) + conteúdo/fórmula (textarea maior). Ao
+   * confirmar, cria ou atualiza a variável na lista. O rótulo acompanha a chave.
+   */
+  private openVariableDialog(mode: 'create' | 'edit', i?: number): void {
+    const current = i !== undefined ? this.formulas()[i] : undefined;
+    const data: VariableDialogData = {
+      mode,
+      key: current?.key ?? '',
+      expression: current?.expression ?? '',
+      readOnly: this.readOnly,
+      fields: this.fieldNames(),
+      // No autocomplete de {variavel}, não sugere a própria variável em edição.
+      variables: this.variableNames().filter((v) => v !== current?.key),
+      sources: this.sources(),
+      policies: this.policies(),
+    };
+    const ref = this.dialog.open<VariableDialog, VariableDialogData, VariableResult>(VariableDialog, {
+      data,
+      // A largura/altura são controladas pelo container .resizable (arrastável e
+      // redimensionável); o painel só não deve limitar o tamanho.
+      maxWidth: '92vw',
+      panelClass: 'resizable-dialog',
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      if (result.deleted) {
+        if (i !== undefined) this.formulas.update((fs) => fs.filter((_, j) => j !== i));
+        return;
+      }
+      const entry: GraphFormula = { key: result.key, label: result.key, expression: result.expression };
+      if (mode === 'create') {
+        this.formulas.update((fs) => [...fs, entry]);
+      } else if (i !== undefined) {
+        this.formulas.update((fs) => fs.map((f, j) => (j === i ? entry : f)));
+      }
+    });
+  }
+
   protected removeFormula(i: number): void {
     this.formulas.update((fs) => fs.filter((_, j) => j !== i));
   }
@@ -360,6 +599,9 @@ export class GraphEditor {
   }
   protected patchRuleset(i: number, patch: Partial<GraphRuleset>): void {
     this.rulesets.update((rs) => rs.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  }
+  protected removeRuleset(i: number): void {
+    this.rulesets.update((rs) => rs.filter((_, j) => j !== i));
   }
   protected addRule(i: number): void {
     this.rulesets.update((rs) =>
@@ -393,15 +635,48 @@ export class GraphEditor {
   }
 
   // --- Editor lateral: Campos de entrada -------------------------------
+
+  /** Abre o modal para criar um novo campo. */
   protected addField(): void {
-    this.inputFields.update((fs) => [
-      ...fs,
-      { name: '', label: '', type: 'Number', required: false, order: fs.length + 1 },
-    ]);
+    this.openFieldDialog('create');
   }
-  protected patchField(i: number, patch: Partial<GraphInputField>): void {
-    this.inputFields.update((fs) => fs.map((f, j) => (j === i ? { ...f, ...patch } : f)));
+
+  /** Abre o modal para editar o campo do índice informado. */
+  protected editField(i: number): void {
+    this.openFieldDialog('edit', i);
   }
+
+  /** Modal de campo (nome técnico, rótulo, tipo, obrigatório). */
+  private openFieldDialog(mode: 'create' | 'edit', i?: number): void {
+    const current = i !== undefined ? this.inputFields()[i] : undefined;
+    const data: FieldDialogData = {
+      mode,
+      name: current?.name ?? '',
+      label: current?.label ?? '',
+      type: current?.type ?? 'Number',
+      required: current?.required ?? false,
+      readOnly: this.readOnly,
+    };
+    const ref = this.dialog.open<FieldDialog, FieldDialogData, FieldResult>(FieldDialog, {
+      data,
+      width: '720px',
+      maxWidth: '92vw',
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      if (result.deleted) {
+        if (i !== undefined) this.inputFields.update((fs) => fs.filter((_, j) => j !== i));
+        return;
+      }
+      const { name, label, type, required } = result;
+      if (mode === 'create') {
+        this.inputFields.update((fs) => [...fs, { name, label, type, required, order: fs.length + 1 }]);
+      } else if (i !== undefined) {
+        this.inputFields.update((fs) => fs.map((f, j) => (j === i ? { ...f, name, label, type, required } : f)));
+      }
+    });
+  }
+
   protected removeField(i: number): void {
     this.inputFields.update((fs) => fs.filter((_, j) => j !== i));
   }

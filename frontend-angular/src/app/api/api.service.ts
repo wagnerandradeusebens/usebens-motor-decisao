@@ -8,6 +8,7 @@ import type {
   FlowSummary,
   FlowVersionSummary,
   GlobalVariable,
+  SourceConfigDto,
   SourceDescriptorDto,
   VersionGraph,
 } from './models';
@@ -81,9 +82,17 @@ export class ApiService {
     return this.http.get<ExecutionDetail>(`${this.base}/executions/${executionId}`);
   }
 
-  // --- Sources (catálogo read-only) ---
+  // --- Sources (catálogo read-only + parâmetros operacionais) ---
   listSources(): Observable<SourceDescriptorDto[]> {
     return this.http.get<SourceDescriptorDto[]>(`${this.base}/sources`);
+  }
+
+  getSourceConfig(name: string): Observable<SourceConfigDto> {
+    return this.http.get<SourceConfigDto>(`${this.base}/sources/${encodeURIComponent(name)}/config`);
+  }
+
+  updateSourceConfig(name: string, config: SourceConfigDto): Observable<SourceConfigDto> {
+    return this.http.put<SourceConfigDto>(`${this.base}/sources/${encodeURIComponent(name)}/config`, config);
   }
 
   // --- Variáveis globais (compartilhadas entre políticas) ---

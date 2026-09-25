@@ -22,28 +22,32 @@ public sealed class SerasaFakeSource : IExternalSource
             new SourceProduct(
                 Name: "Score",
                 Description: "Score de crédito.",
-                Data: new[] { new SourceDatum("Pontuacao", "Pontuação de 1 a 1000.") })
+                Data: new[] { new SourceDatum("Pontuacao", "Pontuação de 1 a 1000.") },
+                KeyField: "cpf")
         });
 
     /// <summary>Fake availability: up ~90% of the time (random per call).</summary>
     public bool IsAvailable(IFormulaContext context) => Random.Shared.NextDouble() < 0.9;
 
-    public Task<FormulaValue> ResolveAsync(
+    public Task<IReadOnlyDictionary<string, FormulaValue>> ResolveProductAsync(
         string product,
-        string datum,
         IFormulaContext context,
         CancellationToken cancellationToken = default)
     {
-        if (!string.Equals(product, "Score", StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(datum, "Pontuacao", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(product, "Score", StringComparison.OrdinalIgnoreCase))
         {
-            return Task.FromResult(FormulaValue.Error(FormulaErrorKind.Name));
+            return Task.FromResult<IReadOnlyDictionary<string, FormulaValue>>(
+                new Dictionary<string, FormulaValue>());
         }
 
         // Reads cpf from the proposal context (demonstrates context access).
         _ = context.TryGetField("cpf", out _);
 
         var score = Random.Shared.Next(1, 1001); // 1..1000 inclusive
-        return Task.FromResult(FormulaValue.Number(score));
+        var data = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Pontuacao"] = FormulaValue.Number(score),
+        };
+        return Task.FromResult<IReadOnlyDictionary<string, FormulaValue>>(data);
     }
 }

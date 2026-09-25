@@ -5,9 +5,18 @@
 .section {
   margin: 1.25rem 0 0.75rem;
   font-size: 1rem;
+  font-weight: 600;
   color: var(--marca-azul);
 }
 
+// Cada versão é um cartão com respiro interno (como o `.card` do React).
 .version {
-  margin-bottom: 0.6rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.version__num {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cor-texto);
 }

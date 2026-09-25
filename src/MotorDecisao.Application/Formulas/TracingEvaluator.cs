@@ -52,6 +52,9 @@ public sealed class TracingEvaluator : IFormulaNodeVisitor<FormulaValue>
     public FormulaValue VisitExternalRef(ExternalRefNode node)
         => Record(node, _context.ResolveExternal(node.Source, node.Product, node.Datum));
 
+    public FormulaValue VisitPolicyRef(PolicyRefNode node)
+        => Record(node, _context.ResolvePolicy(node.Policy, node.Category, node.Variable));
+
     public FormulaValue VisitUnary(UnaryNode node)
     {
         _depth++;

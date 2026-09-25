@@ -66,4 +66,14 @@ public sealed record DecisionResult(
     /// <summary>Named output parameters set during the run (limite, taxa, etc.).</summary>
     public IReadOnlyDictionary<string, string> Outputs { get; init; } =
         new Dictionary<string, string>();
+
+    /// <summary>A "resposta" (string) definida pela política durante a execução.</summary>
+    public string Resposta { get; init; } = string.Empty;
+
+    /// <summary>
+    /// As variáveis avaliadas durante a execução (nome → valor). Usadas para
+    /// resolver <c>(Política;Variaveis;nome)</c> a partir de outra política.
+    /// </summary>
+    public IReadOnlyDictionary<string, Formulas.FormulaValue> Variables { get; init; } =
+        new Dictionary<string, Formulas.FormulaValue>();
 }

@@ -30,6 +30,8 @@ public class MotorDecisaoDbContext : DbContext
     public DbSet<InputField> InputFields => Set<InputField>();
     public DbSet<DecisionExecution> DecisionExecutions => Set<DecisionExecution>();
     public DbSet<ExecutionTrace> ExecutionTraces => Set<ExecutionTrace>();
+    public DbSet<SourceCacheEntry> SourceCacheEntries => Set<SourceCacheEntry>();
+    public DbSet<SourceConfig> SourceConfigs => Set<SourceConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

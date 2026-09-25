@@ -112,8 +112,17 @@ export interface SourceDatumDto {
 export interface SourceProductDto {
   name: string;
   description: string | null;
+  /** Campo obrigatório da proposta usado como chave da consulta/cache (ex.: cpf, cnpj, placa). */
+  keyField: string;
   data: SourceDatumDto[];
 }
+/** Parâmetros operacionais de uma fonte (tela de Fontes). */
+export interface SourceConfigDto {
+  maxAttempts: number;
+  timeoutSeconds: number;
+  cacheTtlHours: number;
+}
+
 export interface SourceDescriptorDto {
   name: string;
   description: string | null;

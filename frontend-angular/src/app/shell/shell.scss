@@ -3,9 +3,10 @@
 }
 
 .shell__sidenav {
-  width: 258px;
+  // Espelha a sidebar do React: azul chapado (sem gradiente), 240px.
+  width: var(--sidebar-width);
   border-right: none;
-  background: linear-gradient(180deg, var(--marca-azul) 0%, #142a4a 100%);
+  background: var(--marca-azul);
   color: #fff;
   display: flex;
   flex-direction: column;
@@ -14,50 +15,55 @@
 .shell__brand {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 1.25rem 1.1rem;
-  font-weight: 600;
-  font-size: 1.06rem;
-}
-
-.shell__mark {
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--marca-teal);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(49, 182, 165, 0.4);
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.shell__brand-text {
-  line-height: 1.1;
+// Logo horizontal "usebens nexo" (branco), servido de public/brand.
+// Ocupa a largura útil da sidebar mantendo a proporção.
+.shell__logo {
+  display: block;
+  width: 100%;
+  max-width: 180px;
+  height: auto;
 }
 
 .shell__nav {
-  padding: 0.5rem 0.6rem;
+  padding: 0.75rem 0.5rem;
 }
 
-// Itens da navegação sobre o fundo azul.
+// Itens da navegação sobre o fundo azul (espelham `.sidebar__link` do React).
+// O texto do mat-list-item vem de variáveis do Material; forçamos branco no
+// escopo da sidenav para não herdar a cor escura do tema.
 .shell__sidenav ::ng-deep .mat-mdc-list-item {
-  color: rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
+  --mat-list-list-item-label-text-color: rgba(255, 255, 255, 0.85);
+  --mat-list-list-item-leading-icon-color: rgba(255, 255, 255, 0.85);
+  --mat-list-list-item-hover-label-text-color: #fff;
+  --mat-list-list-item-hover-leading-icon-color: #fff;
+  --mat-list-list-item-focus-label-text-color: #fff;
+  color: rgba(255, 255, 255, 0.85);
+  border-radius: var(--radius-sm);
   margin-bottom: 2px;
+  transition: var(--transition);
 }
-.shell__sidenav ::ng-deep .mat-mdc-list-item .mat-icon {
-  color: rgba(255, 255, 255, 0.8);
+.shell__sidenav ::ng-deep .mat-mdc-list-item .mat-icon,
+.shell__sidenav ::ng-deep .mat-mdc-list-item .mdc-list-item__primary-text {
+  color: rgba(255, 255, 255, 0.85);
 }
 .shell__sidenav ::ng-deep .mat-mdc-list-item:hover {
   background: rgba(255, 255, 255, 0.08);
 }
-.shell__sidenav ::ng-deep .shell__link--active {
-  background: rgba(255, 255, 255, 0.14);
+.shell__sidenav ::ng-deep .mat-mdc-list-item:hover .mat-icon,
+.shell__sidenav ::ng-deep .mat-mdc-list-item:hover .mdc-list-item__primary-text {
+  color: #fff;
 }
-.shell__sidenav ::ng-deep .shell__link--active,
-.shell__sidenav ::ng-deep .shell__link--active .mat-icon {
+// Ativo em teal translúcido, como no React (rgba(49, 182, 165, 0.22)).
+.shell__sidenav ::ng-deep .shell__link--active {
+  background: rgba(49, 182, 165, 0.22);
+}
+.shell__sidenav ::ng-deep .shell__link--active .mat-icon,
+.shell__sidenav ::ng-deep .shell__link--active .mdc-list-item__primary-text {
   color: #fff;
   font-weight: 600;
 }
@@ -71,15 +77,19 @@
 }
 
 .shell__toolbar {
-  background: var(--cor-superficie);
-  color: var(--marca-azul);
+  // Topbar como no React: branca, 60px, título 1rem/600 em azul.
+  height: var(--topbar-height);
+  min-height: var(--topbar-height);
+  background: var(--cor-branco);
+  color: var(--cor-primaria);
   border-bottom: 1px solid var(--cor-borda);
+  font-size: 1rem;
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  box-shadow: none;
 }
 
 .shell__page {
-  height: calc(100vh - 64px);
+  height: calc(100vh - var(--topbar-height));
   overflow: auto;
   background: var(--cor-fundo);
 }

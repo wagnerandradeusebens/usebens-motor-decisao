@@ -77,16 +77,26 @@ public static class DependencyInjection
         // External data sources (integrations self-register). Fake SERASA + BACEN.
         services.AddSingleton<IExternalSource, SerasaFakeSource>();
         services.AddSingleton<IExternalSource, BacenFakeSource>();
+        // Cache persistente de fontes (por fonte;produto;dado;CPF), compartilhado
+        // entre políticas/execuções. Singleton que abre escopo por operação.
+        services.AddSingleton<ISourceCache, SourceCache>();
+        services.AddSingleton<ISourceConfigProvider, SourceConfigProvider>();
         services.AddSingleton<ISourceCatalog, SourceCatalog>();
 
         services.AddSingleton(sp => new FlowExecutor(
             sp.GetRequiredService<IDataSourceResolver>(),
-            sp.GetRequiredService<ISourceCatalog>()));
+            sp.GetRequiredService<ISourceCatalog>())
+        {
+            // Habilita a referência (Política;...): o provider resolve a política
+            // alvo por nome e o executor a executa sob demanda (reentrância).
+            PolicyProvider = sp.GetRequiredService<ICompiledFlowProvider>(),
+        });
         services.AddScoped<IDecisionService, DecisionService>();
 
         // Flow authoring / publishing use cases (scoped: uses the DbContext).
         services.AddScoped<IFlowManagementService, FlowManagementService>();
         services.AddScoped<IGlobalVariableService, GlobalVariableService>();
+        services.AddScoped<ISourceConfigService, SourceConfigService>();
 
         return services;
     }

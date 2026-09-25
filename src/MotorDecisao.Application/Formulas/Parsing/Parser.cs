@@ -141,6 +141,14 @@ public sealed class Parser
                 return new LiteralNode(FormulaValue.Boolean(token.Boolean));
 
             case TokenType.LeftParen:
+                // Desambigua referência de política de agrupamento: uma referência
+                // tem a forma "( <parte> ; ..." — parte (ident/texto) seguida de ';'.
+                // Agrupamento nunca usa ';', e chamada de função entra pelo case
+                // Identifier (o '(' de função nunca cai aqui).
+                if (IsPolicyRefAhead())
+                {
+                    return ParsePolicyRef();
+                }
                 Advance();
                 var inner = ParseExpression();
                 Expect(TokenType.RightParen, "Esperado ')'.");
@@ -200,6 +208,63 @@ public sealed class Parser
         return new ExternalRefNode(parts[0], parts[1], parts[2]);
     }
 
+    /// <summary>
+    /// Verdadeiro quando o que vem após '(' é uma referência de política — isto é,
+    /// uma parte (identificador ou texto) imediatamente seguida de ';'. Distingue
+    /// de agrupamento (nunca usa ';') sem consumir tokens.
+    /// </summary>
+    private bool IsPolicyRefAhead()
+    {
+        var first = PeekAt(1);
+        var second = PeekAt(2);
+        var firstIsPart = first.Type == TokenType.Identifier || first.Type == TokenType.String;
+        return firstIsPart && second.Type == TokenType.Separator;
+    }
+
+    /// <summary>
+    /// Parses a policy reference <c>(Política;Categoria;Variável)</c> — 2 ou 3
+    /// partes. Categoria ∈ {Pontos, Limite, Resposta, Variaveis}. A 3ª parte
+    /// (variável) só é exigida quando a categoria é "Variaveis".
+    /// </summary>
+    private FormulaNode ParsePolicyRef()
+    {
+        var open = Current;
+        Expect(TokenType.LeftParen, "Esperado '('.");
+
+        var parts = new List<string> { ReadRefPart() };
+        while (Current.Type == TokenType.Separator)
+        {
+            Advance();
+            parts.Add(ReadRefPart());
+        }
+
+        Expect(TokenType.RightParen, "Esperado ')' fechando a referência de política.");
+
+        if (parts.Count is < 2 or > 3)
+        {
+            throw new FormulaException(
+                "Referência de política: use (Política;Pontos|Limite|Resposta) ou (Política;Variaveis;nome).", open.Position);
+        }
+
+        var category = parts[1];
+        var normalized = category.Trim().ToLowerInvariant();
+        var known = normalized is "pontos" or "limite" or "resposta" or "variaveis" or "variáveis";
+        if (!known)
+        {
+            throw new FormulaException(
+                $"Categoria de política inválida: '{category}'. Use Pontos, Limite, Resposta ou Variaveis.", open.Position);
+        }
+
+        if ((normalized is "variaveis" or "variáveis") && parts.Count != 3)
+        {
+            throw new FormulaException(
+                "Para Variaveis, informe o nome: (Política;Variaveis;nome).", open.Position);
+        }
+
+        var variable = parts.Count == 3 ? parts[2] : string.Empty;
+        return new PolicyRefNode(parts[0], category, variable);
+    }
+
     /// <summary>Reads one part of an external reference (an identifier or text).</summary>
     private string ReadRefPart()
     {
@@ -240,6 +305,13 @@ public sealed class Parser
     // --- Helpers ----------------------------------------------------------
 
     private Token Current => _tokens[_index];
+
+    /// <summary>Espia o token em <paramref name="offset"/> posições à frente.</summary>
+    private Token PeekAt(int offset)
+    {
+        var i = _index + offset;
+        return i < _tokens.Count ? _tokens[i] : _tokens[^1];
+    }
 
     private void Advance()
     {

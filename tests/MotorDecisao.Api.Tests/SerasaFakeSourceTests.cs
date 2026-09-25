@@ -10,7 +10,7 @@ public class SerasaFakeSourceTests
     [Fact]
     public async Task Resolves_score_between_1_and_1000()
     {
-        var source = new SerasaFakeSource();
+        IExternalSource source = new SerasaFakeSource();
         var ctx = new DictionaryFormulaContext().Set("cpf", FormulaValue.Text("11493903799"));
 
         // Sample several times since the value is random.
@@ -26,7 +26,7 @@ public class SerasaFakeSourceTests
     [Fact]
     public async Task Unknown_product_or_datum_is_name_error()
     {
-        var source = new SerasaFakeSource();
+        IExternalSource source = new SerasaFakeSource();
         var ctx = new DictionaryFormulaContext();
         var value = await source.ResolveAsync("Outro", "X", ctx);
         Assert.True(value.IsError);
@@ -46,7 +46,7 @@ public class SerasaFakeSourceTests
     [Fact]
     public void Catalog_lists_registered_sources()
     {
-        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource() });
+        var catalog = new SourceCatalog(new IExternalSource[] { new SerasaFakeSource() }, new NullSourceCache(), new NullSourceConfigProvider());
         var list = catalog.List();
         Assert.Contains(list, s => s.Name == "SERASA");
     }

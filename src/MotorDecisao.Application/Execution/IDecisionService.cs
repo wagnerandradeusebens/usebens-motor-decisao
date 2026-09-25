@@ -32,3 +32,13 @@ public interface ICompiledFlowProvider
     /// </summary>
     void InvalidateAll();
 }
+
+/// <summary>
+/// Resolve uma política publicada pelo NOME (para a referência
+/// <c>(Política;...)</c>). Retorna null quando não há política publicada com esse
+/// nome. Separado de <see cref="ICompiledFlowProvider"/> (indexado por id).
+/// </summary>
+public interface IPolicyByNameProvider
+{
+    Task<CompiledFlow?> GetByNameAsync(string policyName, CancellationToken cancellationToken = default);
+}

@@ -1,4 +1,5 @@
-import { Component, Inject, signal } from '@angular/core';
+import { Component, Inject, signal, WritableSignal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -24,6 +25,13 @@ export interface NodeConfigData {
   readOnly: boolean;
 }
 
+/** Uma ação no editor (tipo + expressão; nome só para SetOutput). */
+export interface ActionRow {
+  type: string;
+  name?: string | null;
+  expression: string;
+}
+
 export interface NodeConfigResult {
   label: string;
   config: string;
@@ -45,6 +53,7 @@ const FORMULA_HINT =
 @Component({
   selector: 'app-node-config-dialog',
   imports: [
+    NgTemplateOutlet,
     FormsModule,
     MatButtonModule,
     MatDialogModule,
@@ -68,7 +77,11 @@ export class NodeConfigDialog {
   protected message = ''; // Decision
   protected source = ''; // DataSource
   protected text = ''; // Comment
-  protected actions = signal<{ type: string; name?: string | null; expression: string }[]>([]); // Action
+  protected actions = signal<ActionRow[]>([]); // Action (nó legado)
+  // Ações anexadas a qualquer nó: um conjunto para nós simples; V/F para condição.
+  protected nodeActions = signal<ActionRow[]>([]); // Decision/Computation/DataSource
+  protected trueActions = signal<ActionRow[]>([]); // Condition (ramo verdadeiro)
+  protected falseActions = signal<ActionRow[]>([]); // Condition (ramo falso)
   protected matrix = signal<MatrixConfig>({
     mode: 'Points', rowExpression: '', colExpression: '', rowBands: [], colBands: [], cells: [], defaultValue: '0',
   }); // Matrix
@@ -82,6 +95,7 @@ export class NodeConfigDialog {
     { value: 'AddJustification', label: 'Adiciona à justificativa' },
     { value: 'SetJustification', label: 'Define justificativa' },
     { value: 'SetOutput', label: 'Define parâmetro de saída' },
+    { value: 'SetResposta', label: 'Define resposta' },
   ];
 
   constructor(
@@ -102,19 +116,32 @@ export class NodeConfigDialog {
   private parse(): void {
     const cfg = safeParse(this.data.config);
     switch (this.data.kind) {
-      case 'Condition':
-        this.expression = (cfg as { expression?: string }).expression ?? '';
+      case 'Condition': {
+        const c = cfg as { expression?: string; trueActions?: ActionRow[]; falseActions?: ActionRow[] };
+        this.expression = c.expression ?? '';
+        this.trueActions.set(c.trueActions ?? []);
+        this.falseActions.set(c.falseActions ?? []);
         break;
-      case 'Computation':
-        this.assignments.set((cfg as ComputationConfig).assignments ?? []);
+      }
+      case 'Computation': {
+        const c = cfg as ComputationConfig & { actions?: ActionRow[] };
+        this.assignments.set(c.assignments ?? []);
+        this.nodeActions.set(c.actions ?? []);
         break;
-      case 'Decision':
-        this.outcome = (cfg as DecisionConfig).outcome ?? 'Approved';
-        this.message = (cfg as DecisionConfig).message ?? '';
+      }
+      case 'Decision': {
+        const c = cfg as DecisionConfig & { actions?: ActionRow[] };
+        this.outcome = c.outcome ?? 'Approved';
+        this.message = c.message ?? '';
+        this.nodeActions.set(c.actions ?? []);
         break;
-      case 'DataSource':
-        this.source = (cfg as { source?: string }).source ?? '';
+      }
+      case 'DataSource': {
+        const c = cfg as { source?: string; actions?: ActionRow[] };
+        this.source = c.source ?? '';
+        this.nodeActions.set(c.actions ?? []);
         break;
+      }
       case 'Comment':
         this.text = (cfg as { text?: string }).text ?? '';
         break;
@@ -150,15 +177,15 @@ export class NodeConfigDialog {
     this.assignments.update((a) => a.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   }
 
-  // --- Action helpers ---
-  protected addAction(): void {
-    this.actions.update((a) => [...a, { type: 'AddPoints', expression: '' }]);
+  // --- Action helpers (genéricos: operam sobre o signal de ações informado) ---
+  protected addAction(target: WritableSignal<ActionRow[]>): void {
+    target.update((a) => [...a, { type: 'AddPoints', expression: '' }]);
   }
-  protected removeAction(i: number): void {
-    this.actions.update((a) => a.filter((_, j) => j !== i));
+  protected removeAction(target: WritableSignal<ActionRow[]>, i: number): void {
+    target.update((a) => a.filter((_, j) => j !== i));
   }
-  protected setAction(i: number, patch: Partial<{ type: string; name?: string | null; expression: string }>): void {
-    this.actions.update((a) => a.map((x, j) => (j === i ? { ...x, ...patch } : x)));
+  protected setAction(target: WritableSignal<ActionRow[]>, i: number, patch: Partial<ActionRow>): void {
+    target.update((a) => a.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   }
 
   // --- Matrix helpers ---
@@ -204,43 +231,45 @@ export class NodeConfigDialog {
   }
 
   protected save(): void {
-    let config: string;
+    this.ref.close({ label: this.label, config: this.buildConfig() });
+  }
+
+  /** Monta o JSON de config do nó, incluindo as ações anexadas quando houver. */
+  private buildConfig(): string {
+    // Só inclui listas de ações não-vazias, para não poluir o JSON.
+    const opt = (a: ActionRow[]) => (a.length > 0 ? a : undefined);
     switch (this.data.kind) {
       case 'Condition':
-        config = JSON.stringify({ expression: this.expression });
-        break;
+        return JSON.stringify({
+          expression: this.expression,
+          trueActions: opt(this.trueActions()),
+          falseActions: opt(this.falseActions()),
+        });
       case 'Computation':
-        config = JSON.stringify({ assignments: this.assignments() });
-        break;
+        return JSON.stringify({ assignments: this.assignments(), actions: opt(this.nodeActions()) });
       case 'Decision':
-        config = JSON.stringify({ outcome: this.outcome, message: this.message });
-        break;
+        return JSON.stringify({ outcome: this.outcome, message: this.message, actions: opt(this.nodeActions()) });
       case 'DataSource':
-        config = JSON.stringify({ source: this.source });
-        break;
+        return JSON.stringify({ source: this.source, actions: opt(this.nodeActions()) });
       case 'Comment':
-        config = JSON.stringify({ text: this.text });
         this.label = this.text; // o rótulo do comentário é o próprio texto
-        break;
+        return JSON.stringify({ text: this.text });
       case 'Action':
-        config = JSON.stringify({ actions: this.actions() });
-        break;
+        return JSON.stringify({ actions: this.actions() });
       case 'Matrix':
-        config = JSON.stringify(this.matrix());
-        break;
+        return JSON.stringify(this.matrix());
       default:
-        config = normalizeJson(this.rawJson);
+        return normalizeJson(this.rawJson);
     }
-    this.ref.close({ label: this.label, config });
   }
 
   protected delete(): void {
     this.ref.close({ label: this.label, config: this.data.config, deleted: true });
   }
 
-  /** Fecha salvando a config atual e pede ao editor para configurar a saída V/F. */
+  /** Fecha salvando a config atual (com as ações) e pede para configurar a saída V/F. */
   protected configureBranch(branch: 'true' | 'false'): void {
-    this.ref.close({ label: this.label, config: JSON.stringify({ expression: this.expression }), configureBranch: branch });
+    this.ref.close({ label: this.label, config: this.buildConfig(), configureBranch: branch });
   }
 }
 

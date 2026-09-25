@@ -32,8 +32,8 @@
       <mat-card class="version" appearance="outlined">
         <div class="row spread">
           <div class="row" style="gap: 10px">
-            <strong>v{{ v.versionNumber }}</strong>
-            <mat-chip-set><mat-chip>{{ v.status }}</mat-chip></mat-chip-set>
+            <span class="version__num">v{{ v.versionNumber }}</span>
+            <span class="badge" [class]="v.status">{{ v.status }}</span>
             @if (v.publishedAt) {
               <span class="muted">publicada {{ fmt(v.publishedAt) }}</span>
             }
