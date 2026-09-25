@@ -45,9 +45,23 @@ public sealed class FlowExecutor
         CompiledFlow flow,
         DecisionRequest request,
         CancellationToken cancellationToken = default,
-        IReadOnlyCollection<Guid>? policyStack = null)
+        IReadOnlyCollection<Guid>? policyStack = null,
+        IPolicyByNameProvider? policyResolver = null)
     {
+        // Resolvedor de subpolítica por nome desta decisão: quando a execução vem
+        // de um bundle congelado, o DecisionService passa um resolvedor restrito
+        // ao bundle (as subs vêm do retrato congelado, não da versão mais recente).
+        // Sem ele, cai no provider singleton (fallback: políticas sem bundle).
+        var policyByName = policyResolver ?? (PolicyProvider as IPolicyByNameProvider);
+
         var context = new DictionaryFormulaContext(request.Input);
+
+        // Tabelas de parâmetros ficam inteiras no snapshot (congeladas), sem I/O;
+        // semeamos todas no contexto para PROCV/PROCV.FAIXA consultarem direto.
+        foreach (var table in flow.Snapshot.Tables)
+        {
+            context.SetTable(table);
+        }
 
         var trace = new List<TraceStep>();
         var sequence = 0;
@@ -122,7 +136,7 @@ public sealed class FlowExecutor
         // e extrai o valor pedido (Pontos/Limite/Resposta/Variável).
         async Task<FormulaValue> ResolvePolicyRefAsync(Sources.PolicyRef pref)
         {
-            if (PolicyProvider is null)
+            if (policyByName is null)
             {
                 return FormulaValue.Error(FormulaErrorKind.NotAvailable);
             }
@@ -146,8 +160,26 @@ public sealed class FlowExecutor
             if (!policyResults.TryGetValue(targetFlow.Snapshot.FlowId, out var sub))
             {
                 var subRequest = new DecisionRequest(targetFlow.Snapshot.FlowId, request.ProposalReference, request.Input);
-                sub = await ExecuteAsync(targetFlow, subRequest, cancellationToken, stack);
+                // Propaga o mesmo resolvedor do bundle nas subpolíticas (cascata).
+                sub = await ExecuteAsync(targetFlow, subRequest, cancellationToken, stack, policyResolver);
                 policyResults[targetFlow.Snapshot.FlowId] = sub;
+
+                // Incorpora a trilha da subpolítica na trilha desta execução, para
+                // a auditoria mostrar TUDO que rodou em todas as políticas. Só na
+                // 1ª execução da sub (o cache evita duplicar). Cada passo da sub é
+                // reindexado na sequência atual e marcado com o nome da política a
+                // que pertence (PolicyName) — sem prefixar o rótulo do nó. Passos
+                // já marcados (netos, de subpolíticas mais profundas) preservam o
+                // nome original.
+                var policyName = targetFlow.Snapshot.FlowName;
+                foreach (var step in sub.Trace)
+                {
+                    trace.Add(step with
+                    {
+                        Sequence = sequence++,
+                        PolicyName = step.PolicyName ?? policyName,
+                    });
+                }
             }
 
             var cat = pref.Category.Trim().ToLowerInvariant();
@@ -167,11 +199,11 @@ public sealed class FlowExecutor
         // provider (que expõe por id); aqui usamos o nome do snapshot.
         async Task<CompiledFlow?> ResolveTargetByNameAsync(string name)
         {
-            if (PolicyProvider is not IPolicyByNameProvider byName)
+            if (policyByName is null)
             {
                 return null;
             }
-            return await byName.GetByNameAsync(name, cancellationToken);
+            return await policyByName.GetByNameAsync(name, cancellationToken);
         }
 
         decimal score = 0m;
@@ -192,18 +224,35 @@ public sealed class FlowExecutor
         }
         SyncCounters();
 
+        // Antes de devolver, marca com o nome DESTA política os passos que ainda
+        // não têm PolicyName (os passos próprios; os de subpolíticas já vêm
+        // marcados do merge acima). Assim a trilha agrupa por política sem
+        // depender de prefixos no rótulo do nó.
+        List<TraceStep> StampPolicy()
+        {
+            var name = flow.Snapshot.FlowName;
+            for (var i = 0; i < trace.Count; i++)
+            {
+                if (trace[i].PolicyName is null)
+                {
+                    trace[i] = trace[i] with { PolicyName = name };
+                }
+            }
+            return trace;
+        }
+
         // Helpers de resultado como funções locais: capturam os acumuladores
         // (incluindo resposta e as variáveis avaliadas) para expô-los no resultado.
         DecisionResult Completed(DecisionOutcome outcome)
-            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, outcome, score, ExecutionStatus.Completed, null, trace)
+            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, outcome, score, ExecutionStatus.Completed, null, StampPolicy())
             { Limit = limit, Justifications = justifications, Outputs = outputs, Resposta = resposta, Variables = evaluatedVariables };
 
         DecisionResult ManualReview()
-            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.ManualReview, score, ExecutionStatus.Completed, null, trace)
+            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.ManualReview, score, ExecutionStatus.Completed, null, StampPolicy())
             { Limit = limit, Justifications = justifications, Outputs = outputs, Resposta = resposta, Variables = evaluatedVariables };
 
         DecisionResult Failed(string error)
-            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.Pending, score, ExecutionStatus.Failed, error, trace)
+            => new(flow.Snapshot.FlowId, flow.Snapshot.FlowVersionId, DecisionOutcome.Pending, score, ExecutionStatus.Failed, error, StampPolicy())
             { Limit = limit, Justifications = justifications, Outputs = outputs, Resposta = resposta, Variables = evaluatedVariables };
 
         // Aplica uma lista de ações (pontos/limite/justificativa/resposta/saída) de

@@ -38,6 +38,13 @@ public class ExecutionTrace : Entity
     public string Category { get; set; } = "Fluxo";
 
     /// <summary>
+    /// Nome da política a que o passo pertence (a principal ou uma subpolítica
+    /// referenciada), para agrupar a trilha por política. <c>null</c> em traces
+    /// antigos, anteriores a este campo.
+    /// </summary>
+    public string? PolicyName { get; set; }
+
+    /// <summary>
     /// Serialized deep resolution tree of the step's formula (a JSON array of
     /// {depth, expression, value} entries), when applicable.
     /// </summary>

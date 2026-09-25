@@ -91,11 +91,14 @@ public static class DependencyInjection
             // alvo por nome e o executor a executa sob demanda (reentrância).
             PolicyProvider = sp.GetRequiredService<ICompiledFlowProvider>(),
         });
+        services.AddScoped<IBundleProvider, BundleProvider>();
         services.AddScoped<IDecisionService, DecisionService>();
+        services.AddScoped<ITestDecisionService, TestDecisionService>();
 
         // Flow authoring / publishing use cases (scoped: uses the DbContext).
         services.AddScoped<IFlowManagementService, FlowManagementService>();
         services.AddScoped<IGlobalVariableService, GlobalVariableService>();
+        services.AddScoped<IGlobalParameterTableService, GlobalParameterTableService>();
         services.AddScoped<ISourceConfigService, SourceConfigService>();
 
         return services;

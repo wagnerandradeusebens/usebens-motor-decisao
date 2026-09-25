@@ -21,7 +21,32 @@ public sealed record PublishedFlowSnapshot(
     IReadOnlyList<PublishedNode> Nodes,
     IReadOnlyList<PublishedEdge> Edges,
     IReadOnlyList<PublishedRuleset> Rulesets,
-    IReadOnlyList<PublishedFormula> Formulas);
+    IReadOnlyList<PublishedFormula> Formulas)
+{
+    /// <summary>
+    /// Tabelas de parâmetros disponíveis ao fluxo (locais da versão + globais
+    /// mescladas; local vence). Congeladas junto na publicação. Opcional para
+    /// compatibilidade com snapshots antigos (default vazio).
+    /// </summary>
+    public IReadOnlyList<PublishedTable> Tables { get; init; } = Array.Empty<PublishedTable>();
+}
+
+/// <summary>
+/// Uma tabela de parâmetros congelada: colunas, linhas e os metadados de consulta
+/// (coluna-chave para <c>PROCV</c>, colunas min/max para <c>PROCV.FAIXA</c>) e o
+/// valor padrão. Colunas e linhas já vêm desserializadas do jsonb.
+/// </summary>
+public sealed record PublishedTable(
+    string Name,
+    IReadOnlyList<PublishedTableColumn> Columns,
+    IReadOnlyList<IReadOnlyList<string>> Rows,
+    string? KeyColumn,
+    string? MinColumn,
+    string? MaxColumn,
+    string? DefaultValue);
+
+/// <summary>Uma coluna de uma tabela de parâmetros: nome + tipo.</summary>
+public sealed record PublishedTableColumn(string Name, string Type);
 
 /// <summary>A node on the published graph.</summary>
 public sealed record PublishedNode(

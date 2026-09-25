@@ -37,6 +37,13 @@ public sealed record TraceStep(
     /// <summary>Block this step belongs to (for grouping the log).</summary>
     public TraceCategory Category { get; init; } = TraceCategory.Fluxo;
 
+    /// <summary>
+    /// Nome da política a que este passo pertence — a principal ou uma
+    /// subpolítica referenciada. Permite agrupar a trilha por política sem
+    /// depender de prefixos no rótulo do nó. <c>null</c> para passos legados.
+    /// </summary>
+    public string? PolicyName { get; init; }
+
     /// <summary>Deep resolution tree of the step's formula, when applicable.</summary>
     public IReadOnlyList<EvalStep> Detail { get; init; } = Array.Empty<EvalStep>();
 }

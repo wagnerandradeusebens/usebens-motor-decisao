@@ -1,0 +1,46 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">Tabelas Globais</h1>
+      <p class="page-header__subtitle">
+        Tabelas de parâmetros compartilhadas entre políticas, consultadas nas fórmulas com
+        <code>PROCV</code> / <code>PROCV.FAIXA</code>. Uma tabela local de mesmo nome tem prioridade.
+      </p>
+    </div>
+    <button matButton="filled" (click)="openNew()">
+      <mat-icon>add</mat-icon>
+      Nova tabela global
+    </button>
+  </header>
+
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else if (items().length === 0) {
+    <div class="empty-state">
+      <mat-icon>table_chart</mat-icon>
+      <div>Nenhuma tabela global criada.</div>
+      <button matButton="filled" (click)="openNew()"><mat-icon>add</mat-icon> Criar a primeira</button>
+    </div>
+  } @else {
+    @for (t of items(); track t.id) {
+      <mat-card class="gt" appearance="outlined">
+        <div class="row spread">
+          <div>
+            <strong class="mono">{{ t.name }}</strong>
+            <span class="gt__label muted">{{ t.label }}</span>
+          </div>
+          <div class="row" style="gap: 6px">
+            <button matButton (click)="openEdit(t)"><mat-icon>edit</mat-icon> Editar</button>
+          </div>
+        </div>
+        <div class="gt__meta muted">
+          {{ t.columns.length }} coluna(s) · {{ t.rows.length }} linha(s) · colunas: {{ columnsSummary(t) }}
+        </div>
+      </mat-card>
+    }
+  }
+</div>

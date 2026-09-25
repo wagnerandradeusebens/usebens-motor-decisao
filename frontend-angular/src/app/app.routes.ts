@@ -32,6 +32,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/global-variables/global-variables-page').then((m) => m.GlobalVariablesPage),
       },
+      {
+        path: 'tabelas-globais',
+        loadComponent: () =>
+          import('./pages/parameter-tables/parameter-tables-page').then((m) => m.ParameterTablesPage),
+      },
     ],
   },
   { path: '**', redirectTo: 'politicas' },

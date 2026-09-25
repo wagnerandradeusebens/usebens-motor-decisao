@@ -15,6 +15,7 @@ namespace MotorDecisao.Infrastructure.Execution;
 public sealed class DecisionService : IDecisionService
 {
     private readonly ICompiledFlowProvider _flows;
+    private readonly IBundleProvider _bundles;
     private readonly FlowExecutor _executor;
     private readonly MotorDecisaoDbContext _db;
 
@@ -25,24 +26,42 @@ public sealed class DecisionService : IDecisionService
 
     public DecisionService(
         ICompiledFlowProvider flows,
+        IBundleProvider bundles,
         FlowExecutor executor,
         MotorDecisaoDbContext db)
     {
         _flows = flows;
+        _bundles = bundles;
         _executor = executor;
         _db = db;
     }
 
     public async Task<DecisionResult> DecideAsync(DecisionRequest request, CancellationToken cancellationToken = default)
     {
-        var flow = await _flows.GetAsync(request.FlowId, cancellationToken);
+        // Preferência: bundle congelado ativo da principal (execução usa o retrato
+        // imutável da publicação — principal + subs). Fallback: caminho antigo
+        // (política publicada antes do congelamento, ou sem bundle).
+        var bundle = await _bundles.GetActiveBundleAsync(request.FlowId, cancellationToken);
+
+        CompiledFlow? flow;
+        IPolicyByNameProvider? policyResolver = null;
+        if (bundle is not null && bundle.Snapshots.TryGetValue(request.FlowId, out var rootSnapshot))
+        {
+            flow = CompiledFlow.Compile(rootSnapshot);
+            policyResolver = new BundleScopedPolicyProvider(bundle);
+        }
+        else
+        {
+            flow = await _flows.GetAsync(request.FlowId, cancellationToken);
+        }
+
         if (flow is null)
         {
             throw new InvalidOperationException(
                 $"Fluxo {request.FlowId} não possui versão publicada.");
         }
 
-        var result = await _executor.ExecuteAsync(flow, request, cancellationToken);
+        var result = await _executor.ExecuteAsync(flow, request, cancellationToken, policyStack: null, policyResolver);
 
         var execution = new DecisionExecution
         {
@@ -70,6 +89,7 @@ public sealed class DecisionService : IDecisionService
                 Result = step.Result is null ? null : JsonSerializer.Serialize(step.Result, JsonOptions),
                 Message = step.Message,
                 Category = step.Category.ToString(),
+                PolicyName = step.PolicyName,
                 Detail = step.Detail.Count == 0 ? null : JsonSerializer.Serialize(step.Detail, JsonOptions)
             });
         }

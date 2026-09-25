@@ -25,6 +25,7 @@ public enum TokenType
     RightBracket,    // ']'
     Field,           // 'campo'  -> single-quoted request field reference
     Variable,        // {variavel} -> brace-delimited variable reference
+    PolicyRef,       // $[Política;Categoria;Variável] -> cross-policy reference (conteúdo cru)
     Separator,       // ';' argument separator (pt-BR) / part separator inside [ ]
     EndOfInput
 }

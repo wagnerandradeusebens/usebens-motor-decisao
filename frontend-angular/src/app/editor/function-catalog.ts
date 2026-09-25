@@ -39,4 +39,6 @@ export const FUNCTIONS: FunctionDoc[] = [
   { name: 'DATADIF', signature: 'DATADIF(início; fim; "Y"|"M"|"D")', description: 'Diferença entre datas (anos/meses/dias).' },
   { name: 'EHNUM', signature: 'EHNUM(valor)', description: 'Verdadeiro se for número.' },
   { name: 'EHBRANCO', signature: 'EHBRANCO(valor)', description: 'Verdadeiro se estiver em branco.' },
+  { name: 'PROCV', signature: 'PROCV("tabela"; "coluna"; chave)', description: 'Busca exata em tabela de parâmetros: casa a coluna-chave com o valor e retorna a coluna indicada.' },
+  { name: 'PROCV.FAIXA', signature: 'PROCV.FAIXA("tabela"; "coluna"; valor)', description: 'Busca por faixa em tabela de parâmetros: encontra a linha onde mín ≤ valor < máx e retorna a coluna indicada.' },
 ];

@@ -37,5 +37,6 @@ export class Shell {
     { label: 'Políticas', icon: 'account_tree', link: '/politicas', exact: false },
     { label: 'Fontes', icon: 'cloud', link: '/fontes', exact: false },
     { label: 'Variáveis Globais', icon: 'functions', link: '/variaveis-globais', exact: false },
+    { label: 'Tabelas Globais', icon: 'table_chart', link: '/tabelas-globais', exact: false },
   ];
 }

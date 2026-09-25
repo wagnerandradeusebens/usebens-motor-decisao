@@ -91,8 +91,13 @@
         }
 
         <div class="field">
-          <div class="field__label">Log passo a passo (por bloco)</div>
-          @for (g of groups(); track g.category) {
+          <div class="field__label">Log passo a passo (por política e bloco)</div>
+          @for (p of policyGroups(); track p.policyName) {
+            <div class="policy-group">
+              <div class="policy-group__title">
+                <mat-icon>account_tree</mat-icon>{{ p.label }}
+              </div>
+              @for (g of p.categories; track g.category) {
             <div class="block">
               <div class="block__title">
                 {{ g.label }} <span class="muted">· {{ g.steps.length }}</span>
@@ -132,6 +137,8 @@
                     }
                   </div>
                 }
+              }
+            </div>
               }
             </div>
           }

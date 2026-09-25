@@ -78,6 +78,15 @@ public sealed class Lexer
             return ReadVariable();
         }
 
+        // Cross-policy references: $[Política;Categoria;Variável]. Lido inteiro
+        // aqui (conteúdo cru até ']'), então o nome da política pode ter QUALQUER
+        // caractere — parênteses, espaços, hífen — sem aspas e sem ambiguidade
+        // com '(' de agrupamento.
+        if (c == '$' && _pos + 1 < _src.Length && _src[_pos + 1] == '[')
+        {
+            return ReadPolicyRef();
+        }
+
         // Identifiers / keywords.
         if (char.IsLetter(c) || c == '_')
         {
@@ -227,6 +236,37 @@ public sealed class Lexer
         }
 
         throw new FormulaException("Variável sem chave de fechamento '}'.", start);
+    }
+
+    /// <summary>
+    /// Reads a cross-policy reference <c>$[Política;Categoria;Variável]</c>. The
+    /// content between <c>$[</c> and <c>]</c> is captured raw (unquoted), so a
+    /// policy name may contain any character. The parser later splits it by ';'.
+    /// </summary>
+    private Token ReadPolicyRef()
+    {
+        var start = _pos;
+        _pos += 2; // '$' and '['
+        var sb = new StringBuilder();
+
+        while (_pos < _src.Length)
+        {
+            var c = _src[_pos];
+            if (c == ']')
+            {
+                _pos++; // closing bracket
+                var content = sb.ToString();
+                if (content.Trim().Length == 0)
+                {
+                    throw new FormulaException("Referência de política vazia: $[].", start);
+                }
+                return new Token(TokenType.PolicyRef, content, start, Text: content);
+            }
+            sb.Append(c);
+            _pos++;
+        }
+
+        throw new FormulaException("Referência de política sem ']' de fechamento.", start);
     }
 
     private Token ReadIdentifierOrKeyword()

@@ -11,7 +11,39 @@ public sealed record VersionGraph(
     IReadOnlyList<GraphEdge> Edges,
     IReadOnlyList<GraphRuleset> Rulesets,
     IReadOnlyList<GraphFormula> Formulas,
-    IReadOnlyList<GraphInputField> InputFields);
+    IReadOnlyList<GraphInputField> InputFields)
+{
+    /// <summary>
+    /// Tabelas de parâmetros LOCAIS da versão (salvas/carregadas junto com o
+    /// grafo, como as fórmulas; congelam na publicação). Opcional para
+    /// compatibilidade com payloads antigos.
+    /// </summary>
+    public IReadOnlyList<GraphTable> Tables { get; init; } = Array.Empty<GraphTable>();
+
+    /// <summary>
+    /// Avisos de validação preenchidos na RESPOSTA do save (fórmulas inválidas,
+    /// PROCV em tabela sem coluna-chave, etc.). Não bloqueiam o salvamento — o
+    /// editor os exibe ao usuário. Vazio no GET.
+    /// </summary>
+    public IReadOnlyList<ValidationWarning> Warnings { get; init; } = Array.Empty<ValidationWarning>();
+}
+
+/// <summary>
+/// Uma tabela de parâmetros no grafo editável. Colunas e linhas viajam já
+/// estruturadas (o backend serializa para jsonb ao persistir).
+/// </summary>
+public sealed record GraphTable(
+    string Name,
+    string Label,
+    IReadOnlyList<GraphTableColumn> Columns,
+    IReadOnlyList<IReadOnlyList<string>> Rows,
+    string? KeyColumn,
+    string? MinColumn,
+    string? MaxColumn,
+    string? DefaultValue);
+
+/// <summary>Coluna de uma tabela de parâmetros: nome + tipo.</summary>
+public sealed record GraphTableColumn(string Name, string Type);
 
 /// <summary>A declared input field of the policy (drives the portal + autocomplete).</summary>
 public sealed record GraphInputField(

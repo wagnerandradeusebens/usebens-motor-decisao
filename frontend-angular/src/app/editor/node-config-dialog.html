@@ -9,11 +9,20 @@
 
   @switch (kind) {
     @case ('Condition') {
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Expressão (booleana)</mat-label>
-        <textarea matInput rows="3" [(ngModel)]="expression" [disabled]="readOnly"
-          placeholder="Ex.: 'idade' >= 18"></textarea>
-      </mat-form-field>
+      <label class="field-label">Expressão (booleana)</label>
+      <app-formula-input
+        [value]="expression"
+        (valueChange)="expression = $event"
+        [fields]="data.fields"
+        [variables]="data.variables"
+        [sources]="data.sources"
+        [policies]="data.policies"
+        [policyVariables]="data.policyVariables"
+        [tables]="data.tables"
+        [disabled]="readOnly"
+        [rows]="3"
+        placeholder="Ex.: 'idade' >= 18"
+      ></app-formula-input>
       <p class="hint muted">{{ hint }}</p>
       <p class="hint muted">Saídas: verde = verdadeiro, vermelho = falso.</p>
       @if (!readOnly) {
@@ -44,12 +53,20 @@
               (ngModelChange)="setAssignment($index, { targetField: $event })"
               placeholder="ex.: comprometimento" />
           </mat-form-field>
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Expressão</mat-label>
-            <textarea matInput rows="2" [ngModel]="a.expression" [disabled]="readOnly"
-              (ngModelChange)="setAssignment($index, { expression: $event })"
-              placeholder="ex.: 'divida' / 'renda'"></textarea>
-          </mat-form-field>
+          <label class="field-label">Expressão</label>
+          <app-formula-input
+            [value]="a.expression"
+            (valueChange)="setAssignment($index, { expression: $event })"
+            [fields]="data.fields"
+            [variables]="data.variables"
+            [sources]="data.sources"
+            [policies]="data.policies"
+            [policyVariables]="data.policyVariables"
+            [tables]="data.tables"
+            [disabled]="readOnly"
+            [rows]="2"
+            placeholder="ex.: 'divida' / 'renda'"
+          ></app-formula-input>
           @if (!readOnly) {
             <button matButton (click)="removeAssignment($index)">Remover</button>
           }
@@ -108,95 +125,194 @@
     }
 
     @case ('Matrix') {
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Modo</mat-label>
-        <mat-select [ngModel]="matrix().mode" [disabled]="readOnly" (ngModelChange)="setMatrixMode($event)">
-          <mat-option value="Points">Pontos</mat-option>
-          <mat-option value="Limit">Limite</mat-option>
-          <mat-option value="Decision">Decisão</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <div class="matrix-intro">
+        A <strong>regra matriz</strong> é uma tabela de dupla entrada: ela cruza
+        dois valores (uma <strong>linha</strong> e uma <strong>coluna</strong>) e
+        lê o resultado na célula do cruzamento. Monte em 4 passos:
+      </div>
 
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Expressão das linhas</mat-label>
-        <input matInput [ngModel]="matrix().rowExpression" [disabled]="readOnly"
-          (ngModelChange)="setMatrixExpr('rowExpression', $event)" placeholder="ex.: 'renda'" />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Expressão das colunas</mat-label>
-        <input matInput [ngModel]="matrix().colExpression" [disabled]="readOnly"
-          (ngModelChange)="setMatrixExpr('colExpression', $event)" placeholder="ex.: [SERASA;Score;Pontuacao]" />
-      </mat-form-field>
-
-      <!-- Faixas -->
-      @for (which of ['rowBands', 'colBands']; track which) {
-        <div class="section-label">{{ which === 'rowBands' ? 'Faixas das linhas' : 'Faixas das colunas' }}</div>
-        @for (b of (which === 'rowBands' ? matrix().rowBands : matrix().colBands); track $index) {
-          <div class="band-row">
-            <mat-form-field appearance="outline" class="band-label">
-              <mat-label>rótulo</mat-label>
-              <input matInput [ngModel]="b.label" [disabled]="readOnly"
-                (ngModelChange)="patchBand($any(which), $index, { label: $event })" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="band-num">
-              <mat-label>min</mat-label>
-              <input matInput type="number" [ngModel]="b.min" [disabled]="readOnly"
-                (ngModelChange)="patchBand($any(which), $index, { min: toNumberOrNull($event) })" />
-            </mat-form-field>
-            <mat-form-field appearance="outline" class="band-num">
-              <mat-label>max</mat-label>
-              <input matInput type="number" [ngModel]="b.max" [disabled]="readOnly"
-                (ngModelChange)="patchBand($any(which), $index, { max: toNumberOrNull($event) })" />
-            </mat-form-field>
-            @if (!readOnly) {
-              <button matIconButton (click)="removeBand($any(which), $index)"><mat-icon>close</mat-icon></button>
-            }
-          </div>
-        }
-        @if (!readOnly) {
-          <button matButton (click)="addBand($any(which))"><mat-icon>add</mat-icon> Faixa</button>
-        }
-      }
-
-      <!-- Grade de células -->
-      @if (matrix().rowBands.length > 0 && matrix().colBands.length > 0) {
-        <div class="section-label">Células ({{ matrix().mode === 'Decision' ? 'desfecho' : 'valor' }})</div>
-        <div class="matrix-grid">
-          <table>
-            <thead>
-              <tr>
-                <th></th>
-                @for (c of matrix().colBands; track $index) {
-                  <th>{{ c.label || 'col ' + ($index + 1) }}</th>
-                }
-              </tr>
-            </thead>
-            <tbody>
-              @for (r of matrix().rowBands; track $index; let ri = $index) {
-                <tr>
-                  <th class="rowhead">{{ r.label || 'lin ' + (ri + 1) }}</th>
-                  @for (c of matrix().colBands; track $index; let ci = $index) {
-                    <td>
-                      @if (matrix().mode === 'Decision') {
-                        <mat-select [ngModel]="cellAt(ri, ci)" [disabled]="readOnly"
-                          (ngModelChange)="setCell(ri, ci, $event)" class="cell-select">
-                          @for (o of outcomes; track o) {
-                            <mat-option [value]="o">{{ o }}</mat-option>
-                          }
-                        </mat-select>
-                      } @else {
-                        <input type="number" class="cell-input" [ngModel]="cellAt(ri, ci)" [disabled]="readOnly"
-                          (ngModelChange)="setCell(ri, ci, $event)" />
-                      }
-                    </td>
-                  }
-                </tr>
-              }
-            </tbody>
-          </table>
+      <!-- Passo 1: modo -->
+      <div class="matrix-step">
+        <div class="matrix-step__num">1</div>
+        <div class="matrix-step__body">
+          <div class="matrix-step__title">O que a célula faz</div>
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Modo</mat-label>
+            <mat-select [ngModel]="matrix().mode" [disabled]="readOnly" (ngModelChange)="setMatrixMode($event)">
+              <mat-option value="Points">Pontos — soma o valor da célula ao score</mat-option>
+              <mat-option value="Limit">Limite — soma o valor da célula ao limite</mat-option>
+              <mat-option value="Decision">Decisão — a célula é o desfecho e encerra a política</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
-        <p class="hint muted">Faixas: min ≤ valor &lt; max (vazio = aberto). Célula padrão quando nada casa.</p>
-      }
+      </div>
+
+      <!-- Passo 2: expressões -->
+      <div class="matrix-step">
+        <div class="matrix-step__num">2</div>
+        <div class="matrix-step__body">
+          <div class="matrix-step__title">Quais valores cruzar</div>
+          <p class="matrix-step__help">
+            Duas fórmulas que resultam em número. Uma escolhe a <strong>linha</strong>,
+            a outra a <strong>coluna</strong>.
+          </p>
+          <label class="field-label">Valor da linha (eixo vertical)</label>
+          <app-formula-input
+            [value]="matrix().rowExpression"
+            (valueChange)="setMatrixExpr('rowExpression', $event)"
+            [fields]="data.fields"
+            [variables]="data.variables"
+            [sources]="data.sources"
+            [policies]="data.policies"
+            [policyVariables]="data.policyVariables"
+            [tables]="data.tables"
+            [disabled]="readOnly"
+            [rows]="1"
+            placeholder="ex.: 'renda'"
+          ></app-formula-input>
+          <label class="field-label">Valor da coluna (eixo horizontal)</label>
+          <app-formula-input
+            [value]="matrix().colExpression"
+            (valueChange)="setMatrixExpr('colExpression', $event)"
+            [fields]="data.fields"
+            [variables]="data.variables"
+            [sources]="data.sources"
+            [policies]="data.policies"
+            [policyVariables]="data.policyVariables"
+            [tables]="data.tables"
+            [disabled]="readOnly"
+            [rows]="1"
+            placeholder="ex.: 'score'"
+          ></app-formula-input>
+        </div>
+      </div>
+
+      <!-- Passo 3: faixas -->
+      <div class="matrix-step">
+        <div class="matrix-step__num">3</div>
+        <div class="matrix-step__body">
+          <div class="matrix-step__title">Faixas de cada eixo</div>
+          <p class="matrix-step__help">
+            Divida cada valor em intervalos. Uma faixa casa quando
+            <code>mínimo ≤ valor &lt; máximo</code>. Deixe <strong>mín. vazio</strong>
+            para "sem limite inferior" e <strong>máx. vazio</strong> para "sem limite
+            superior". Use limites contíguos (ex.: 0–500, 500–700, 700+).
+          </p>
+
+          @for (which of ['rowBands', 'colBands']; track which) {
+            <div class="band-group-label">
+              {{ which === 'rowBands' ? 'Faixas da LINHA' : 'Faixas da COLUNA' }}
+            </div>
+            @for (b of (which === 'rowBands' ? matrix().rowBands : matrix().colBands); track $index) {
+              <div class="band-row">
+                <mat-form-field appearance="outline" class="band-label">
+                  <mat-label>rótulo</mat-label>
+                  <input matInput [ngModel]="b.label" [disabled]="readOnly"
+                    (ngModelChange)="patchBand($any(which), $index, { label: $event })"
+                    placeholder="ex.: Renda alta" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="band-num">
+                  <mat-label>mín.</mat-label>
+                  <input matInput type="number" [ngModel]="b.min" [disabled]="readOnly"
+                    (ngModelChange)="patchBand($any(which), $index, { min: toNumberOrNull($event) })" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="band-num">
+                  <mat-label>máx.</mat-label>
+                  <input matInput type="number" [ngModel]="b.max" [disabled]="readOnly"
+                    (ngModelChange)="patchBand($any(which), $index, { max: toNumberOrNull($event) })" />
+                </mat-form-field>
+                <span class="band-range" [title]="bandRangeHint(b)">{{ bandRangeHint(b) }}</span>
+                @if (!readOnly) {
+                  <button matIconButton (click)="removeBand($any(which), $index)" title="Remover faixa">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                }
+              </div>
+            }
+            @if (!readOnly) {
+              <button matButton (click)="addBand($any(which))"><mat-icon>add</mat-icon> Adicionar faixa</button>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Passo 4: células + padrão -->
+      <div class="matrix-step">
+        <div class="matrix-step__num">4</div>
+        <div class="matrix-step__body">
+          <div class="matrix-step__title">
+            Preencher a tabela ({{ matrix().mode === 'Decision' ? 'desfecho por célula' : 'valor por célula' }})
+          </div>
+          @if (matrix().rowBands.length > 0 && matrix().colBands.length > 0) {
+            <p class="matrix-step__help">
+              Cada célula é o resultado quando a linha e a coluna casam com aquelas faixas.
+            </p>
+            <div class="matrix-grid">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="corner">linha \ coluna</th>
+                    @for (c of matrix().colBands; track $index) {
+                      <th>{{ c.label || 'col ' + ($index + 1) }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of matrix().rowBands; track $index; let ri = $index) {
+                    <tr>
+                      <th class="rowhead">{{ r.label || 'lin ' + (ri + 1) }}</th>
+                      @for (c of matrix().colBands; track $index; let ci = $index) {
+                        <td>
+                          @if (matrix().mode === 'Decision') {
+                            <mat-select [ngModel]="cellAt(ri, ci)" [disabled]="readOnly"
+                              (ngModelChange)="setCell(ri, ci, $event)" class="cell-select">
+                              @for (o of outcomes; track o) {
+                                <mat-option [value]="o">{{ o }}</mat-option>
+                              }
+                            </mat-select>
+                          } @else {
+                            <input type="number" class="cell-input" [ngModel]="cellAt(ri, ci)" [disabled]="readOnly"
+                              (ngModelChange)="setCell(ri, ci, $event)" />
+                          }
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="matrix-step__help matrix-step__help--warn">
+              Adicione ao menos uma faixa de linha e uma de coluna (passo 3) para a tabela aparecer.
+            </p>
+          }
+
+          <label class="field-label">
+            Valor padrão {{ matrix().mode === 'Decision' ? '(desfecho)' : '(número)' }}
+          </label>
+          <p class="matrix-step__help">
+            Usado quando o valor cai fora de todas as faixas. Sem um valor padrão, um
+            cruzamento sem correspondência manda a proposta para revisão manual.
+          </p>
+          @if (matrix().mode === 'Decision') {
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Desfecho padrão</mat-label>
+              <mat-select [ngModel]="matrix().defaultValue" [disabled]="readOnly"
+                (ngModelChange)="setDefaultValue($event)">
+                @for (o of outcomes; track o) {
+                  <mat-option [value]="o">{{ o }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          } @else {
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Valor padrão</mat-label>
+              <input matInput type="number" [ngModel]="matrix().defaultValue" [disabled]="readOnly"
+                (ngModelChange)="setDefaultValue($event)" placeholder="ex.: 0" />
+            </mat-form-field>
+          }
+        </div>
+      </div>
     }
 
     @default {
@@ -246,12 +362,20 @@
             (ngModelChange)="setAction(list, $index, { name: $event })" placeholder="ex.: taxa" />
         </mat-form-field>
       }
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Expressão</mat-label>
-        <textarea matInput rows="2" [ngModel]="a.expression" [disabled]="readOnly"
-          (ngModelChange)="setAction(list, $index, { expression: $event })"
-          placeholder='ex.: 30  ou  "cliente ok"  ou  "NOK"'></textarea>
-      </mat-form-field>
+      <label class="field-label">Expressão</label>
+      <app-formula-input
+        [value]="a.expression"
+        (valueChange)="setAction(list, $index, { expression: $event })"
+        [fields]="data.fields"
+        [variables]="data.variables"
+        [sources]="data.sources"
+        [policies]="data.policies"
+        [policyVariables]="data.policyVariables"
+        [tables]="data.tables"
+        [disabled]="readOnly"
+        [rows]="2"
+        placeholder='ex.: 30  ·  {minhaVariavel}  ·  $[Política;Variaveis;score]'
+      ></app-formula-input>
       @if (!readOnly) {
         <button matButton (click)="removeAction(list, $index)">Remover</button>
       }

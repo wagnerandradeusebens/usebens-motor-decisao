@@ -90,15 +90,22 @@ public sealed class Evaluator : IFormulaNodeVisitor<FormulaValue>
             return EvaluateShortCircuit(name, node.Arguments);
         }
 
-        if (!FunctionLibrary.IsKnown(name))
-        {
-            return FormulaValue.Error(FormulaErrorKind.Name);
-        }
-
         var args = new FormulaValue[node.Arguments.Count];
         for (var i = 0; i < node.Arguments.Count; i++)
         {
             args[i] = node.Arguments[i].Accept(this);
+        }
+
+        // PROCV/PROCV.FAIXA consultam uma tabela de parâmetros no contexto (não são
+        // funções "puras"). Tratadas aqui, com o contexto disponível.
+        if (TableFunctions.IsTableFunction(name))
+        {
+            return TableFunctions.Invoke(name, args, _context);
+        }
+
+        if (!FunctionLibrary.IsKnown(name))
+        {
+            return FormulaValue.Error(FormulaErrorKind.Name);
         }
 
         return FunctionLibrary.Invoke(name, args);

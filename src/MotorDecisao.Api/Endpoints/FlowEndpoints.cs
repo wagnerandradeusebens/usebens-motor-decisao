@@ -28,6 +28,12 @@ public static class FlowEndpoints
         flows.MapDelete("/{flowId:guid}", async (Guid flowId, IFlowManagementService svc, CancellationToken ct) =>
             (await svc.DeleteFlowAsync(flowId, ct)).ToHttp(_ => Results.NoContent()));
 
+        // Administrativo: gera o bundle congelado para políticas já publicadas que
+        // ainda não têm bundle (retrocompatibilidade com o modelo de congelamento).
+        // Idempotente.
+        flows.MapPost("/backfill-bundles", async (IFlowManagementService svc, CancellationToken ct) =>
+            (await svc.BackfillBundlesAsync(ct)).ToHttp(count => Results.Ok(new { generated = count })));
+
         // --- Versions ---
         var versions = flows.MapGroup("/{flowId:guid}/versions");
 
@@ -45,6 +51,9 @@ public static class FlowEndpoints
 
         versions.MapPost("/{versionId:guid}/publish", async (Guid flowId, Guid versionId, IFlowManagementService svc, CancellationToken ct) =>
             (await svc.PublishVersionAsync(flowId, versionId, ct)).ToHttp());
+
+        versions.MapDelete("/{versionId:guid}", async (Guid flowId, Guid versionId, IFlowManagementService svc, CancellationToken ct) =>
+            (await svc.DeleteVersionAsync(flowId, versionId, ct)).ToHttp(_ => Results.NoContent()));
 
         return app;
     }

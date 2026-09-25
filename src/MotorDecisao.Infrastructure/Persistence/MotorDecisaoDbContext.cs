@@ -27,6 +27,9 @@ public class MotorDecisaoDbContext : DbContext
     public DbSet<Rule> Rules => Set<Rule>();
     public DbSet<Formula> Formulas => Set<Formula>();
     public DbSet<GlobalVariable> GlobalVariables => Set<GlobalVariable>();
+    public DbSet<ParameterTable> ParameterTables => Set<ParameterTable>();
+    public DbSet<GlobalParameterTable> GlobalParameterTables => Set<GlobalParameterTable>();
+    public DbSet<PublishedBundle> PublishedBundles => Set<PublishedBundle>();
     public DbSet<InputField> InputFields => Set<InputField>();
     public DbSet<DecisionExecution> DecisionExecutions => Set<DecisionExecution>();
     public DbSet<ExecutionTrace> ExecutionTraces => Set<ExecutionTrace>();

@@ -45,4 +45,20 @@ public interface IFlowManagementService
     /// compiled-flow cache. This is destructive and irreversible.
     /// </summary>
     Task<OperationResult<bool>> DeleteFlowAsync(Guid flowId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Exclui uma única versão. Recusada com conflito quando a versão está
+    /// publicada ou congelada em algum bundle ativo (vinculada a outra política),
+    /// e quando é a última versão do fluxo (nesse caso exclua a política inteira).
+    /// Remove também as execuções da versão. É destrutiva e irreversível.
+    /// </summary>
+    Task<OperationResult<bool>> DeleteVersionAsync(Guid flowId, Guid versionId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gera o bundle congelado para políticas que já estão publicadas mas ainda
+    /// não têm bundle ativo (retrocompatibilidade com publicações feitas antes do
+    /// modelo de congelamento). Idempotente: pula quem já tem bundle. Retorna
+    /// quantos bundles foram gerados.
+    /// </summary>
+    Task<OperationResult<int>> BackfillBundlesAsync(CancellationToken ct = default);
 }

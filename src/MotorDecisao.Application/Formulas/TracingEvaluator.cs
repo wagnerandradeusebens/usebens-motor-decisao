@@ -97,9 +97,17 @@ public sealed class TracingEvaluator : IFormulaNodeVisitor<FormulaValue>
         }
         _depth--;
 
-        var result = FunctionLibrary.IsKnown(name)
-            ? FunctionLibrary.Invoke(name, args)
-            : FormulaValue.Error(FormulaErrorKind.Name);
+        FormulaValue result;
+        if (TableFunctions.IsTableFunction(name))
+        {
+            result = TableFunctions.Invoke(name, args, _context);
+        }
+        else
+        {
+            result = FunctionLibrary.IsKnown(name)
+                ? FunctionLibrary.Invoke(name, args)
+                : FormulaValue.Error(FormulaErrorKind.Name);
+        }
         return Record(node, result);
     }
 

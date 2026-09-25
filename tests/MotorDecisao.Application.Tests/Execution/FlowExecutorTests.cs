@@ -555,6 +555,55 @@ public class FlowExecutorTests
         Assert.Equal(DecisionOutcome.Denied, result.Outcome);
     }
 
+    [Fact]
+    public async Task Policy_reference_includes_subpolicy_trace_steps()
+    {
+        // Subpolítica BUREAU: um Start + Decision. A trilha dela terá passos
+        // próprios (início, decisão) que devem aparecer na trilha da principal.
+        var snapB = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\",\"actions\":[{\"type\":\"SetResposta\",\"expression\":\"\\\"OK\\\"\"}]}")
+            },
+            edges: new[] { Edge("start", "ap") },
+            flowName: "BUREAU");
+        var flowB = CompiledFlow.Compile(snapB);
+
+        var snapA = Snapshot(
+            nodes: new[]
+            {
+                Node("start", FlowNodeKind.Start),
+                Node("cond", FlowNodeKind.Condition, "{\"expression\":\"$[BUREAU;Resposta] = \\\"OK\\\"\"}"),
+                Node("ap", FlowNodeKind.Decision, "{\"outcome\":\"Approved\"}"),
+                Node("ng", FlowNodeKind.Decision, "{\"outcome\":\"Denied\"}")
+            },
+            edges: new[]
+            {
+                Edge("start", "cond"),
+                Edge("cond", "ap", "true"),
+                Edge("cond", "ng", "false")
+            },
+            flowName: "PRINCIPAL");
+        var flowA = CompiledFlow.Compile(snapA);
+
+        var executor = new FlowExecutor(new NoOpDataSourceResolver(), new EmptySourceCatalog())
+        {
+            PolicyProvider = new StubPolicyProvider(new() { ["BUREAU"] = flowB }),
+        };
+
+        var result = await executor.ExecuteAsync(flowA, Request(snapA));
+
+        // A trilha da principal deve conter passos da subpolítica, marcados com o
+        // nome dela em PolicyName (não mais prefixados no rótulo), e os passos
+        // próprios devem carregar o nome da principal.
+        Assert.Contains(result.Trace, s => s.PolicyName == "BUREAU");
+        Assert.Contains(result.Trace, s => s.PolicyName == "PRINCIPAL");
+        // A sequência é contínua e sem duplicatas (a sub roda uma vez).
+        var seqs = result.Trace.Select(s => s.Sequence).ToList();
+        Assert.Equal(seqs.Count, seqs.Distinct().Count());
+    }
+
     /// <summary>Provider de política por nome, em memória, para os testes.</summary>
     private sealed class StubPolicyProvider : ICompiledFlowProvider, IPolicyByNameProvider
     {

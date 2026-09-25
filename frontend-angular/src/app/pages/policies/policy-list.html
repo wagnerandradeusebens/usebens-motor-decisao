@@ -105,12 +105,37 @@
           <th mat-header-cell *matHeaderCellDef>Publicada</th>
           <td mat-cell *matCellDef="let v">{{ fmt(v.publishedAt) }}</td>
         </ng-container>
+        <ng-container matColumnDef="linked">
+          <th mat-header-cell *matHeaderCellDef>Vinculado a</th>
+          <td mat-cell *matCellDef="let v">
+            @if (v.linkedPolicies?.length) {
+              <span class="linked-cell">
+                @for (p of v.linkedPolicies; track p) {
+                  <span class="linked-chip" title="Congelada na publicação desta política">{{ p }}</span>
+                }
+              </span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+        </ng-container>
         <ng-container matColumnDef="open">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let v">
-            <a mat-button [routerLink]="['/politicas', selected()!.id, 'versions', v.id]">
-              {{ v.status === 'Draft' ? 'Editar' : 'Abrir' }}
-            </a>
+            <span class="row" style="gap: 4px; justify-content: flex-end">
+              <a mat-button [routerLink]="['/politicas', selected()!.id, 'versions', v.id]">
+                {{ v.status === 'Draft' ? 'Editar' : 'Abrir' }}
+              </a>
+              <button matButton (click)="newVersionFrom(v.id)" [disabled]="creating()"
+                      title="Cria uma nova versão (rascunho) copiando esta">
+                <mat-icon>content_copy</mat-icon>
+                Nova versão
+              </button>
+              <button matIconButton (click)="deleteVersion(v, $event)"
+                      [disabled]="!canDeleteVersion(v)" [title]="deleteVersionHint(v)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </span>
           </td>
         </ng-container>
         <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>

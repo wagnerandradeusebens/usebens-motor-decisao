@@ -210,147 +210,178 @@ f-flow {
   width: 100%;
   height: 100%;
   background: var(--cor-fundo);
+
+  // Neutraliza o "frame" padrão que a lib aplica em .f-node (padding 24px,
+  // largura 120px, borda e sombra próprias). Sem isto, esse frame briga com o
+  // nosso card .rf-node: o padding cria uma moldura branca em volta e empurra o
+  // cabeçalho colorido para dentro (o "botão flutuando" do print). Zerando os
+  // tokens, quem controla o visual do nó é 100% o nosso .rf-node.
+  --ff-node-width: auto;
+  --ff-node-min-height: 0;
+  --ff-node-padding: 0;
+  --ff-node-border-color: transparent;
+  --ff-node-background-color: transparent;
+  --ff-node-shadow: none;
+  --ff-node-border-radius: 10px;
+}
+// Reforço direto: o elemento [fNode] recebe .f-node (lib) E .rf-node (nosso).
+// Como `f-flow .f-node` tem especificidade maior que `.rf-node`, definimos a
+// caixa visual (borda, sombra, raio, largura) AQUI para vencer o frame da lib.
+f-flow .f-node.rf-node {
+  // Cresce conforme o conteúdo entre um mínimo (consistência) e um máximo (para
+  // o auto-organizar não desalinhar). width:max-content faz o card acompanhar o
+  // texto; as reticências só entram quando bate no teto.
+  width: max-content;
+  min-width: 190px;
+  max-width: 460px;
+  padding: 0;
+  text-align: left;
+  border: 1px solid var(--cor-borda);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+f-flow .f-node.rf-node:hover {
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08), 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+f-flow .f-node.rf-node.f-selected,
+f-flow .f-node.rf-node.selected {
+  border-color: var(--node-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--node-accent) 25%, transparent);
 }
 f-canvas {
   // deixa o padrão de fundo (pontos) do f-background visível
 }
 
-// Nós no canvas (espelham o visual do editor React Flow: compacto, centralizado).
+// ---------------------------------------------------------------------------
+// Nós do canvas — card profissional em duas faixas: cabeçalho colorido (tipo)
+// + corpo branco (rótulo + resumo). Largura fixa e altura uniforme para um
+// grafo alinhado e previsível. A cor de cada tipo é definida por uma única
+// variável (--node-accent), o que mantém o estilo consistente e enxuto.
+// ---------------------------------------------------------------------------
+// A caixa visual (largura, borda, sombra, raio) fica no seletor de alta
+// especificidade `f-flow .f-node.rf-node` acima, para vencer o frame da lib.
+// Aqui só o que não conflita: o accent por tipo, cor, fonte e transição.
 .rf-node {
+  --node-accent: #64748b; // sobrescrito por tipo abaixo
   position: relative;
-  min-width: 150px;
-  max-width: 240px;
-  padding: 0.5rem 0.8rem;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--cor-borda);
-  background: #ffffff;
+  box-sizing: border-box;
   color: var(--cor-texto);
-  box-shadow: var(--sombra-card);
-  cursor: pointer;
   user-select: none;
-  text-align: center;
   font-size: 0.82rem;
+  transition: box-shadow 0.15s ease;
 }
-// Cabeçalho do nó: ícone + tipo (pt-BR). A cor do ícone/tipo segue o tipo.
-.rf-node__head {
+// Card interno (alça de arrasto). border-radius herdado; overflow hidden para o
+// cabeçalho colorido respeitar os cantos arredondados.
+.rf-node__card {
+  border-radius: inherit;
+  overflow: hidden;
+  cursor: move;
+}
+// Cabeçalho: faixa com a cor do tipo, ícone + nome do tipo em maiúsculas.
+.rf-node__header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.3rem;
-  margin-bottom: 2px;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  background: var(--node-accent);
+  color: #ffffff;
 }
 .rf-node__icon {
   font-size: 15px;
   width: 15px;
   height: 15px;
   line-height: 15px;
+  color: #ffffff;
 }
-.rf-node .kind {
-  font-size: 0.6rem;
+.rf-node__type {
+  font-size: 0.62rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--cor-texto-claro);
-  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.rf-node .node-label {
+// Corpo: rótulo + resumo, alinhados à esquerda, altura uniforme entre nós.
+.rf-node__body {
+  padding: 0.5rem 0.6rem;
+  min-height: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  text-align: left;
+}
+.rf-node__title {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--cor-texto);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 // Resumo do que o nó faz (expressão da condição, desfecho, fonte, etc.).
 .rf-node__summary {
-  margin-top: 4px;
   padding: 2px 6px;
   background: var(--cor-fundo);
   border: 1px solid var(--cor-borda);
   border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--cor-texto-claro);
-  max-width: 200px;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-left: auto;
-  margin-right: auto;
 }
-// Nó selecionado: realce azul.
+// Nó selecionado: anel na cor do tipo.
 .rf-node.f-selected,
 .rf-node.selected {
-  box-shadow: 0 0 0 3px rgba(27, 55, 96, 0.14);
+  border-color: var(--node-accent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--node-accent) 25%, transparent);
 }
 
-// --- Cor da borda e do ícone/tipo por tipo de nó ----------------------
-.rf-node.Start { border-color: var(--marca-teal); }
-.rf-node.Start .rf-node__icon, .rf-node.Start .kind { color: var(--marca-teal); }
+// --- Cor de accent por tipo (uma variável só, aplicada ao header) ------
+.rf-node.Start { --node-accent: #14b8a6; }
+.rf-node.Condition { --node-accent: #d97706; }
+.rf-node.Ruleset { --node-accent: var(--marca-azul-medio); }
+.rf-node.Computation { --node-accent: #64748b; }
+.rf-node.DataSource { --node-accent: #db2777; }
+.rf-node.Decision { --node-accent: #7c3aed; }
+.rf-node.Action { --node-accent: #0891b2; }
+.rf-node.Matrix { --node-accent: #ca8a04; }
 
-.rf-node.Decision { border-color: #7c3aed; }
-.rf-node.Decision .rf-node__icon, .rf-node.Decision .kind { color: #7c3aed; }
+// Início: sem corpo com rótulo repetido — é um terminal. Deixamos o corpo mais
+// compacto e o cabeçalho já identifica. (Mantém o card padrão para alinhar.)
+.rf-node.Start .rf-node__body { min-height: 30px; }
 
-.rf-node.Condition { border-color: var(--cor-alerta); }
-.rf-node.Condition .rf-node__icon, .rf-node.Condition .kind { color: #b45309; }
-
-.rf-node.Ruleset { border-color: var(--marca-azul-medio); }
-.rf-node.Ruleset .rf-node__icon, .rf-node.Ruleset .kind { color: var(--marca-azul-medio); }
-
-.rf-node.Computation { border-color: #64748b; }
-.rf-node.Computation .rf-node__icon, .rf-node.Computation .kind { color: #64748b; }
-
-.rf-node.DataSource { border-color: #db2777; }
-.rf-node.DataSource .rf-node__icon, .rf-node.DataSource .kind { color: #db2777; }
-
-.rf-node.Action { border-color: #0891b2; }
-.rf-node.Action .rf-node__icon, .rf-node.Action .kind { color: #0891b2; }
-
-.rf-node.Matrix { border-color: #ca8a04; }
-.rf-node.Matrix .rf-node__icon, .rf-node.Matrix .kind { color: #ca8a04; }
-
-// --- Formas por tipo (baseadas em fluxograma / Crivo) -----------------
-// Início: forma de "pílula" (start terminal).
-.rf-node.Start {
-  border-radius: 999px;
-  border-width: 2px;
-  background: #f0fdfa;
-}
-// Condição: destaque de decisão — borda mais grossa e fundo âmbar. (Evitamos
-// clip-path de losango porque ele recortaria os conectores que ficam nas bordas.)
-.rf-node.Condition {
-  border-radius: 4px;
-  border-width: 2.5px;
-  background: #fffbeb;
-}
-// Decisão: terminal de saída — cantos bem arredondados, fundo lilás.
-.rf-node.Decision {
-  border-radius: 18px;
-  background: #faf5ff;
-}
-// Fonte de dados: topo/rodapé arredondados sugerindo cilindro (banco de dados).
-.rf-node.DataSource {
-  border-radius: 40% 40% 12px 12px / 18px 18px 12px 12px;
-  background: #fdf2f8;
-}
-// Conjunto de regras: faixa lateral colorida (accent bar).
-.rf-node.Ruleset { border-left-width: 5px; }
-// Ação: faixa lateral ciano.
-.rf-node.Action { border-left-width: 5px; }
-// Cálculo / Matriz: retângulo com accent lateral.
-.rf-node.Computation { border-left-width: 5px; }
-.rf-node.Matrix { border-left-width: 5px; background: #fefce8; }
-
-// Comentário: nota adesiva tracejada.
+// Comentário: nota adesiva. Sem cabeçalho colorido cheio; cresce em altura.
 .rf-node.Comment {
-  border-color: #eab308;
-  border-style: dashed;
+  --node-accent: #eab308;
+  border-color: #fde68a;
   background: #fefce8;
-  box-shadow: none;
-  max-width: 230px;
-  text-align: left;
 }
-.rf-node.Comment .rf-node__head { justify-content: flex-start; }
+.rf-node.Comment .rf-node__header {
+  background: #fef9c3;
+  color: #854d0e;
+}
+.rf-node.Comment .rf-node__icon,
+.rf-node.Comment .rf-node__type { color: #854d0e; }
+.rf-node.Comment .rf-node__body {
+  min-height: 0;
+  justify-content: flex-start;
+}
 .rf-node.Comment .comment-text {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
+  color: var(--cor-texto);
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.35;
 }
 
 // Conectores: o @foblex/flow desenha a bolinha no PRÓPRIO elemento com diretiva
@@ -358,7 +389,10 @@ f-canvas {
 // Não desenhamos bolinha própria (isso duplicava/desalinhava); apenas ajustamos
 // os tokens da lib para o visual pequeno do React Flow e colorimos os sockets.
 f-flow {
-  --ff-connector-size: 9px;
+  // 14px é o alvo padrão da lib; 9px era pequeno demais para mirar e arrastar
+  // (o clique caía no corpo do nó, que é drag handle, e movia o nó em vez de
+  // iniciar a conexão). Maior = mais fácil ligar os nós.
+  --ff-connector-size: 14px;
   --ff-connector-border-width: 2px;
   --ff-connector-border-color: #ffffff;
   --ff-connector-background-color: var(--marca-azul);
@@ -369,6 +403,25 @@ f-flow {
   --ff-connection-hover-color: var(--marca-azul);
 }
 
+// Área de clique ampliada (hit area) ao redor de cada socket: um alvo invisível
+// maior que a bolinha, para o arrasto de conexão iniciar mesmo sem acertar o
+// pixel exato — sem alterar o visual. `content` só existe para o ::after render.
+.rf-node .f-node-input,
+.rf-node .f-node-output {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+  }
+}
+
+// Cursor de "cruz" ao passar sobre um socket, deixando claro que dali se arrasta
+// uma conexão (e não move o nó).
+.rf-node .f-node-output {
+  cursor: crosshair;
+}
+
 // Esconde os círculos de reatribuição das pontas das conexões
 // (.f-connection-drag-handle) — eram o "círculo azul vazado" que poluía os
 // pontos de conexão. As conexões ficam limpas, ligando socket a socket.
@@ -377,13 +430,21 @@ f-flow .f-connection .f-connection-drag-handle {
   fill: transparent !important;
 }
 
-// Socket de ENTRADA (topo) fica invisível: no React o destino da conexão é a
-// borda do nó marcada pela seta, sem bolinha. Some com o "borrão" onde a linha
-// encontrava o topo do nó. O elemento continua funcional (área de conexão).
+// Socket de ENTRADA (topo): discreto por padrão (bolinha clara com borda), mas
+// visível o bastante para o usuário saber onde soltar a conexão. Antes ficava
+// totalmente transparente, o que dava a impressão de que o nó "não conecta".
 .rf-node .f-node-input {
-  background: transparent !important;
-  border-color: transparent !important;
-  box-shadow: none !important;
+  background: #ffffff !important;
+  border-color: var(--marca-azul-medio) !important;
+  opacity: 0.55;
+}
+// Ao arrastar uma conexão, os sockets de entrada acendem para indicar destinos
+// válidos; ao passar o mouse, ficam sólidos.
+.rf-node .f-node-input:hover,
+.f-connections-dragging .rf-node .f-node-input {
+  opacity: 1;
+  background: var(--marca-azul) !important;
+  border-color: #ffffff !important;
 }
 
 // A seta de chegada em tom escuro, para destacar sobre o fundo e a borda do nó.

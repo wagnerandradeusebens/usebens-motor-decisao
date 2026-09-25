@@ -57,6 +57,14 @@ public sealed class CompiledFlow
     public IReadOnlyList<Sources.ExternalRef> ExternalReferences { get; }
 
     /// <summary>
+    /// Nomes distintos das políticas referenciadas em qualquer fórmula do fluxo
+    /// (via <c>$[Política;...]</c>). Usado na publicação para congelar em cascata
+    /// as subpolíticas. Só os nomes — categoria/variável não importam para o
+    /// congelamento.
+    /// </summary>
+    public IReadOnlyList<string> ReferencedPolicies { get; }
+
+    /// <summary>
     /// The flow's variables (named formulas) compiled and ordered so each is
     /// resolved after the variables it depends on. The executor evaluates these in
     /// order into the context before walking the graph.
@@ -75,6 +83,7 @@ public sealed class CompiledFlow
         IReadOnlyDictionary<Guid, IReadOnlyList<CompiledRule>> rulesByRulesetId,
         string startNodeKey,
         IReadOnlyList<Sources.ExternalRef> externalReferences,
+        IReadOnlyList<string> referencedPolicies,
         IReadOnlyList<CompiledVariable> orderedVariables)
     {
         Snapshot = snapshot;
@@ -88,6 +97,7 @@ public sealed class CompiledFlow
         RulesByRulesetId = rulesByRulesetId;
         StartNodeKey = startNodeKey;
         ExternalReferences = externalReferences;
+        ReferencedPolicies = referencedPolicies;
         OrderedVariables = orderedVariables;
     }
 
@@ -138,7 +148,7 @@ public sealed class CompiledFlow
                 case FlowNodeKind.Condition:
                 {
                     var cfg = NodeConfig.Deserialize<ConditionConfig>(node.Config);
-                    conditionByNode[node.NodeKey] = CompileOrThrow(cfg.Expression, node.NodeKey);
+                    conditionByNode[node.NodeKey] = CompileOrThrow(cfg.Expression, $"condição '{node.Label}'");
                     conditionActionsByNode[node.NodeKey] = new CompiledBranchActions(
                         CompileActions(cfg.TrueActions, $"ações (verdadeiro) em '{node.Label}'"),
                         CompileActions(cfg.FalseActions, $"ações (falso) em '{node.Label}'"));
@@ -150,7 +160,7 @@ public sealed class CompiledFlow
                     var list = new List<CompiledAssignment>();
                     foreach (var a in cfg.Assignments)
                     {
-                        list.Add(new CompiledAssignment(a.TargetField, CompileOrThrow(a.Expression, node.NodeKey)));
+                        list.Add(new CompiledAssignment(a.TargetField, CompileOrThrow(a.Expression, $"cálculo '{a.TargetField}' em '{node.Label}'")));
                     }
                     computationByNode[node.NodeKey] = list;
                     nodeActionsByNode[node.NodeKey] = CompileActions(cfg.Actions, $"ações em '{node.Label}'");
@@ -209,11 +219,20 @@ public sealed class CompiledFlow
         // Aggregate every external reference used across all compiled formulas
         // (including variables) so the executor pre-fetches them once per decision.
         var externalRefs = new List<Sources.ExternalRef>();
+        var policyNames = new List<string>();
+        var policySeen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         void Collect(CompiledFormula f)
         {
             foreach (var r in f.ExternalReferences)
             {
                 if (!externalRefs.Contains(r)) externalRefs.Add(r);
+            }
+            foreach (var p in f.PolicyReferences)
+            {
+                if (!string.IsNullOrWhiteSpace(p.Policy) && policySeen.Add(p.Policy))
+                {
+                    policyNames.Add(p.Policy);
+                }
             }
         }
         foreach (var c in conditionByNode.Values) Collect(c);
@@ -240,7 +259,7 @@ public sealed class CompiledFlow
         return new CompiledFlow(
             snapshot, nodesByKey, conditionByNode, computationByNode, actionsByNode,
             nodeActionsByNode, conditionActionsByNode, matrixByNode,
-            rulesByRulesetId, starts[0].NodeKey, externalRefs, orderedVariables);
+            rulesByRulesetId, starts[0].NodeKey, externalRefs, policyNames, orderedVariables);
     }
 
     /// <summary>

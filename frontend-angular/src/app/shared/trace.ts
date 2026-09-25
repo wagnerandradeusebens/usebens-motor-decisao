@@ -23,6 +23,15 @@ export interface TraceGroup {
   steps: TraceStep[];
 }
 
+/** Uma política na trilha, com seus passos agrupados por categoria. */
+export interface PolicyTraceGroup {
+  /** Nome da política; null/'' para passos sem política (traces antigos). */
+  policyName: string | null;
+  /** Rótulo exibido (o nome, ou "Política principal" quando não há nome). */
+  label: string;
+  categories: TraceGroup[];
+}
+
 /** Agrupa os passos da trilha por categoria, preservando a ordem original. */
 export function groupByCategory(trace: TraceStep[]): TraceGroup[] {
   const buckets = new Map<TraceCategory, TraceStep[]>();
@@ -43,6 +52,31 @@ export function groupByCategory(trace: TraceStep[]): TraceGroup[] {
     }
   }
   return ordered;
+}
+
+/**
+ * Agrupa a trilha por POLÍTICA (na ordem em que cada política aparece pela 1ª
+ * vez) e, dentro de cada política, por categoria (na ordem canônica). Isso
+ * separa a execução da principal e das subpolíticas e evita misturar tudo num
+ * balde só. A ordem de execução é preservada dentro de cada categoria.
+ */
+export function groupByPolicy(trace: TraceStep[]): PolicyTraceGroup[] {
+  // Preserva a ordem de 1ª aparição de cada política.
+  const order: string[] = [];
+  const buckets = new Map<string, TraceStep[]>();
+  for (const step of trace) {
+    const key = step.policyName ?? '';
+    if (!buckets.has(key)) {
+      buckets.set(key, []);
+      order.push(key);
+    }
+    buckets.get(key)!.push(step);
+  }
+  return order.map((key) => ({
+    policyName: key || null,
+    label: key || 'Política principal',
+    categories: groupByCategory(buckets.get(key)!),
+  }));
 }
 
 /** Monta um log textual legível de uma execução (para download .txt). */
@@ -67,20 +101,24 @@ export function toTextLog(d: ExecutionDetail): string {
     Object.entries(d.outputs).forEach(([k, v]) => lines.push(`  ${k} = ${v}`));
   }
   lines.push('');
-  lines.push('Log passo a passo (por bloco):');
-  groupByCategory(d.trace).forEach(({ label, steps }) => {
+  lines.push('Log passo a passo (por política e bloco):');
+  groupByPolicy(d.trace).forEach((policy) => {
     lines.push('');
-    lines.push(`== ${label} ==`);
-    steps.forEach((t) => {
-      lines.push(`  #${t.sequence} [${t.nodeLabel}]${t.expression ? ` ${t.expression}` : ''}`);
-      if (t.result) lines.push(`      resultado: ${t.result}`);
-      if (t.message) lines.push(`      ${t.message}`);
-      if (t.detail?.length) {
-        lines.push('      resolução:');
-        t.detail.forEach((s) => {
-          lines.push(`        ${'  '.repeat(s.depth)}${s.expression} = ${s.value}`);
-        });
-      }
+    lines.push(`######## ${policy.label} ########`);
+    policy.categories.forEach(({ label, steps }) => {
+      lines.push('');
+      lines.push(`  == ${label} ==`);
+      steps.forEach((t) => {
+        lines.push(`    #${t.sequence} [${t.nodeLabel}]${t.expression ? ` ${t.expression}` : ''}`);
+        if (t.result) lines.push(`        resultado: ${t.result}`);
+        if (t.message) lines.push(`        ${t.message}`);
+        if (t.detail?.length) {
+          lines.push('        resolução:');
+          t.detail.forEach((s) => {
+            lines.push(`          ${'  '.repeat(s.depth)}${s.expression} = ${s.value}`);
+          });
+        }
+      });
     });
   });
   return lines.join('\n');

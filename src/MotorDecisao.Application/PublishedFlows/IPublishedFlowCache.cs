@@ -28,6 +28,27 @@ public interface IPublishedFlowLoader
     /// has no published version.
     /// </summary>
     Task<PublishedFlowSnapshot?> LoadAsync(Guid flowId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Carrega um snapshot a partir da versão MAIS RECENTE de uma política casada
+    /// pelo nome (case-insensitive), independentemente do status — inclusive
+    /// rascunhos. Usado para resolver políticas SECUNDÁRIAS (referenciadas por
+    /// <c>(Política;Categoria;Variável)</c>): só a política principal precisa
+    /// estar publicada; as referenciadas valem pela versão mais recente. Retorna
+    /// <c>null</c> quando não há política com esse nome. Não passa pelo cache de
+    /// publicados (a versão de rascunho é mutável), então o chamador deve tratar
+    /// o resultado como volátil.
+    /// </summary>
+    Task<PublishedFlowSnapshot?> LoadLatestByNameAsync(string policyName, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Carrega o snapshot de uma versão ESPECÍFICA (por id), qualquer status —
+    /// inclusive rascunho. Usado para TESTAR uma versão antes de publicar: monta
+    /// o mesmo retrato do caminho publicado (com tabelas e variáveis globais
+    /// mescladas), sem cache e sem persistência. <c>null</c> se a versão não
+    /// existir no fluxo informado.
+    /// </summary>
+    Task<PublishedFlowSnapshot?> LoadByVersionAsync(Guid flowId, Guid versionId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

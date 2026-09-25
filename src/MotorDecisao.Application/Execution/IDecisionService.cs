@@ -11,6 +11,19 @@ public interface IDecisionService
 }
 
 /// <summary>
+/// Executa uma decisão de TESTE contra uma versão específica (inclusive rascunho),
+/// SEM publicar e SEM persistir a execução. Compila o grafo da versão na hora
+/// (com tabelas e variáveis), roda o executor e devolve o resultado efêmero. As
+/// políticas referenciadas resolvem pela versão mais recente (mesmo critério do
+/// editor). Lança <see cref="System.InvalidOperationException"/> quando a versão
+/// não existe e propaga erros de compilação do grafo.
+/// </summary>
+public interface ITestDecisionService
+{
+    Task<DecisionResult> TestAsync(Guid flowId, Guid versionId, DecisionRequest request, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
 /// Provides the compiled form of a flow's published version, compiling once and
 /// caching. Sits on top of the published-flow snapshot cache so the executor gets
 /// pre-parsed formulas without touching the database on the hot path.
@@ -41,4 +54,15 @@ public interface ICompiledFlowProvider
 public interface IPolicyByNameProvider
 {
     Task<CompiledFlow?> GetByNameAsync(string policyName, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Carrega o bundle CONGELADO ativo de uma política principal (o retrato imutável
+/// da publicação: principal + subpolíticas). Quando existe, a execução usa esse
+/// conjunto; quando não (política publicada antes do modelo de congelamento),
+/// retorna null e o chamador cai no comportamento anterior (fallback).
+/// </summary>
+public interface IBundleProvider
+{
+    Task<PublishedFlows.BundleContent?> GetActiveBundleAsync(Guid rootFlowId, CancellationToken cancellationToken = default);
 }

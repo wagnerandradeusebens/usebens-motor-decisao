@@ -16,13 +16,24 @@ import type {
   MatrixBand,
   MatrixConfig,
   MatrixMode,
+  SourceDescriptorDto,
 } from '../api/models';
+import { FormulaInput } from './formula-input';
 
 export interface NodeConfigData {
   kind: FlowNodeKind;
   label: string;
   config: string;
   readOnly: boolean;
+  /** Listas para o autocomplete de fórmula (mesmas do editor de variáveis). */
+  fields: string[];
+  variables: string[];
+  sources: SourceDescriptorDto[];
+  policies: string[];
+  /** Variáveis por política (para o 3º nível da referência cruzada). */
+  policyVariables: Record<string, string[]>;
+  /** Tabelas (nome + colunas) para o autocomplete de PROCV. */
+  tables: { name: string; columns: string[] }[];
 }
 
 /** Uma ação no editor (tipo + expressão; nome só para SetOutput). */
@@ -42,7 +53,7 @@ export interface NodeConfigResult {
 
 const OUTCOMES: DecisionOutcome[] = ['Approved', 'ApprovedWithConditions', 'ManualReview', 'Denied'];
 const FORMULA_HINT =
-  "Campos 'campo', variáveis {variavel}, texto \"texto\", fontes [Fonte;Produto;Dado], funções (SE, ARRED…). Separador: ;";
+  "Campos 'campo', variáveis {variavel}, texto \"texto\", fontes [Fonte;Produto;Dado], política $[Política;Categoria;Variável], tabelas PROCV(\"tabela\";\"coluna\";chave), funções (SE, ARRED…). Separador: ;";
 
 /**
  * Diálogo de configuração de um nó, por tipo. Cobre Condition, Computation,
@@ -61,6 +72,7 @@ const FORMULA_HINT =
     MatInputModule,
     MatSelectModule,
     MatIconModule,
+    FormulaInput,
   ],
   templateUrl: './node-config-dialog.html',
   styleUrl: './node-config-dialog.scss',
@@ -209,6 +221,23 @@ export class NodeConfigDialog {
   }
   protected patchBand(which: 'rowBands' | 'colBands', i: number, patch: Partial<MatrixBand>): void {
     this.setBands(which, this.matrix()[which].map((b, j) => (j === i ? { ...b, ...patch } : b)));
+  }
+  /** Define o valor padrão da matriz (usado quando o cruzamento não casa). */
+  protected setDefaultValue(value: string): void {
+    this.matrix.update((m) => ({ ...m, defaultValue: value }));
+  }
+  /**
+   * Descrição legível do intervalo de uma faixa, refletindo a regra do motor
+   * (min ≤ valor < max; vazio = aberto). Ex.: "2000 ≤ v < 5000", "v < 500",
+   * "v ≥ 700", "qualquer valor".
+   */
+  protected bandRangeHint(b: MatrixBand): string {
+    const hasMin = b.min !== null && b.min !== undefined;
+    const hasMax = b.max !== null && b.max !== undefined;
+    if (hasMin && hasMax) return `${b.min} ≤ v < ${b.max}`;
+    if (hasMin) return `v ≥ ${b.min}`;
+    if (hasMax) return `v < ${b.max}`;
+    return 'qualquer valor';
   }
   private setBands(which: 'rowBands' | 'colBands', bands: MatrixBand[]): void {
     const m = this.matrix();

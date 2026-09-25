@@ -245,6 +245,17 @@
 .side-ruleset {
   margin-bottom: 0.75rem;
 }
+// Rótulo compacto para o app-formula-input dentro das regras do menu lateral.
+.side-field-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+  margin: 0.1rem 0 0.2rem;
+}
+.side-rule app-formula-input {
+  display: block;
+  margin-bottom: 0.5rem;
+}
 .side-ruleset:last-child { margin-bottom: 0; }
 .side-row {
   display: flex;
@@ -301,6 +312,50 @@
   border-bottom: 1px solid var(--cor-alerta);
   padding: 0.5rem 1rem;
   font-size: 0.85rem;
+}
+
+// Painel de avisos de validação exibido após salvar (não bloqueante).
+.validation {
+  background: #fffbeb;
+  border-bottom: 1px solid var(--cor-alerta);
+  padding: 0.5rem 1rem 0.65rem;
+  font-size: 0.85rem;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+.validation__head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #92400e;
+}
+.validation__spacer {
+  flex: 1 1 auto;
+}
+.validation__list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.validation__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  color: #78350f;
+}
+.validation__list li mat-icon {
+  font-size: 1.05rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  color: var(--cor-alerta);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.validation__item--error mat-icon {
+  color: var(--cor-perigo);
 }
 
 .flow {

@@ -9,7 +9,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiService } from '../../api/api.service';
 import type { ExecutionDetail, ExecutionSummary } from '../../api/models';
 import { apiErrorMessage, fmtDate } from '../../shared/format';
-import { download, groupByCategory, pretty, toTextLog, TraceGroup } from '../../shared/trace';
+import { download, groupByPolicy, pretty, toTextLog, PolicyTraceGroup } from '../../shared/trace';
 
 /**
  * Log detalhado de execuções de uma política: lista de execuções recentes e, para
@@ -40,9 +40,9 @@ export class ExecutionsPage {
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
-  protected readonly groups = computed<TraceGroup[]>(() => {
+  protected readonly policyGroups = computed<PolicyTraceGroup[]>(() => {
     const d = this.detail();
-    return d ? groupByCategory(d.trace) : [];
+    return d ? groupByPolicy(d.trace) : [];
   });
 
   protected readonly fmt = fmtDate;

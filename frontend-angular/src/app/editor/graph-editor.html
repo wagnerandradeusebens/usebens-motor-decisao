@@ -67,6 +67,33 @@
         }
       </mat-expansion-panel>
 
+      <!-- Tabelas de parâmetros (lookup para PROCV/PROCV.FAIXA) -->
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>Tabelas</mat-panel-title>
+          @if (!readOnly) {
+            <button matIconButton class="palette__add" title="Nova tabela"
+                    (click)="addTable(); $event.stopPropagation()">
+              <mat-icon>add</mat-icon>
+            </button>
+          }
+        </mat-expansion-panel-header>
+
+        @if (tables().length === 0) {
+          <div class="palette__empty">Nenhuma tabela ainda.</div>
+        }
+        @for (t of tables(); track $index) {
+          <div class="var-row">
+            <span class="var-row__name" [title]="t.name">{{ t.label || t.name || '(sem nome)' }}</span>
+            <span class="var-row__actions">
+              <button matIconButton (click)="editTable($index)" title="Editar tabela">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </span>
+          </div>
+        }
+      </mat-expansion-panel>
+
       <!-- Conjuntos de regras (scorecard) -->
       <mat-expansion-panel>
         <mat-expansion-panel-header>
@@ -100,12 +127,20 @@
                   <input matInput [ngModel]="r.name" [disabled]="readOnly"
                     (ngModelChange)="patchRule(ri, ru, { name: $event })" />
                 </mat-form-field>
-                <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>condição</mat-label>
-                  <textarea matInput rows="2" [ngModel]="r.conditionExpression" [disabled]="readOnly"
-                    (ngModelChange)="patchRule(ri, ru, { conditionExpression: $event })"
-                    placeholder="ex.: 'score' > 600"></textarea>
-                </mat-form-field>
+                <label class="side-field-label">condição</label>
+                <app-formula-input
+                  [value]="r.conditionExpression"
+                  (valueChange)="patchRule(ri, ru, { conditionExpression: $event })"
+                  [fields]="fieldNames()"
+                  [variables]="variableNames()"
+                  [sources]="sources()"
+                  [policies]="policies()"
+                  [policyVariables]="policyVariables()"
+                  [tables]="tableSpecs()"
+                  [disabled]="readOnly"
+                  [rows]="2"
+                  placeholder="ex.: 'score' > 600"
+                ></app-formula-input>
                 <div class="side-row">
                   <mat-form-field appearance="outline" class="type">
                     <mat-label>efeito</mat-label>
@@ -221,8 +256,10 @@
               title="Reorganiza os nós em árvore de cima para baixo">
         <mat-icon>account_tree</mat-icon> Auto-organizar
       </button>
-      <button matButton="outlined" (click)="openTest()" [disabled]="status() !== 'Published'">
-        <mat-icon>play_arrow</mat-icon> Testar
+      <button matButton="outlined" (click)="openTest()" [disabled]="status() === 'Archived'"
+              [title]="status() === 'Draft' ? 'Testa este rascunho sem publicar' : 'Executa a versão publicada'">
+        <mat-icon>play_arrow</mat-icon>
+        {{ status() === 'Draft' ? 'Testar rascunho' : 'Testar' }}
       </button>
       <a mat-button [routerLink]="['/politicas', flowId, 'execucoes']">
         <mat-icon>receipt_long</mat-icon> Execuções
@@ -232,6 +269,25 @@
       }
     </div>
 
+    @if (warnings().length > 0) {
+      <div class="validation">
+        <div class="validation__head">
+          <mat-icon>report_problem</mat-icon>
+          <strong>Problemas encontrados ao salvar</strong>
+          <span class="validation__spacer"></span>
+          <button matIconButton (click)="dismissWarnings()" title="Dispensar"><mat-icon>close</mat-icon></button>
+        </div>
+        <ul class="validation__list">
+          @for (w of warnings(); track $index) {
+            <li [class.validation__item--error]="w.severity === 'Error'">
+              <mat-icon>{{ w.severity === 'Error' ? 'error' : 'warning' }}</mat-icon>
+              <span><strong>{{ w.where }}:</strong> {{ w.message }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+
     @if (readOnly) {
       <div class="readonly-banner">
         <span>
@@ -239,7 +295,7 @@
           <strong>{{ status() === 'Published' ? 'publicada' : 'arquivada' }}</strong>
           e é somente leitura.
         </span>
-        <button matButton="filled" (click)="createDraft()">Criar rascunho para editar</button>
+        <button matButton="filled" (click)="createDraft()">Criar nova versão para editar</button>
       </div>
     }
 
@@ -256,35 +312,44 @@
         @for (node of nodes(); track node.id) {
           <div
             fNode
-            fDragHandle
             [fNodeId]="node.id"
+            [attr.data-node-id]="node.id"
             [fNodePosition]="{ x: node.x, y: node.y }"
             [fNodeDraggingDisabled]="readOnly"
             (fNodePositionChange)="onNodePositionChanged(node.id, $event)"
             class="rf-node"
             [class]="node.kind"
-            (dblclick)="openConfig(node)"
           >
             @if (hasInput(node.kind)) {
               <div fNodeInput [fInputId]="node.id" [fInputConnectableSide]="side.TOP" class="top"></div>
             }
 
-            @if (node.kind === 'Comment') {
-              <div class="rf-node__head">
-                <mat-icon class="rf-node__icon">{{ nodeIcon(node.kind) }}</mat-icon>
-                <span class="kind">Comentário</span>
-              </div>
-              <div class="comment-text">{{ node.label || 'Comentário…' }}</div>
-            } @else {
-              <div class="rf-node__head">
-                <mat-icon class="rf-node__icon">{{ nodeIcon(node.kind) }}</mat-icon>
-                <span class="kind">{{ nodeLabel(node.kind) }}</span>
-              </div>
-              <div class="node-label">{{ node.label }}</div>
-              @if (nodeSummary(node); as summary) {
-                <div class="rf-node__summary" [title]="summary">{{ summary }}</div>
+            <!-- Só o CORPO é a alça de arrasto (fDragHandle). Os conectores
+                 ficam fora dele, para que clicar numa bolinha inicie a conexão
+                 em vez de mover o nó. O duplo-clique abre a config. Estrutura em
+                 duas faixas: cabeçalho (tipo) + corpo (rótulo + resumo). -->
+            <div fDragHandle class="rf-node__card" (dblclick)="openConfig(node)">
+              @if (node.kind === 'Comment') {
+                <div class="rf-node__header">
+                  <mat-icon class="rf-node__icon">{{ nodeIcon(node.kind) }}</mat-icon>
+                  <span class="rf-node__type">Comentário</span>
+                </div>
+                <div class="rf-node__body">
+                  <div class="comment-text">{{ node.label || 'Comentário…' }}</div>
+                </div>
+              } @else {
+                <div class="rf-node__header">
+                  <mat-icon class="rf-node__icon">{{ nodeIcon(node.kind) }}</mat-icon>
+                  <span class="rf-node__type">{{ nodeLabel(node.kind) }}</span>
+                </div>
+                <div class="rf-node__body">
+                  <div class="rf-node__title" [title]="node.label">{{ node.label }}</div>
+                  @if (nodeSummary(node); as summary) {
+                    <div class="rf-node__summary" [title]="summary">{{ summary }}</div>
+                  }
+                </div>
               }
-            }
+            </div>
 
             @if (isCondition(node.kind)) {
               <div fNodeOutput [fOutputId]="node.id + ':true'" [fOutputConnectableSide]="side.BOTTOM"
@@ -306,6 +371,13 @@
             <f-connection-marker-arrow [type]="markerType.END_ALL_STATES" />
           </f-connection>
         }
+
+        <!-- Conexão-fantasma do arrasto: sem este elemento a lib NÃO inicia o
+             drag-to-connect (é o "opt-in gate" do @foblex/flow). É o preview que
+             segue o cursor ao puxar de um socket até soltar num destino. -->
+        <f-connection-for-create fType="bezier">
+          <f-connection-marker-arrow [type]="markerType.END_ALL_STATES" />
+        </f-connection-for-create>
       </f-canvas>
 
       <f-minimap />

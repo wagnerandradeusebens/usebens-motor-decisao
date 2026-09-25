@@ -165,6 +165,10 @@ public sealed class Parser
                 Advance();
                 return new VariableRefNode(token.Text ?? string.Empty);
 
+            case TokenType.PolicyRef:
+                Advance();
+                return ParsePolicyRefFromToken(token);
+
             case TokenType.Identifier:
                 Advance();
                 // A function call if immediately followed by '('.
@@ -259,6 +263,44 @@ public sealed class Parser
         {
             throw new FormulaException(
                 "Para Variaveis, informe o nome: (Política;Variaveis;nome).", open.Position);
+        }
+
+        var variable = parts.Count == 3 ? parts[2] : string.Empty;
+        return new PolicyRefNode(parts[0], category, variable);
+    }
+
+    /// <summary>
+    /// Interpreta o conteúdo cru de um token <c>$[...]</c> como referência de
+    /// política: divide por ';' em 2 ou 3 partes (Política;Categoria[;Variável]).
+    /// O nome da política é a 1ª parte e aceita qualquer caractere (foi capturado
+    /// cru pelo lexer). Mesma validação de categoria da sintaxe legada.
+    /// </summary>
+    private static FormulaNode ParsePolicyRefFromToken(Token token)
+    {
+        var raw = token.Text ?? string.Empty;
+        var parts = raw.Split(';').Select(p => p.Trim()).ToList();
+
+        if (parts.Count is < 2 or > 3 || parts[0].Length == 0)
+        {
+            throw new FormulaException(
+                "Referência de política: use $[Política;Pontos|Limite|Resposta] ou $[Política;Variaveis;nome].",
+                token.Position);
+        }
+
+        var category = parts[1];
+        var normalized = category.ToLowerInvariant();
+        var known = normalized is "pontos" or "limite" or "resposta" or "variaveis" or "variáveis";
+        if (!known)
+        {
+            throw new FormulaException(
+                $"Categoria de política inválida: '{category}'. Use Pontos, Limite, Resposta ou Variaveis.",
+                token.Position);
+        }
+
+        if ((normalized is "variaveis" or "variáveis") && (parts.Count != 3 || parts[2].Length == 0))
+        {
+            throw new FormulaException(
+                "Para Variaveis, informe o nome: $[Política;Variaveis;nome].", token.Position);
         }
 
         var variable = parts.Count == 3 ? parts[2] : string.Empty;

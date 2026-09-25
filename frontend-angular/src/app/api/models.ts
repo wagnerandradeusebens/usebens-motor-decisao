@@ -33,6 +33,11 @@ export interface FlowVersionSummary {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string | null;
+  /**
+   * Políticas (bundles publicados ativos) de OUTRAS políticas que congelam esta
+   * versão como membro — o "Vinculado a" do histórico. Vazio quando nenhuma.
+   */
+  linkedPolicies: string[];
 }
 
 export interface FlowSummary {
@@ -96,12 +101,77 @@ export interface GraphInputField {
   order: number;
 }
 
+/** Tipo de coluna de uma tabela de parâmetros. */
+export type ParameterColumnType = 'Number' | 'Text' | 'Boolean' | 'Date';
+
+/** Coluna de uma tabela de parâmetros: nome técnico + tipo. */
+export interface GraphTableColumn {
+  name: string;
+  type: ParameterColumnType;
+}
+
+/**
+ * Tabela de parâmetros (lookup) LOCAL da versão — viaja dentro do VersionGraph,
+ * salva/carregada junto com o grafo. `rows` é uma matriz de strings [linha][coluna]
+ * na ordem de `columns`. keyColumn (busca exata PROCV), minColumn/maxColumn (busca
+ * por faixa PROCV.FAIXA) e defaultValue (retorno quando não casa).
+ */
+export interface GraphTable {
+  name: string;
+  label: string;
+  columns: GraphTableColumn[];
+  rows: string[][];
+  keyColumn: string | null;
+  minColumn: string | null;
+  maxColumn: string | null;
+  defaultValue: string | null;
+}
+
 export interface VersionGraph {
   nodes: GraphNode[];
   edges: GraphEdge[];
   rulesets: GraphRuleset[];
   formulas: GraphFormula[];
   inputFields: GraphInputField[];
+  tables: GraphTable[];
+  /** Avisos de validação preenchidos na resposta do save (vazio no GET). */
+  warnings?: ValidationWarning[];
+}
+
+export type ValidationSeverity = 'Error' | 'Warning';
+
+/** Aviso de validação do grafo: gravidade, local amigável e mensagem pt-BR. */
+export interface ValidationWarning {
+  severity: ValidationSeverity;
+  where: string;
+  message: string;
+}
+
+/** Tabela de parâmetros GLOBAL (compartilhada entre políticas). */
+export interface GlobalParameterTable {
+  id: string;
+  name: string;
+  label: string;
+  columns: GraphTableColumn[];
+  rows: string[][];
+  keyColumn: string | null;
+  minColumn: string | null;
+  maxColumn: string | null;
+  defaultValue: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+/** Corpo para criar/atualizar uma tabela global. */
+export interface GlobalParameterTableInput {
+  name: string;
+  label: string;
+  columns: GraphTableColumn[];
+  rows: string[][];
+  keyColumn: string | null;
+  minColumn: string | null;
+  maxColumn: string | null;
+  defaultValue: string | null;
 }
 
 /** Catálogo read-only de fontes externas (GET /sources). */
@@ -155,6 +225,8 @@ export interface TraceStep {
   result: string | null;
   message: string | null;
   category: TraceCategory;
+  /** Política a que o passo pertence (principal ou subpolítica). Null em traces antigos. */
+  policyName: string | null;
   detail: EvalStep[];
 }
 

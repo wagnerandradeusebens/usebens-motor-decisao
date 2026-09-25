@@ -10,6 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiService } from '../api/api.service';
 import type { DecisionResponse, GraphInputField } from '../api/models';
 import { apiErrorMessage } from '../shared/format';
+import { groupByPolicy, PolicyTraceGroup } from '../shared/trace';
 
 interface RunField {
   key: string;
@@ -20,6 +21,13 @@ interface RunField {
 export interface DecisionRunnerData {
   flowId: string;
   inputFields: GraphInputField[];
+  /** Versão a testar. Quando presente e `test` é true, roda em modo teste. */
+  versionId?: string;
+  /**
+   * Modo teste: executa a versão informada (rascunho) sem publicar nem persistir.
+   * Quando false/ausente, chama o endpoint normal (versão publicada).
+   */
+  test?: boolean;
 }
 
 function toValue(f: RunField): unknown {
@@ -89,6 +97,11 @@ export class DecisionRunnerDialog {
     return Object.entries(r.outputs).map(([key, value]) => ({ key, value }));
   }
 
+  /** Trilha agrupada por política → categoria (para não misturar principal e subs). */
+  protected policyGroups(r: DecisionResponse): PolicyTraceGroup[] {
+    return groupByPolicy(r.trace);
+  }
+
   protected run(): void {
     this.error.set(null);
     this.result.set(null);
@@ -97,7 +110,11 @@ export class DecisionRunnerDialog {
     for (const f of this.fields()) {
       if (f.key.trim()) payload[f.key.trim()] = toValue(f);
     }
-    this.api.decide(this.data.flowId, this.reference || null, payload).subscribe({
+    // Modo teste (rascunho): executa a versão informada sem publicar/persistir.
+    const call$ = this.data.test && this.data.versionId
+      ? this.api.testDecide(this.data.flowId, this.data.versionId, this.reference || null, payload)
+      : this.api.decide(this.data.flowId, this.reference || null, payload);
+    call$.subscribe({
       next: (r) => {
         this.result.set(r);
         this.running.set(false);

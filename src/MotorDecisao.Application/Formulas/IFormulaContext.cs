@@ -40,6 +40,17 @@ public interface IFormulaContext
     /// tiver sido resolvido.
     /// </summary>
     FormulaValue ResolvePolicy(string policy, string category, string variable);
+
+    /// <summary>
+    /// Consulta uma tabela de parâmetros. Em <c>byRange=false</c> (PROCV), casa a
+    /// coluna-chave da tabela com <paramref name="key"/> por igualdade. Em
+    /// <c>byRange=true</c> (PROCV.FAIXA), acha a linha cuja faixa (min ≤ valor &lt; max)
+    /// contém <paramref name="key"/>. Devolve o valor de <paramref name="returnColumn"/>
+    /// coagido ao tipo da coluna. Sem correspondência: o valor padrão da tabela ou
+    /// <c>#N/D</c>. Tabela/coluna inexistente: <c>#NOME?</c>. As tabelas são semeadas
+    /// no contexto antes da avaliação (congeladas no snapshot).
+    /// </summary>
+    FormulaValue ResolveTable(string table, string returnColumn, FormulaValue key, bool byRange);
 }
 
 /// <summary>
@@ -113,6 +124,19 @@ public sealed class DictionaryFormulaContext : IFormulaContext
         => _policies.TryGetValue(PolicyKey(policy, category, variable), out var v)
             ? v
             : FormulaValue.Error(FormulaErrorKind.NotAvailable);
+
+    private readonly Dictionary<string, PublishedFlows.PublishedTable> _tables =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Semeia uma tabela de parâmetros para consulta por PROCV/PROCV.FAIXA.</summary>
+    public DictionaryFormulaContext SetTable(PublishedFlows.PublishedTable table)
+    {
+        _tables[table.Name] = table;
+        return this;
+    }
+
+    public FormulaValue ResolveTable(string table, string returnColumn, FormulaValue key, bool byRange)
+        => TableLookup.Resolve(_tables, table, returnColumn, key, byRange);
 
     private static string ExternalKey(string source, string product, string datum)
         => $"{source}\u0001{product}\u0001{datum}";

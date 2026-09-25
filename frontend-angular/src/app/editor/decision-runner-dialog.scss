@@ -44,6 +44,30 @@ mat-dialog-content {
 .out {
   font-size: 0.82rem;
 }
+.trace .policy-group {
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.75rem;
+  background: color-mix(in srgb, var(--marca-teal) 4%, #fff);
+}
+.trace .policy-group__title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--marca-teal);
+  margin-bottom: 0.4rem;
+}
+.trace .cat-group {
+  margin-bottom: 0.5rem;
+}
+.trace .cat-label {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--marca-azul);
+  border-bottom: 1px solid var(--cor-borda);
+  padding-bottom: 0.15rem;
+  margin-bottom: 0.25rem;
+}
 .trace .trace-step {
   border-left: 3px solid var(--cor-borda);
   padding: 0.3rem 0.6rem;

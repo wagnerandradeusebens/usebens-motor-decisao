@@ -58,6 +58,7 @@ app.MapFlowEndpoints();
 app.MapDecisionEndpoints();
 app.MapSourceEndpoints();
 app.MapGlobalVariableEndpoints();
+app.MapGlobalParameterTableEndpoints();
 
 app.Run();
 

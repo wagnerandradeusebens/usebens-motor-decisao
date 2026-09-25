@@ -19,8 +19,12 @@ export interface VariableDialogData {
   fields: string[];
   variables: string[];
   sources: SourceDescriptorDto[];
-  /** Nomes de todas as políticas publicadas (gatilho '(' de referência). */
+  /** Nomes de todas as políticas (gatilho '$[' de referência cruzada). */
   policies: string[];
+  /** Variáveis por política (para o 3º nível da referência cruzada). */
+  policyVariables: Record<string, string[]>;
+  /** Tabelas (nome + colunas) para o autocomplete de PROCV. */
+  tables: { name: string; columns: string[] }[];
 }
 
 export interface VariableResult {
@@ -84,13 +88,15 @@ export interface VariableResult {
         [variables]="data.variables"
         [sources]="data.sources"
         [policies]="data.policies"
+        [policyVariables]="data.policyVariables"
+        [tables]="data.tables"
         [disabled]="data.readOnly"
         [rows]="7"
         placeholder="ex.: 'divida' / 'renda'  ·  {variavel}  ·  [SERASA;Score;Pontuacao]"
       ></app-formula-input>
       <div class="formula-help">
         Dica: <code>'</code> campos · <code>&#123;</code> variáveis ·
-        <code>[</code> fontes · <code>(</code> política (pontos/limite/resposta) · letras para funções.
+        <code>[</code> fontes · <code>$[</code> política (pontos/limite/resposta/variáveis) · letras para funções.
       </div>
     </mat-dialog-content>
     <mat-dialog-actions>

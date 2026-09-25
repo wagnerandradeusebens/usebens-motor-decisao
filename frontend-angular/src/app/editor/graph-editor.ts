@@ -24,6 +24,7 @@ import { ApiService } from '../api/api.service';
 import type {
   DecisionOutcome,
   FlowNodeKind,
+  FlowSummary,
   FlowVersionStatus,
   GraphEdge,
   GraphRule,
@@ -31,9 +32,11 @@ import type {
   VersionGraph,
   GraphFormula,
   GraphInputField,
+  GraphTable,
   InputFieldType,
   RuleEffect,
   SourceDescriptorDto,
+  ValidationWarning,
 } from '../api/models';
 import { apiErrorMessage } from '../shared/format';
 import { defaultConfig, OUTCOME_LABEL, RULE_PALETTE } from './node-config';
@@ -43,6 +46,14 @@ import { BranchDialog, BranchData, BranchTarget } from './branch-dialog';
 import { DecisionRunnerDialog, DecisionRunnerData } from './decision-runner-dialog';
 import { VariableDialog, VariableDialogData, VariableResult } from './variable-dialog';
 import { FieldDialog, FieldDialogData, FieldResult } from './field-dialog';
+import { TableDialog, TableDialogData, TableResult } from './table-dialog';
+import { FormulaInput } from './formula-input';
+import {
+  RenameKind,
+  rewriteFormulas,
+  rewriteNodeConfig,
+  rewriteRulesets,
+} from './reference-rename';
 
 interface EditorNode {
   id: string;
@@ -83,6 +94,7 @@ interface EditorEdge {
     MatInputModule,
     MatSelectModule,
     MatCheckboxModule,
+    FormulaInput,
   ],
   templateUrl: './graph-editor.html',
   styleUrl: './graph-editor.scss',
@@ -101,6 +113,8 @@ export class GraphEditor {
   protected readonly edges = signal<EditorEdge[]>([]);
   protected readonly status = signal<FlowVersionStatus>('Draft');
   protected readonly error = signal<string | null>(null);
+  /** Avisos de validação do último save (fórmulas inválidas, PROCV sem chave, …). */
+  protected readonly warnings = signal<ValidationWarning[]>([]);
   protected readonly palette = RULE_PALETTE;
   protected readonly side = EFConnectableSide;
   protected readonly markerType = EFMarkerType;
@@ -120,10 +134,31 @@ export class GraphEditor {
   protected readonly rulesets = signal<GraphRuleset[]>([]);
   protected readonly inputFields = signal<GraphInputField[]>([]);
   protected readonly formulas = signal<GraphFormula[]>([]);
+  /** Tabelas de parâmetros locais desta versão (lookup para PROCV/PROCV.FAIXA). */
+  protected readonly tables = signal<GraphTable[]>([]);
+  /** Tabelas globais (carregadas da API) — para o autocomplete de PROCV. */
+  protected readonly globalTables = signal<{ name: string; columns: string[] }[]>([]);
+
+  /**
+   * Tabelas disponíveis para o autocomplete de PROCV: locais (desta versão) +
+   * globais, com o nome e as colunas. Local de mesmo nome tem prioridade.
+   */
+  protected tableSpecs(): { name: string; columns: string[] }[] {
+    const local = this.tables().map((t) => ({ name: t.name, columns: t.columns.map((c) => c.name) }));
+    const localNames = new Set(local.map((t) => t.name.toLowerCase()));
+    const globals = this.globalTables().filter((g) => !localNames.has(g.name.toLowerCase()));
+    return [...local, ...globals];
+  }
   protected readonly sources = signal<SourceDescriptorDto[]>([]);
   protected readonly policyName = signal<string>('Política atual');
-  /** Nomes de todas as políticas (para o autocomplete de referência com '('). */
+  /** Nomes de todas as políticas (para o autocomplete de referência com '$['). */
   protected readonly policies = signal<string[]>([]);
+  /**
+   * Variáveis de cada política publicada, por nome da política. Alimenta o 3º
+   * nível do autocomplete de referência cruzada — (Política;Variaveis;___) — para
+   * sugerir as variáveis da política ALVO, não as locais desta versão.
+   */
+  protected readonly policyVariables = signal<Record<string, string[]>>({});
 
   // Opções para os selects dos editores laterais.
   protected readonly effects: RuleEffect[] = ['Score', 'Decision', 'Annotation'];
@@ -152,9 +187,15 @@ export class GraphEditor {
    * Ajusta o zoom para caber todo o grafo e o centraliza na viewport. Precisa
    * rodar depois que os nós estão renderizados/medidos — daí o defer por frame,
    * usado tanto no fFullRendered quanto após carregar o grafo da API.
+   *
+   * O 4º argumento (`maxScale = 1`) limita a ampliação: sem ele, uma política
+   * com poucos nós é escalada para preencher a viewport e os blocos abrem
+   * gigantes. Com o teto em 1x, o grafo abre no tamanho natural (ou menor, se
+   * for grande demais) e sempre centralizado. Assinatura confirmada no bundle:
+   * fitToScreen(padding, animated, emitCanvasChange, maxScale).
    */
   private centerGraph(): void {
-    setTimeout(() => this.canvas()?.fitToScreen({ x: 80, y: 80 } as IPoint, false), 0);
+    setTimeout(() => this.canvas()?.fitToScreen({ x: 80, y: 80 } as IPoint, false, true, 1), 0);
   }
 
   private load(): void {
@@ -177,19 +218,57 @@ export class GraphEditor {
       error: () => this.sources.set([]),
     });
 
+    // Tabelas globais para o autocomplete de PROCV (nomes + colunas).
+    this.api.listGlobalTables().subscribe({
+      next: (list) => this.globalTables.set(list.map((t) => ({ name: t.name, columns: t.columns.map((c) => c.name) }))),
+      error: () => this.globalTables.set([]),
+    });
+
     // Todas as políticas, para o autocomplete de referência cruzada com '('.
+    // Além dos nomes, carregamos as variáveis de cada política PUBLICADA (o motor
+    // só resolve referências contra a versão publicada), para o 3º nível do
+    // autocomplete sugerir as variáveis da política alvo.
     this.api.listFlows().subscribe({
-      next: (list) => this.policies.set(list.map((f) => f.name).filter((n) => !!n)),
+      next: (list) => {
+        this.policies.set(list.map((f) => f.name).filter((n) => !!n));
+        this.loadPolicyVariables(list);
+      },
       error: () => this.policies.set([]),
     });
   }
 
+  /**
+   * Para cada política (exceto a atual), busca o grafo da sua versão MAIS RECENTE
+   * (maior versionNumber, independente do status) e extrai as variáveis
+   * (formulas). Monta o mapa nome→variáveis usado no 3º nível do autocomplete de
+   * referência cruzada $[Política;Variaveis;___]. Usa a versão mais recente
+   * (não só a publicada) porque as subpolíticas não precisam estar publicadas —
+   * elas são congeladas na publicação da política principal. Falhas individuais
+   * são ignoradas (uma política sem grafo não quebra as demais).
+   */
+  private loadPolicyVariables(flows: FlowSummary[]): void {
+    for (const flow of flows) {
+      if (flow.id === this.flowId) continue;
+      const latest = [...flow.versions].sort((a, b) => b.versionNumber - a.versionNumber)[0];
+      if (!latest) continue;
+      this.api.getVersionGraph(flow.id, latest.id).subscribe({
+        next: (graph) => {
+          const vars = (graph.formulas ?? []).map((f) => f.key).filter((k) => !!k);
+          this.policyVariables.update((m) => ({ ...m, [flow.name]: vars }));
+        },
+        error: () => {
+          /* política sem grafo acessível: sem variáveis para sugerir */
+        },
+      });
+    }
+  }
+
   /** Nomes das variáveis locais (para o autocomplete de {variavel}). */
-  private variableNames(): string[] {
+  protected variableNames(): string[] {
     return this.formulas().map((f) => f.key).filter((k) => !!k);
   }
   /** Nomes técnicos dos campos (para o autocomplete de 'campo'). */
-  private fieldNames(): string[] {
+  protected fieldNames(): string[] {
     return this.inputFields().map((f) => f.name).filter((n) => !!n);
   }
 
@@ -197,6 +276,7 @@ export class GraphEditor {
     this.rulesets.set(graph.rulesets);
     this.formulas.set(graph.formulas);
     this.inputFields.set(graph.inputFields ?? []);
+    this.tables.set(graph.tables ?? []);
 
     let nodes: EditorNode[] = graph.nodes.map((n) => ({
       id: n.nodeKey,
@@ -324,61 +404,101 @@ export class GraphEditor {
     const nodes = this.nodes();
     if (nodes.length === 0) return;
 
-    const V_GAP = 170; // distância vertical entre níveis
-    const H_GAP = 220; // distância horizontal entre irmãos
+    const V_GAP = 150; // distância vertical entre níveis (centro a centro)
+    const H_GAP = 40; // folga horizontal entre bordas de nós irmãos
+    const DEFAULT_W = 210; // largura usada quando o nó ainda não foi medido
 
-    // Adjacência a partir das arestas (na ordem: true antes de false).
+    // Largura REAL de cada nó, medida no DOM. Como os nós crescem conforme o
+    // conteúdo, o layout precisa da largura verdadeira para centralizar os pais
+    // sobre os filhos e nunca sobrepor irmãos de tamanhos diferentes.
+    const widthOf = (id: string): number => {
+      const el = document.querySelector<HTMLElement>(`[data-node-id="${id}"]`);
+      return el?.offsetWidth || DEFAULT_W;
+    };
+
+    // Adjacência a partir das arestas (na ordem: true antes de false), sem
+    // duplicar filhos e evitando revisitar (o grafo pode ter ciclos/reconvergência).
     const children = new Map<string, string[]>();
     for (const n of nodes) children.set(n.id, []);
     const ordered = [...this.edges()].sort((a, b) => {
       const rank = (h: string | null) => (h === 'true' ? 0 : h === 'false' ? 1 : 0);
       return rank(a.sourceHandle) - rank(b.sourceHandle);
     });
+    const linked = new Set<string>();
     for (const e of ordered) {
-      if (children.has(e.source) && children.has(e.target)) {
+      if (children.has(e.source) && children.has(e.target) && !linked.has(e.target)) {
         children.get(e.source)!.push(e.target);
+        linked.add(e.target); // cada nó entra na árvore uma única vez (como filho)
       }
     }
 
     // Raiz: o Start; se não houver, o primeiro nó.
     const start = nodes.find((n) => n.kind === 'Start') ?? nodes[0];
 
-    // BFS para atribuir níveis (evita ciclos com o visited).
-    const level = new Map<string, number>();
-    const queue: string[] = [start.id];
-    level.set(start.id, 0);
-    while (queue.length) {
-      const id = queue.shift()!;
-      const lvl = level.get(id)!;
-      for (const child of children.get(id) ?? []) {
-        if (!level.has(child)) {
-          level.set(child, lvl + 1);
-          queue.push(child);
+    // Profundidade (nível/linha) de cada nó por BFS a partir da raiz.
+    const depth = new Map<string, number>();
+    const bfs: string[] = [start.id];
+    depth.set(start.id, 0);
+    while (bfs.length) {
+      const id = bfs.shift()!;
+      for (const c of children.get(id) ?? []) {
+        if (!depth.has(c)) {
+          depth.set(c, (depth.get(id) ?? 0) + 1);
+          bfs.push(c);
         }
       }
     }
 
-    // Nós não alcançados a partir do Start vão para um nível extra ao final.
-    let maxLevel = 0;
-    for (const l of level.values()) maxLevel = Math.max(maxLevel, l);
+    // Layout de árvore centralizado (pós-ordem): o centro X de cada nó é a média
+    // dos centros dos filhos; folhas são empacotadas lado a lado respeitando a
+    // largura real de cada uma. `cursor` acompanha o próximo X livre por subárvore.
+    const centerX = new Map<string, number>();
+    let cursor = 0;
+    const visited = new Set<string>();
+
+    const place = (id: string): number => {
+      if (visited.has(id)) return centerX.get(id) ?? cursor;
+      visited.add(id);
+
+      const kids = (children.get(id) ?? []).filter((c) => !visited.has(c));
+      const halfSelf = widthOf(id) / 2;
+
+      if (kids.length === 0) {
+        // Folha: ocupa o próximo espaço livre, avançando pela sua largura.
+        const cx = cursor + halfSelf;
+        cursor += widthOf(id) + H_GAP;
+        centerX.set(id, cx);
+        return cx;
+      }
+
+      // Posiciona os filhos primeiro; o pai fica centralizado sobre eles.
+      const kidCenters = kids.map((k) => place(k));
+      const cx = (kidCenters[0] + kidCenters[kidCenters.length - 1]) / 2;
+      centerX.set(id, cx);
+      return cx;
+    };
+
+    place(start.id);
+
+    // Nós não alcançados a partir da raiz (soltos): empacota numa linha ao final.
+    const maxDepth = Math.max(0, ...[...depth.values()]);
     for (const n of nodes) {
-      if (!level.has(n.id)) level.set(n.id, maxLevel + 1);
+      if (!visited.has(n.id)) {
+        depth.set(n.id, maxDepth + 1);
+        const cx = cursor + widthOf(n.id) / 2;
+        cursor += widthOf(n.id) + H_GAP;
+        centerX.set(n.id, cx);
+        visited.add(n.id);
+      }
     }
 
-    // Agrupa por nível e posiciona: cada linha centralizada em torno de x=0.
-    const byLevel = new Map<number, string[]>();
-    for (const [id, lvl] of level) {
-      if (!byLevel.has(lvl)) byLevel.set(lvl, []);
-      byLevel.get(lvl)!.push(id);
-    }
-
+    // Converte centro X -> canto superior-esquerdo (o que o fNodePosition espera),
+    // subtraindo metade da largura real de cada nó. Y pela profundidade.
     const pos = new Map<string, { x: number; y: number }>();
-    for (const [lvl, ids] of [...byLevel.entries()].sort((a, b) => a[0] - b[0])) {
-      const count = ids.length;
-      const totalWidth = (count - 1) * H_GAP;
-      ids.forEach((id, i) => {
-        pos.set(id, { x: Math.round(i * H_GAP - totalWidth / 2), y: lvl * V_GAP });
-      });
+    for (const n of nodes) {
+      const cx = centerX.get(n.id) ?? 0;
+      const lvl = depth.get(n.id) ?? 0;
+      pos.set(n.id, { x: Math.round(cx - widthOf(n.id) / 2), y: lvl * V_GAP });
     }
 
     this.nodes.update((ns) => ns.map((n) => ({ ...n, ...(pos.get(n.id) ?? { x: n.x, y: n.y }) })));
@@ -437,6 +557,14 @@ export class GraphEditor {
       label: node.label,
       config: node.config,
       readOnly: this.readOnly,
+      // Mesmas listas do editor de variáveis, para o autocomplete de fórmula
+      // (', {, [, () funcionar nos campos de condição, cálculo, ações e matriz.
+      fields: this.fieldNames(),
+      variables: this.variableNames(),
+      sources: this.sources(),
+      policies: this.policies(),
+      policyVariables: this.policyVariables(),
+      tables: this.tableSpecs(),
     };
     const ref = this.dialog.open<NodeConfigDialog, NodeConfigData, NodeConfigResult>(NodeConfigDialog, {
       data,
@@ -513,6 +641,26 @@ export class GraphEditor {
     this.edges.update((es) => es.filter((e) => e.source !== id && e.target !== id));
   }
 
+  /**
+   * Propaga um rename por TODO o grafo: reescreve as referências ao nome antigo
+   * (variável `{x}`, campo `'x'`, tabela no 1º arg de PROCV) em todas as
+   * expressões — variáveis, condições de regra e configs dos nós. Chamado ao
+   * editar (renomear) uma variável, campo ou tabela, antes de aplicar a troca do
+   * próprio item. Sem efeito quando o nome não mudou.
+   */
+  private renameReference(kind: RenameKind, oldName: string, newName: string): void {
+    if (!oldName || oldName === newName) return;
+
+    this.formulas.update((fs) => rewriteFormulas(fs, kind, oldName, newName));
+    this.rulesets.update((rs) => rewriteRulesets(rs, kind, oldName, newName));
+    this.nodes.update((ns) =>
+      ns.map((n) => ({
+        ...n,
+        config: rewriteNodeConfig(n.config, n.kind, kind, oldName, newName),
+      })),
+    );
+  }
+
   // --- Persistência -----------------------------------------------------
 
   private currentGraph(): VersionGraph {
@@ -532,7 +680,87 @@ export class GraphEditor {
       sourceHandle: e.sourceHandle,
       label: e.label,
     }));
-    return { nodes, edges, rulesets: this.rulesets(), formulas: this.formulas(), inputFields: this.inputFields() };
+    return {
+      nodes,
+      edges,
+      rulesets: this.rulesets(),
+      formulas: this.formulas(),
+      inputFields: this.inputFields(),
+      tables: this.tables(),
+    };
+  }
+
+  // --- Editor lateral: Tabelas de parâmetros ---------------------------
+
+  /** Tabela vazia base para o modal de criação. */
+  private emptyTable(): GraphTable {
+    return { name: '', label: '', columns: [], rows: [], keyColumn: null, minColumn: null, maxColumn: null, defaultValue: null };
+  }
+
+  protected addTable(): void {
+    this.openTableDialog('create');
+  }
+
+  protected editTable(i: number): void {
+    this.openTableDialog('edit', i);
+  }
+
+  /**
+   * Modal de tabela. Escopo local grava no signal desta versão (salvo com o
+   * grafo). Escopo global grava via API (/global-tables) na hora, pois vive fora
+   * da versão. Na criação o usuário escolhe o escopo; na edição de uma local, ela
+   * permanece local (globais são editadas na tela dedicada).
+   */
+  private openTableDialog(mode: 'create' | 'edit', i?: number): void {
+    const current = i !== undefined ? this.tables()[i] : undefined;
+    const data: TableDialogData = {
+      mode,
+      allowScope: mode === 'create',
+      scope: 'local',
+      table: current ? { ...current } : this.emptyTable(),
+      readOnly: this.readOnly,
+    };
+    const ref = this.dialog.open<TableDialog, TableDialogData, TableResult>(TableDialog, {
+      data,
+      maxWidth: '94vw',
+      panelClass: 'resizable-dialog',
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+
+      if (result.scope === 'global') {
+        // Tabela global: persiste imediatamente via API (não entra no grafo local).
+        this.api.createGlobalTable({
+          name: result.table.name,
+          label: result.table.label,
+          columns: result.table.columns,
+          rows: result.table.rows,
+          keyColumn: result.table.keyColumn,
+          minColumn: result.table.minColumn,
+          maxColumn: result.table.maxColumn,
+          defaultValue: result.table.defaultValue,
+        }).subscribe({
+          next: () => this.snack.open('Tabela global criada.', 'ok', { duration: 2500 }),
+          error: (e) => this.snack.open(apiErrorMessage(e, 'Falha ao criar tabela global.'), 'ok', { duration: 4000 }),
+        });
+        return;
+      }
+
+      // Tabela local: opera no signal (salva junto com o grafo).
+      if (result.deleted) {
+        if (i !== undefined) this.tables.update((ts) => ts.filter((_, j) => j !== i));
+        return;
+      }
+      if (mode === 'create') {
+        this.tables.update((ts) => [...ts, result.table]);
+      } else if (i !== undefined) {
+        // Renomeou a tabela? Propaga o novo nome para o 1º arg dos PROCV.
+        if (current && current.name !== result.table.name) {
+          this.renameReference('table', current.name, result.table.name);
+        }
+        this.tables.update((ts) => ts.map((t, j) => (j === i ? result.table : t)));
+      }
+    });
   }
 
   // --- Editor lateral: Minhas Variáveis (locais) -----------------------
@@ -563,6 +791,8 @@ export class GraphEditor {
       variables: this.variableNames().filter((v) => v !== current?.key),
       sources: this.sources(),
       policies: this.policies(),
+      policyVariables: this.policyVariables(),
+      tables: this.tableSpecs(),
     };
     const ref = this.dialog.open<VariableDialog, VariableDialogData, VariableResult>(VariableDialog, {
       data,
@@ -581,6 +811,10 @@ export class GraphEditor {
       if (mode === 'create') {
         this.formulas.update((fs) => [...fs, entry]);
       } else if (i !== undefined) {
+        // Renomeou a variável? Propaga o novo nome para {x} em todas as fórmulas.
+        if (current && current.key !== result.key) {
+          this.renameReference('variable', current.key, result.key);
+        }
         this.formulas.update((fs) => fs.map((f, j) => (j === i ? entry : f)));
       }
     });
@@ -672,6 +906,10 @@ export class GraphEditor {
       if (mode === 'create') {
         this.inputFields.update((fs) => [...fs, { name, label, type, required, order: fs.length + 1 }]);
       } else if (i !== undefined) {
+        // Renomeou o campo? Propaga o novo nome para 'x' em todas as fórmulas.
+        if (current && current.name !== name) {
+          this.renameReference('field', current.name, name);
+        }
         this.inputFields.update((fs) => fs.map((f, j) => (j === i ? { ...f, name, label, type, required } : f)));
       }
     });
@@ -684,12 +922,43 @@ export class GraphEditor {
   protected save(): void {
     this.error.set(null);
     this.api.saveVersionGraph(this.flowId, this.versionId, this.currentGraph()).subscribe({
-      next: () => this.snack.open('Rascunho salvo.', 'ok', { duration: 2500 }),
+      next: (graph) => this.handleSaveWarnings(graph.warnings ?? []),
       error: (e) => this.error.set(apiErrorMessage(e, 'Falha ao salvar.')),
     });
   }
 
+  /**
+   * Mostra o resultado do save. Salvou sempre (não bloqueia), mas se a validação
+   * apontou problemas nas fórmulas/tabelas, lista os avisos num painel; senão,
+   * confirma com um snackbar simples.
+   */
+  private handleSaveWarnings(warnings: ValidationWarning[]): void {
+    this.warnings.set(warnings);
+    if (warnings.length === 0) {
+      this.snack.open('Rascunho salvo.', 'ok', { duration: 2500 });
+      return;
+    }
+    const errs = warnings.filter((w) => w.severity === 'Error').length;
+    const msg = errs > 0
+      ? `Salvo com ${errs} erro(s) de validação.`
+      : `Salvo com ${warnings.length} aviso(s).`;
+    this.snack.open(msg, 'ok', { duration: 3500 });
+  }
+
+  protected dismissWarnings(): void {
+    this.warnings.set([]);
+  }
+
   protected publish(): void {
+    // Publicar é irreversível na prática: valida e publica esta versão, arquiva
+    // a anterior e invalida o cache dos fluxos publicados. Confirma antes.
+    const ok = window.confirm(
+      `Publicar esta versão da política "${this.policyName()}"?\n\n` +
+        'A versão publicada atual será arquivada e esta passará a ser a vigente ' +
+        'para as decisões. Após publicar, a versão fica somente leitura.',
+    );
+    if (!ok) return;
+
     this.error.set(null);
     this.api.saveVersionGraph(this.flowId, this.versionId, this.currentGraph()).subscribe({
       next: () => {
@@ -709,12 +978,20 @@ export class GraphEditor {
     this.error.set(null);
     this.api.createVersion(this.flowId, this.versionId).subscribe({
       next: (v) => this.router.navigate(['/politicas', this.flowId, 'versions', v.id]),
-      error: (e) => this.error.set(apiErrorMessage(e, 'Falha ao criar rascunho.')),
+      error: (e) => this.error.set(apiErrorMessage(e, 'Falha ao criar nova versão.')),
     });
   }
 
   protected openTest(): void {
-    const data: DecisionRunnerData = { flowId: this.flowId, inputFields: this.inputFields() };
+    // Rascunho: testa a versão atual (sem publicar). Publicada/arquivada: roda a
+    // versão publicada pelo caminho normal.
+    const isDraft = this.status() === 'Draft';
+    const data: DecisionRunnerData = {
+      flowId: this.flowId,
+      inputFields: this.inputFields(),
+      versionId: this.versionId,
+      test: isDraft,
+    };
     this.dialog.open<DecisionRunnerDialog, DecisionRunnerData>(DecisionRunnerDialog, { data, width: '720px' });
   }
 }

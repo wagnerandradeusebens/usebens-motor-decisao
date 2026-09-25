@@ -19,11 +19,16 @@ public sealed class FlowManagementService : IFlowManagementService
 {
     private readonly MotorDecisaoDbContext _db;
     private readonly ICompiledFlowProvider _compiledFlows;
+    private readonly IPublishedFlowLoader _loader;
 
-    public FlowManagementService(MotorDecisaoDbContext db, ICompiledFlowProvider compiledFlows)
+    public FlowManagementService(
+        MotorDecisaoDbContext db,
+        ICompiledFlowProvider compiledFlows,
+        IPublishedFlowLoader loader)
     {
         _db = db;
         _compiledFlows = compiledFlows;
+        _loader = loader;
     }
 
     public async Task<OperationResult<FlowSummary>> CreateFlowAsync(CreateFlowInput input, CancellationToken ct = default)
@@ -75,9 +80,59 @@ public sealed class FlowManagementService : IFlowManagementService
             .Include(f => f.Versions)
             .FirstOrDefaultAsync(f => f.Id == flowId, ct);
 
-        return flow is null
-            ? OperationResult<FlowSummary>.NotFound($"Fluxo {flowId} não encontrado.")
-            : OperationResult<FlowSummary>.Ok(ToSummary(flow));
+        if (flow is null)
+        {
+            return OperationResult<FlowSummary>.NotFound($"Fluxo {flowId} não encontrado.");
+        }
+
+        var links = await LoadVersionLinksAsync(flowId, ct);
+        return OperationResult<FlowSummary>.Ok(ToSummary(flow, links));
+    }
+
+    /// <summary>
+    /// Para cada versão deste fluxo, quais OUTRAS políticas (bundles publicados
+    /// ativos, de RootFlowId diferente) a congelam como membro — o "Vinculado a"
+    /// do histórico. Mesma varredura em memória de <see cref="IsVersionFrozenAsync"/>:
+    /// há poucos bundles ativos, então percorrer o manifesto (MembersJson) é barato.
+    /// Usa o nome do bundle (RootFlowId) na tabela de fluxos (nome atual).
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> LoadVersionLinksAsync(
+        Guid flowId, CancellationToken ct)
+    {
+        var bundles = await _db.PublishedBundles
+            .AsNoTracking()
+            .Where(b => b.IsActive && b.RootFlowId != flowId)
+            .Select(b => new { b.RootFlowId, b.MembersJson })
+            .ToListAsync(ct);
+
+        if (bundles.Count == 0)
+        {
+            return new Dictionary<Guid, IReadOnlyList<string>>();
+        }
+
+        var names = await _db.DecisionFlows
+            .AsNoTracking()
+            .ToDictionaryAsync(f => f.Id, f => f.Name, ct);
+
+        // versão desta política -> nomes das políticas que a referenciam.
+        var byVersion = new Dictionary<Guid, List<string>>();
+        foreach (var bundle in bundles)
+        {
+            var rootName = names.TryGetValue(bundle.RootFlowId, out var n) ? n : bundle.RootFlowId.ToString();
+            foreach (var member in BundleJson.DeserializeMembers(bundle.MembersJson))
+            {
+                if (!byVersion.TryGetValue(member.FlowVersionId, out var list))
+                {
+                    byVersion[member.FlowVersionId] = list = new List<string>();
+                }
+                if (!list.Contains(rootName))
+                {
+                    list.Add(rootName);
+                }
+            }
+        }
+
+        return byVersion.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<string>)kv.Value);
     }
 
     public async Task<OperationResult<VersionGraph>> GetVersionGraphAsync(Guid flowId, Guid versionId, CancellationToken ct = default)
@@ -88,7 +143,8 @@ public sealed class FlowManagementService : IFlowManagementService
             return OperationResult<VersionGraph>.NotFound($"Versão {versionId} não encontrada no fluxo {flowId}.");
         }
         var formulas = await LoadFormulas(versionId, ct);
-        return OperationResult<VersionGraph>.Ok(ToGraph(version, formulas));
+        var tables = await LoadTables(versionId, ct);
+        return OperationResult<VersionGraph>.Ok(ToGraph(version, formulas, tables));
     }
 
     public async Task<OperationResult<VersionGraph>> SaveVersionGraphAsync(Guid flowId, Guid versionId, VersionGraph graph, CancellationToken ct = default)
@@ -103,6 +159,14 @@ public sealed class FlowManagementService : IFlowManagementService
             return OperationResult<VersionGraph>.Conflict(
                 "Apenas versões em rascunho (Draft) podem ser editadas.");
         }
+        // Mesmo em rascunho, uma versão congelada num bundle publicado (ex.: uma
+        // subpolítica de uma principal já publicada) não pode ser editada — crie
+        // uma nova versão. Isso preserva a imutabilidade do que está em produção.
+        if (await IsVersionFrozenAsync(versionId, ct))
+        {
+            return OperationResult<VersionGraph>.Conflict(
+                "Esta versão está congelada em uma política publicada. Crie uma nova versão para editar.");
+        }
 
         // Replace the whole graph: clear existing children, then re-add.
         _db.FlowNodes.RemoveRange(version.Nodes);
@@ -116,6 +180,8 @@ public sealed class FlowManagementService : IFlowManagementService
         _db.Formulas.RemoveRange(oldFormulas);
         var oldInputFields = await _db.InputFields.Where(f => f.FlowVersionId == versionId).ToListAsync(ct);
         _db.InputFields.RemoveRange(oldInputFields);
+        var oldTables = await _db.ParameterTables.Where(t => t.FlowVersionId == versionId).ToListAsync(ct);
+        _db.ParameterTables.RemoveRange(oldTables);
 
         // Rulesets first, to map client RulesetKey -> real id for node references.
         var rulesetIdByKey = new Dictionary<string, Guid>(StringComparer.Ordinal);
@@ -204,11 +270,49 @@ public sealed class FlowManagementService : IFlowManagementService
             });
         }
 
+        foreach (var t in graph.Tables ?? Array.Empty<GraphTable>())
+        {
+            _db.ParameterTables.Add(new ParameterTable
+            {
+                FlowVersionId = versionId,
+                Name = t.Name,
+                Label = t.Label,
+                ColumnsJson = ParameterTableJson.SerializeColumns(t.Columns),
+                RowsJson = ParameterTableJson.SerializeRows(t.Rows),
+                KeyColumn = t.KeyColumn,
+                MinColumn = t.MinColumn,
+                MaxColumn = t.MaxColumn,
+                DefaultValue = t.DefaultValue
+            });
+        }
+
         await _db.SaveChangesAsync(ct);
 
         var reloaded = await LoadVersionWithGraph(flowId, versionId, tracking: false, ct);
         var savedFormulas = await LoadFormulas(versionId, ct);
-        return OperationResult<VersionGraph>.Ok(ToGraph(reloaded!, savedFormulas));
+        var savedTables = await LoadTables(versionId, ct);
+        var saved = ToGraph(reloaded!, savedFormulas, savedTables);
+
+        // Validação best-effort (não bloqueia): compila as fórmulas e checa PROCV
+        // contra a config das tabelas; devolve avisos para o editor exibir.
+        var warnings = VersionGraphValidator.Validate(saved, await LoadGlobalTableShapesAsync(ct));
+        return OperationResult<VersionGraph>.Ok(saved with { Warnings = warnings });
+    }
+
+    /// <summary>Config mínima das tabelas globais para validar chamadas de PROCV.</summary>
+    private async Task<IReadOnlyList<TableShape>> LoadGlobalTableShapesAsync(CancellationToken ct)
+    {
+        var globals = await _db.GlobalParameterTables
+            .AsNoTracking()
+            .Select(t => new { t.Name, t.ColumnsJson, t.KeyColumn, t.MinColumn, t.MaxColumn })
+            .ToListAsync(ct);
+
+        return globals.Select(g => new TableShape(
+            g.Name,
+            ParameterTableJson.DeserializeColumns(g.ColumnsJson).Select(c => c.Name).ToList(),
+            g.KeyColumn,
+            g.MinColumn,
+            g.MaxColumn)).ToList();
     }
 
     public async Task<OperationResult<FlowVersionSummary>> CreateVersionAsync(Guid flowId, Guid? copyFromVersionId, CancellationToken ct = default)
@@ -235,7 +339,8 @@ public sealed class FlowManagementService : IFlowManagementService
             if (source is not null)
             {
                 var sourceFormulas = await LoadFormulas(copyFromVersionId.Value, ct);
-                await SaveVersionGraphAsync(flowId, newVersion.Id, ToGraph(source, sourceFormulas), ct);
+                var sourceTables = await LoadTables(copyFromVersionId.Value, ct);
+                await SaveVersionGraphAsync(flowId, newVersion.Id, ToGraph(source, sourceFormulas, sourceTables), ct);
             }
         }
 
@@ -296,10 +401,133 @@ public sealed class FlowManagementService : IFlowManagementService
 
         await _db.SaveChangesAsync(ct);
 
+        // Congela o bundle: a principal recém-publicada + todas as subpolíticas
+        // referenciadas (recursivamente), cada uma na sua versão mais recente
+        // AGORA. Se uma sub referenciada não existir, a publicação falha com
+        // mensagem clara. Feito após o SaveChanges para o loader enxergar a
+        // principal já publicada.
+        var bundleResult = await BuildAndSaveBundleAsync(flowId, version.Id, ct);
+        if (bundleResult is not null)
+        {
+            // Reverte a publicação se o congelamento falhou (ex.: sub inexistente).
+            version.Status = FlowVersionStatus.Draft;
+            version.PublishedAt = null;
+            foreach (var prev in previouslyPublished)
+            {
+                prev.Status = FlowVersionStatus.Published;
+            }
+            await _db.SaveChangesAsync(ct);
+            return OperationResult<FlowVersionSummary>.Invalid(bundleResult);
+        }
+
         // The published version changed: drop cached compiled flow.
         _compiledFlows.Invalidate(flowId);
 
         return OperationResult<FlowVersionSummary>.Ok(ToVersionSummary(version));
+    }
+
+    public async Task<OperationResult<int>> BackfillBundlesAsync(CancellationToken ct = default)
+    {
+        // Políticas com versão publicada.
+        var publishedVersions = await _db.FlowVersions
+            .AsNoTracking()
+            .Where(v => v.Status == FlowVersionStatus.Published)
+            .Select(v => new { v.DecisionFlowId, v.Id })
+            .ToListAsync(ct);
+
+        // As que já têm bundle ativo (pular).
+        var withBundle = await _db.PublishedBundles
+            .AsNoTracking()
+            .Where(b => b.IsActive)
+            .Select(b => b.RootFlowId)
+            .ToListAsync(ct);
+        var withBundleSet = new HashSet<Guid>(withBundle);
+
+        var generated = 0;
+        foreach (var v in publishedVersions)
+        {
+            if (withBundleSet.Contains(v.DecisionFlowId)) continue;
+            var error = await BuildAndSaveBundleAsync(v.DecisionFlowId, v.Id, ct);
+            if (error is null)
+            {
+                generated++;
+                _compiledFlows.Invalidate(v.DecisionFlowId);
+            }
+            // Se falhar (ex.: sub inexistente), não interrompe as demais.
+        }
+        return OperationResult<int>.Ok(generated);
+    }
+
+    /// <summary>
+    /// Monta e grava o <see cref="PublishedBundle"/> da publicação: congela a
+    /// principal (versão publicada) + todas as subpolíticas referenciadas em
+    /// cascata (versão mais recente no instante). Desativa o bundle anterior da
+    /// principal. Retorna null em sucesso, ou uma mensagem de erro (pt-BR) quando
+    /// uma subpolítica referenciada não existe.
+    /// </summary>
+    private async Task<string?> BuildAndSaveBundleAsync(Guid rootFlowId, Guid rootVersionId, CancellationToken ct)
+    {
+        var snapshots = new Dictionary<Guid, PublishedFlowSnapshot>();
+        var members = new List<BundleMember>();
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // por nome, corta ciclos
+
+        // Fila de trabalho: começa pela principal (por id, já publicada).
+        var root = await _loader.LoadAsync(rootFlowId, ct);
+        if (root is null)
+        {
+            return "Não foi possível montar o snapshot da política publicada.";
+        }
+        visited.Add(root.FlowName);
+        var queue = new Queue<PublishedFlowSnapshot>();
+        queue.Enqueue(root);
+
+        while (queue.Count > 0)
+        {
+            var snap = queue.Dequeue();
+            snapshots[snap.FlowId] = snap;
+            members.Add(new BundleMember(snap.FlowId, snap.FlowVersionId, snap.FlowName));
+
+            // Descobre as subpolíticas referenciadas compilando o snapshot.
+            IReadOnlyList<string> referenced;
+            try
+            {
+                referenced = CompiledFlow.Compile(snap).ReferencedPolicies;
+            }
+            catch (FlowCompilationException)
+            {
+                referenced = Array.Empty<string>();
+            }
+
+            foreach (var name in referenced)
+            {
+                if (!visited.Add(name)) continue; // já congelada nesta cascata
+                var sub = await _loader.LoadLatestByNameAsync(name, ct);
+                if (sub is null)
+                {
+                    return $"A política referenciada '{name}' não existe e não pôde ser congelada.";
+                }
+                queue.Enqueue(sub);
+            }
+        }
+
+        // Desativa o bundle ativo anterior da principal (histórico preservado).
+        var previous = await _db.PublishedBundles
+            .Where(b => b.RootFlowId == rootFlowId && b.IsActive)
+            .ToListAsync(ct);
+        foreach (var b in previous) b.IsActive = false;
+
+        var bundle = new PublishedBundle
+        {
+            RootFlowId = rootFlowId,
+            RootFlowVersionId = rootVersionId,
+            PublishedAt = DateTime.UtcNow,
+            IsActive = true,
+            SnapshotsJson = BundleJson.SerializeSnapshots(snapshots),
+            MembersJson = BundleJson.SerializeMembers(members),
+        };
+        _db.PublishedBundles.Add(bundle);
+        await _db.SaveChangesAsync(ct);
+        return null;
     }
 
     public async Task<OperationResult<bool>> DeleteFlowAsync(Guid flowId, CancellationToken ct = default)
@@ -327,6 +555,62 @@ public sealed class FlowManagementService : IFlowManagementService
         // Removing the flow cascades to versions -> nodes/edges/rulesets/rules/
         // formulas/input_fields (all configured with cascade delete).
         _db.DecisionFlows.Remove(flow);
+        await _db.SaveChangesAsync(ct);
+
+        _compiledFlows.Invalidate(flowId);
+
+        return OperationResult<bool>.Ok(true);
+    }
+
+    public async Task<OperationResult<bool>> DeleteVersionAsync(Guid flowId, Guid versionId, CancellationToken ct = default)
+    {
+        var flow = await _db.DecisionFlows
+            .Include(f => f.Versions)
+            .FirstOrDefaultAsync(f => f.Id == flowId, ct);
+
+        if (flow is null)
+        {
+            return OperationResult<bool>.NotFound($"Fluxo {flowId} não encontrado.");
+        }
+
+        var version = flow.Versions.FirstOrDefault(v => v.Id == versionId);
+        if (version is null)
+        {
+            return OperationResult<bool>.NotFound($"Versão {versionId} não encontrada no fluxo {flowId}.");
+        }
+
+        // Não exclui versão publicada: ela é (ou foi) o que rodou em produção.
+        if (version.Status == FlowVersionStatus.Published)
+        {
+            return OperationResult<bool>.Conflict(
+                "Não é possível excluir uma versão publicada. Publique outra versão ou arquive esta antes.");
+        }
+
+        // Não exclui versão congelada em bundle ativo (vinculada a outra política).
+        if (await IsVersionFrozenAsync(versionId, ct))
+        {
+            return OperationResult<bool>.Conflict(
+                "Não é possível excluir esta versão: ela está congelada na publicação de outra política. " +
+                "Publique uma nova versão da política principal para desvinculá-la.");
+        }
+
+        // Não deixa o fluxo sem nenhuma versão — nesse caso, exclua a política.
+        if (flow.Versions.Count <= 1)
+        {
+            return OperationResult<bool>.Conflict(
+                "Não é possível excluir a única versão da política. Exclua a política inteira.");
+        }
+
+        // Execuções referenciam a versão com Restrict; remova-as (e as trilhas, que
+        // cascateiam) antes de excluir a versão.
+        var executions = await _db.DecisionExecutions
+            .Where(e => e.FlowVersionId == versionId)
+            .ToListAsync(ct);
+        _db.DecisionExecutions.RemoveRange(executions);
+
+        // A remoção da versão cascateia para nós/arestas/rulesets/regras/fórmulas/
+        // campos de entrada/tabelas de parâmetros (todos configurados com cascade).
+        _db.FlowVersions.Remove(version);
         await _db.SaveChangesAsync(ct);
 
         _compiledFlows.Invalidate(flowId);
@@ -362,19 +646,84 @@ public sealed class FlowManagementService : IFlowManagementService
             .ToListAsync(ct);
     }
 
+    /// <summary>
+    /// Verdadeiro se a versão participa de algum bundle publicado ativo (como
+    /// principal ou subpolítica congelada). Nesses casos a edição é bloqueada;
+    /// o usuário deve criar uma nova versão. São poucos bundles ativos, então a
+    /// varredura em memória do manifesto (MembersJson) é barata.
+    /// </summary>
+    private async Task<bool> IsVersionFrozenAsync(Guid versionId, CancellationToken ct)
+    {
+        var manifests = await _db.PublishedBundles
+            .AsNoTracking()
+            .Where(b => b.IsActive)
+            .Select(b => b.MembersJson)
+            .ToListAsync(ct);
+
+        foreach (var json in manifests)
+        {
+            var members = BundleJson.DeserializeMembers(json);
+            if (members.Any(m => m.FlowVersionId == versionId))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private async Task<List<GraphTable>> LoadTables(Guid versionId, CancellationToken ct)
+    {
+        var entities = await _db.ParameterTables
+            .AsNoTracking()
+            .Where(t => t.FlowVersionId == versionId)
+            .ToListAsync(ct);
+
+        return entities.Select(t => new GraphTable(
+            t.Name,
+            t.Label,
+            ParameterTableJson.DeserializeColumns(t.ColumnsJson),
+            ParameterTableJson.DeserializeRows(t.RowsJson),
+            t.KeyColumn,
+            t.MinColumn,
+            t.MaxColumn,
+            t.DefaultValue)).ToList();
+    }
+
+
+
     // --- Mapping ----------------------------------------------------------
 
-    private static FlowSummary ToSummary(DecisionFlow flow) => new(
+    /// <summary>
+    /// Mapeia sem os vínculos "Vinculado a" (usado na listagem, onde a coluna
+    /// não é exibida e uma varredura por fluxo seria custosa).
+    /// </summary>
+    private static FlowSummary ToSummary(DecisionFlow flow)
+        => ToSummary(flow, EmptyLinks);
+
+    private static readonly IReadOnlyDictionary<Guid, IReadOnlyList<string>> EmptyLinks
+        = new Dictionary<Guid, IReadOnlyList<string>>();
+
+    private static FlowSummary ToSummary(
+        DecisionFlow flow, IReadOnlyDictionary<Guid, IReadOnlyList<string>> links) => new(
         flow.Id, flow.Name, flow.Description, flow.IsActive,
         flow.Versions
             .OrderBy(v => v.VersionNumber)
-            .Select(ToVersionSummary)
+            .Select(v => ToVersionSummary(v, links))
             .ToList());
 
+    /// <summary>Mapeia sem vínculos (versão recém-criada/publicada — ainda sem "Vinculado a").</summary>
     private static FlowVersionSummary ToVersionSummary(FlowVersion v)
-        => new(v.Id, v.VersionNumber, v.Status, v.PublishedAt, v.CreatedAt, v.UpdatedAt);
+        => ToVersionSummary(v, EmptyLinks);
 
-    private static VersionGraph ToGraph(FlowVersion version, IReadOnlyList<GraphFormula> formulas)
+    private static FlowVersionSummary ToVersionSummary(
+        FlowVersion v, IReadOnlyDictionary<Guid, IReadOnlyList<string>> links)
+        => new(v.Id, v.VersionNumber, v.Status, v.PublishedAt, v.CreatedAt, v.UpdatedAt,
+            links.TryGetValue(v.Id, out var names) ? names : Array.Empty<string>());
+
+    private static VersionGraph ToGraph(
+        FlowVersion version,
+        IReadOnlyList<GraphFormula> formulas,
+        IReadOnlyList<GraphTable> tables)
     {
         // Map ruleset id -> a stable client key (use the id string).
         var keyByRulesetId = version.Rulesets.ToDictionary(r => r.Id, r => r.Id.ToString());
@@ -397,7 +746,7 @@ public sealed class FlowManagementService : IFlowManagementService
             .Select(f => new GraphInputField(f.Name, f.Label, f.Type, f.Required, f.Order))
             .ToList();
 
-        return new VersionGraph(nodes, edges, rulesets, formulas, inputFields);
+        return new VersionGraph(nodes, edges, rulesets, formulas, inputFields) { Tables = tables };
     }
 
     /// <summary>

@@ -1,10 +1,7 @@
 using System.Collections.Concurrent;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MotorDecisao.Application.Execution;
 using MotorDecisao.Application.PublishedFlows;
-using MotorDecisao.Domain.Enums;
-using MotorDecisao.Infrastructure.Persistence;
 
 namespace MotorDecisao.Infrastructure.PublishedFlows;
 
@@ -34,26 +31,27 @@ public sealed class CompiledFlowProvider : ICompiledFlowProvider, IPolicyByNameP
     }
 
     /// <summary>
-    /// Resolve uma política publicada pelo nome. Descobre o flowId (com versão
-    /// publicada) no banco e reusa o pipeline de compilação/cache por id.
+    /// Resolve uma política SECUNDÁRIA (referenciada por nome) pela sua versão
+    /// MAIS RECENTE — qualquer status, inclusive rascunho. Só a política principal
+    /// precisa estar publicada; as referenciadas valem sempre pela última versão.
+    ///
+    /// Diferente do caminho publicado (por id), este NÃO usa o cache: a versão de
+    /// rascunho é mutável, então compilamos a cada resolução para sempre refletir
+    /// o estado atual. O custo é baixo (compilação é rápida e há poucas
+    /// referências por decisão) e evita servir um rascunho desatualizado.
     /// </summary>
     public async Task<CompiledFlow?> GetByNameAsync(string policyName, CancellationToken cancellationToken = default)
     {
         using var scope = _scopeFactory.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<MotorDecisaoDbContext>();
+        var loader = scope.ServiceProvider.GetRequiredService<IPublishedFlowLoader>();
 
-        // Política com pelo menos uma versão publicada, casada pelo nome.
-        var flowId = await db.DecisionFlows
-            .Where(f => f.Name == policyName && f.Versions.Any(v => v.Status == FlowVersionStatus.Published))
-            .Select(f => (Guid?)f.Id)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (flowId is null)
+        var snapshot = await loader.LoadLatestByNameAsync(policyName, cancellationToken);
+        if (snapshot is null)
         {
-            return null;
+            return null; // não existe política com esse nome
         }
 
-        return await GetAsync(flowId.Value, cancellationToken);
+        return CompiledFlow.Compile(snapshot);
     }
 
     public async Task<CompiledFlow?> GetAsync(Guid flowId, CancellationToken cancellationToken = default)

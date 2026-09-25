@@ -76,11 +76,21 @@
         </div>
       }
       <div class="block trace">
-        @for (t of r.trace; track t.sequence) {
-          <div class="trace-step">
-            <div class="seq">#{{ t.sequence }} · {{ t.nodeLabel }}</div>
-            @if (t.result) { <div class="mono">{{ t.result }}</div> }
-            @if (t.message) { <div class="muted small">{{ t.message }}</div> }
+        @for (p of policyGroups(r); track p.policyName) {
+          <div class="policy-group">
+            <div class="policy-group__title">{{ p.label }}</div>
+            @for (g of p.categories; track g.category) {
+              <div class="cat-group">
+                <div class="cat-label">{{ g.label }}</div>
+                @for (t of g.steps; track t.sequence) {
+                  <div class="trace-step">
+                    <div class="seq">#{{ t.sequence }} · {{ t.nodeLabel }}</div>
+                    @if (t.result) { <div class="mono">{{ t.result }}</div> }
+                    @if (t.message) { <div class="muted small">{{ t.message }}</div> }
+                  </div>
+                }
+              </div>
+            }
           </div>
         }
       </div>

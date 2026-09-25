@@ -89,3 +89,19 @@ table.full ::ng-deep .mat-mdc-cell {
 table.full ::ng-deep .mat-mdc-row:last-child .mat-mdc-cell {
   border-bottom: none;
 }
+
+// Coluna "Vinculado a": chips com o nome das políticas que congelam a versão.
+.linked-cell {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.linked-chip {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+  white-space: nowrap;
+}

@@ -45,6 +45,15 @@
             <button matButton (click)="newVersion(v.id)">Duplicar</button>
           </div>
         </div>
+        @if (v.linkedPolicies.length > 0) {
+          <div class="linked" title="Congelada em publicações destas políticas">
+            <mat-icon class="linked__icon">link</mat-icon>
+            <span class="linked__label">Vinculado a</span>
+            @for (p of v.linkedPolicies; track p) {
+              <span class="linked__chip">{{ p }}</span>
+            }
+          </div>
+        }
       </mat-card>
     }
   }

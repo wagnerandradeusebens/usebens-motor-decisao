@@ -162,6 +162,10 @@ namespace MotorDecisao.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("PolicyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Result")
                         .HasColumnType("jsonb");
 
@@ -353,6 +357,60 @@ namespace MotorDecisao.Infrastructure.Persistence.Migrations
                     b.ToTable("formulas", "usebens_motor_decisao");
                 });
 
+            modelBuilder.Entity("MotorDecisao.Domain.Entities.GlobalParameterTable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ColumnsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefaultValue")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("KeyColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("MaxColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MinColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RowsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("global_parameter_tables", "usebens_motor_decisao");
+                });
+
             modelBuilder.Entity("MotorDecisao.Domain.Entities.GlobalVariable", b =>
                 {
                     b.Property<Guid>("Id")
@@ -432,6 +490,104 @@ namespace MotorDecisao.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("input_fields", "usebens_motor_decisao");
+                });
+
+            modelBuilder.Entity("MotorDecisao.Domain.Entities.ParameterTable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ColumnsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DefaultValue")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("FlowVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("KeyColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("MaxColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MinColumn")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("RowsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FlowVersionId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("parameter_tables", "usebens_motor_decisao");
+                });
+
+            modelBuilder.Entity("MotorDecisao.Domain.Entities.PublishedBundle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("MembersJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RootFlowId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RootFlowVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SnapshotsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RootFlowId", "IsActive");
+
+                    b.ToTable("published_bundles", "usebens_motor_decisao");
                 });
 
             modelBuilder.Entity("MotorDecisao.Domain.Entities.Rule", b =>
@@ -684,6 +840,17 @@ namespace MotorDecisao.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("MotorDecisao.Domain.Entities.FlowVersion", "FlowVersion")
                         .WithMany("InputFields")
+                        .HasForeignKey("FlowVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("FlowVersion");
+                });
+
+            modelBuilder.Entity("MotorDecisao.Domain.Entities.ParameterTable", b =>
+                {
+                    b.HasOne("MotorDecisao.Domain.Entities.FlowVersion", "FlowVersion")
+                        .WithMany()
                         .HasForeignKey("FlowVersionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

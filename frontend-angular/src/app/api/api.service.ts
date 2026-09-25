@@ -7,6 +7,8 @@ import type {
   ExecutionSummary,
   FlowSummary,
   FlowVersionSummary,
+  GlobalParameterTable,
+  GlobalParameterTableInput,
   GlobalVariable,
   SourceConfigDto,
   SourceDescriptorDto,
@@ -59,6 +61,27 @@ export class ApiService {
     return this.http.post<FlowVersionSummary>(
       `${this.base}/flows/${flowId}/versions/${versionId}/publish`,
       {},
+    );
+  }
+
+  /** Exclui uma versão (recusada pelo backend se publicada/vinculada). */
+  deleteVersion(flowId: string, versionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/flows/${flowId}/versions/${versionId}`);
+  }
+
+  /**
+   * Testa uma versão específica (rascunho) sem publicar e sem persistir. Compila
+   * e executa o grafo da versão na hora, devolvendo o mesmo formato de decisão.
+   */
+  testDecide(
+    flowId: string,
+    versionId: string,
+    proposalReference: string | null,
+    fields: Record<string, unknown>,
+  ): Observable<DecisionResponse> {
+    return this.http.post<DecisionResponse>(
+      `${this.base}/flows/${flowId}/versions/${versionId}/test-decision`,
+      { proposalReference, fields },
     );
   }
 
@@ -115,5 +138,22 @@ export class ApiService {
 
   deleteGlobalVariable(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/global-variables/${id}`);
+  }
+
+  // --- Tabelas de parâmetros globais (compartilhadas entre políticas) ---
+  listGlobalTables(): Observable<GlobalParameterTable[]> {
+    return this.http.get<GlobalParameterTable[]>(`${this.base}/global-tables`);
+  }
+
+  createGlobalTable(input: GlobalParameterTableInput): Observable<GlobalParameterTable> {
+    return this.http.post<GlobalParameterTable>(`${this.base}/global-tables`, input);
+  }
+
+  updateGlobalTable(id: string, input: GlobalParameterTableInput): Observable<GlobalParameterTable> {
+    return this.http.put<GlobalParameterTable>(`${this.base}/global-tables/${id}`, input);
+  }
+
+  deleteGlobalTable(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/global-tables/${id}`);
   }
 }

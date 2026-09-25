@@ -36,6 +36,33 @@ public static class DecisionEndpoints
             })
             .WithTags("Decisions");
 
+        // Testar uma versão específica (rascunho) SEM publicar e SEM persistir.
+        app.MapPost("/flows/{flowId:guid}/versions/{versionId:guid}/test-decision",
+            async (Guid flowId, Guid versionId, DecisionApiRequest req, ITestDecisionService svc, CancellationToken ct) =>
+            {
+                var request = new DecisionRequest(
+                    flowId,
+                    req.ProposalReference,
+                    FieldValueMapper.Map(req.Fields));
+
+                try
+                {
+                    var result = await svc.TestAsync(flowId, versionId, request, ct);
+                    return Results.Ok(DecisionApiResponse.From(result));
+                }
+                catch (FlowCompilationException ex)
+                {
+                    // Grafo/fórmula não compila: reporta como erro de validação.
+                    return Results.BadRequest(new { error = ex.Message });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Versão inexistente, etc.
+                    return Results.BadRequest(new { error = ex.Message });
+                }
+            })
+            .WithTags("Decisions");
+
         // List recent executions of a flow.
         app.MapGet("/flows/{flowId:guid}/executions",
             async (Guid flowId, MotorDecisaoDbContext db, CancellationToken ct) =>
@@ -75,6 +102,7 @@ public static class DecisionEndpoints
                     .Select(t => new TraceStepResponse(
                         t.Sequence, t.NodeKey, t.NodeLabel, t.Expression, t.Result, t.Message,
                         string.IsNullOrWhiteSpace(t.Category) ? "Fluxo" : t.Category,
+                        t.PolicyName,
                         DeserializeOrEmpty<List<EvalStepResponse>>(t.Detail) ?? new()))
                     .ToList();
 
