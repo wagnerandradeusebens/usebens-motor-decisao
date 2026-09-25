@@ -51,7 +51,10 @@ public sealed record GraphInputField(
     string Label,
     InputFieldType Type,
     bool Required,
-    int Order);
+    int Order,
+    string? Description = null,
+    string? Example = null,
+    string? Group = null);
 
 public sealed record GraphNode(
     string NodeKey,

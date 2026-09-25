@@ -7,10 +7,16 @@
 
   <div class="section-label">Campos da proposta</div>
   @for (f of fields(); track $index) {
-    <div class="field-row">
+    <div class="field-row" [class.field-row--required]="f.required">
       <mat-form-field appearance="outline" class="key">
-        <mat-label>campo</mat-label>
-        <input matInput [ngModel]="f.key" (ngModelChange)="setField($index, { key: $event })" />
+        <mat-label>campo{{ f.required ? ' *' : '' }}</mat-label>
+        <input matInput [ngModel]="f.key" (ngModelChange)="setField($index, { key: $event })"
+               [readonly]="f.required && (f.sources?.length ?? 0) > 0" />
+        @if (f.required) {
+          <mat-icon matSuffix class="req-suffix" [title]="fieldHint(f)">
+            {{ (f.sources?.length ?? 0) > 0 ? 'bolt' : 'star' }}
+          </mat-icon>
+        }
       </mat-form-field>
       <mat-form-field appearance="outline" class="type">
         <mat-label>tipo</mat-label>
@@ -34,7 +40,9 @@
           <input matInput [ngModel]="f.value" (ngModelChange)="setField($index, { value: $event })" />
         </mat-form-field>
       }
-      <button matIconButton (click)="removeField($index)" aria-label="Remover">
+      <button matIconButton (click)="removeField($index)" aria-label="Remover"
+              [disabled]="f.required && (f.sources?.length ?? 0) > 0"
+              [title]="f.required && (f.sources?.length ?? 0) > 0 ? 'Campo obrigatório (fonte) — não pode remover' : 'Remover'">
         <mat-icon>close</mat-icon>
       </button>
     </div>

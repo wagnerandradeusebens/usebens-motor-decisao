@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MotorDecisao.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MotorDecisao.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MotorDecisaoDbContext))]
-    partial class MotorDecisaoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260925180812_AddInputFieldGroup")]
+    partial class AddInputFieldGroup
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,10 +174,6 @@ namespace MotorDecisao.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("Sequence")
                         .HasColumnType("integer");
-
-                    b.Property<string>("SourceOrigin")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

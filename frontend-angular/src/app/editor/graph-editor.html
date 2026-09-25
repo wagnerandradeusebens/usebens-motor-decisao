@@ -52,17 +52,42 @@
           }
         </mat-expansion-panel-header>
 
-        @if (inputFields().length === 0) {
+        @if (inputFields().length === 0 && sourceFields().length === 0) {
           <div class="palette__empty">Nenhum campo ainda.</div>
         }
         @for (f of inputFields(); track $index) {
           <div class="var-row">
-            <span class="var-row__name" [title]="f.name">{{ f.label || f.name || '(sem nome)' }}</span>
+            <span class="var-row__name" [title]="f.name">
+              {{ f.label || f.name || '(sem nome)' }}
+              @if (f.required) { <span class="req-mark" title="Obrigatório">*</span> }
+            </span>
             <span class="var-row__actions">
               <button matIconButton (click)="editField($index)" title="Editar campo">
                 <mat-icon>edit</mat-icon>
               </button>
             </span>
+          </div>
+        }
+        <!-- Campos obrigatórios derivados das fontes (travados). -->
+        @for (f of sourceFields(); track f.name) {
+          <div class="var-row var-row--derived">
+            <span class="var-row__name" [title]="'Exigido por: ' + f.requiredBySources.join(', ')">
+              <mat-icon class="src-icon" title="Incluído automaticamente por fonte">bolt</mat-icon>
+              {{ f.name }} <span class="req-mark" title="Obrigatório">*</span>
+            </span>
+            <span class="var-row__actions">
+              <mat-icon class="lock-icon"
+                        [title]="'Obrigatório · incluído pela(s) fonte(s): ' + f.requiredBySources.join(', ')">
+                lock
+              </mat-icon>
+            </span>
+          </div>
+        }
+        @if (sourceFields().length > 0) {
+          <div class="palette__hint">
+            <mat-icon>info</mat-icon>
+            Campos com <mat-icon class="inline">bolt</mat-icon> são exigidos por fontes usadas
+            (nesta política ou nas referenciadas) e não podem ser editados.
           </div>
         }
       </mat-expansion-panel>
@@ -255,6 +280,10 @@
       <button matButton="outlined" (click)="autoLayout()" [disabled]="readOnly"
               title="Reorganiza os nós em árvore de cima para baixo">
         <mat-icon>account_tree</mat-icon> Auto-organizar
+      </button>
+      <button matButton="outlined" (click)="openRequestSchema()"
+              title="Define a estrutura da requisição (campos que o integrador envia)">
+        <mat-icon>data_object</mat-icon> Request
       </button>
       <button matButton="outlined" (click)="openTest()" [disabled]="status() === 'Archived'"
               [title]="status() === 'Draft' ? 'Testa este rascunho sem publicar' : 'Executa a versão publicada'">

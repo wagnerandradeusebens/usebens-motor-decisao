@@ -46,6 +46,12 @@ public static class FlowEndpoints
         versions.MapGet("/{versionId:guid}", async (Guid flowId, Guid versionId, IFlowManagementService svc, CancellationToken ct) =>
             (await svc.GetVersionGraphAsync(flowId, versionId, ct)).ToHttp());
 
+        // Schema de entrada (contrato da request): campos declarados + campos-chave
+        // obrigatórios derivados das fontes (própria política + referenciadas).
+        versions.MapGet("/{versionId:guid}/input-schema",
+            async (Guid flowId, Guid versionId, IPolicyInputSchemaService svc, CancellationToken ct) =>
+                (await svc.GetByVersionAsync(flowId, versionId, ct)).ToHttp());
+
         versions.MapPut("/{versionId:guid}", async (Guid flowId, Guid versionId, VersionGraph graph, IFlowManagementService svc, CancellationToken ct) =>
             (await svc.SaveVersionGraphAsync(flowId, versionId, graph, ct)).ToHttp());
 

@@ -22,9 +22,29 @@ public static class FieldValueMapper
 
         foreach (var (key, element) in input)
         {
-            result[key] = Convert(element);
+            Flatten(key, element, result);
         }
         return result;
+    }
+
+    /// <summary>
+    /// Achata a request: objetos aninhados viram chaves com caminho pontilhado
+    /// (<c>grupo.campo</c>), recursivamente. Assim uma request agrupada por assunto
+    /// (proponente, operacao, …) é lida pelo motor como campos <c>'proponente.cpf_cnpj'</c>.
+    /// Valores escalares (número, texto, bool, data, null) viram o campo daquele
+    /// caminho. Arrays não são suportados neste contrato (achatados como texto cru).
+    /// </summary>
+    private static void Flatten(string path, JsonElement element, Dictionary<string, FormulaValue> acc)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var prop in element.EnumerateObject())
+            {
+                Flatten($"{path}.{prop.Name}", prop.Value, acc);
+            }
+            return;
+        }
+        acc[path] = Convert(element);
     }
 
     private static FormulaValue Convert(JsonElement element) => element.ValueKind switch

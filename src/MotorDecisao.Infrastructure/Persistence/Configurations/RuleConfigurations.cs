@@ -55,6 +55,9 @@ public class InputFieldConfiguration : IEntityTypeConfiguration<InputField>
         builder.Property(x => x.Label).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Type).HasConversion<string>().HasMaxLength(20).IsRequired();
         builder.Property(x => x.Required).HasDefaultValue(false);
+        builder.Property(x => x.Description).HasMaxLength(1000);
+        builder.Property(x => x.Example).HasMaxLength(500);
+        builder.Property(x => x.Group).HasMaxLength(100);
 
         builder.HasIndex(x => new { x.FlowVersionId, x.Name }).IsUnique();
 

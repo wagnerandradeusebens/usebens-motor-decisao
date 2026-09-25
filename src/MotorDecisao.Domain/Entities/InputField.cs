@@ -28,6 +28,19 @@ public class InputField : Entity
     /// <summary>Whether the portal should require a value before executing.</summary>
     public bool Required { get; set; }
 
+    /// <summary>Descrição do campo (o que é, formato esperado) — documenta a request.</summary>
+    public string? Description { get; set; }
+
+    /// <summary>Valor de exemplo do campo, usado no payload de exemplo da request.</summary>
+    public string? Example { get; set; }
+
+    /// <summary>
+    /// Grupo/assunto do campo na request (ex.: <c>proponente</c>, <c>operacao</c>).
+    /// Quando definido, o campo é referenciado nas fórmulas como
+    /// <c>'grupo.campo'</c> e viaja aninhado no payload. Vazio = campo na raiz.
+    /// </summary>
+    public string? Group { get; set; }
+
     /// <summary>Display order in the portal form.</summary>
     public int Order { get; set; }
 }

@@ -1,0 +1,120 @@
+mat-dialog-content {
+  min-width: 720px;
+  max-width: 90vw;
+  padding-top: 1.25rem;
+}
+
+.intro {
+  font-size: 0.85rem;
+  color: var(--cor-texto-claro);
+  margin: 0 0 1rem;
+}
+
+.section-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--marca-azul);
+  margin: 1.25rem 0 0.6rem;
+}
+.section-label:first-of-type { margin-top: 0.25rem; }
+
+.empty {
+  font-size: 0.82rem;
+  color: var(--cor-texto-claro);
+}
+
+.field-card {
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  padding: 0.6rem 0.7rem 0.1rem;
+  margin-bottom: 0.6rem;
+}
+.field-card__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.grow { flex: 1; min-width: 150px; }
+.type { width: 130px; }
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--cor-texto-claro);
+  margin: 0 0 0.5rem;
+}
+.hint mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: var(--marca-teal);
+}
+
+.src-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  margin-bottom: 0.3rem;
+  background: color-mix(in srgb, var(--marca-teal) 5%, #fff);
+}
+.src-field__icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--cor-texto-claro);
+  margin-top: 2px;
+}
+.src-field__name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+.src-field__name .badge {
+  font-size: 0.7rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto-claro);
+}
+.src-field__name .req {
+  font-size: 0.7rem;
+  color: var(--cor-perigo);
+  font-weight: 600;
+}
+.src-field__sources {
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+  margin-top: 0.1rem;
+}
+
+.example {
+  position: relative;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  background: var(--cor-fundo);
+}
+.example__copy {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+}
+.example__code {
+  margin: 0;
+  padding: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 30vh;
+  overflow: auto;
+}
+
+.spacer { flex: 1 1 auto; }

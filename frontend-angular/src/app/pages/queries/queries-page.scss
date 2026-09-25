@@ -1,0 +1,131 @@
+.page { display: flex; flex-direction: column; gap: 1rem; }
+
+.full { width: 100%; display: block; }
+
+.picker, .form-card, .result, .report { padding: 1rem 1.25rem; }
+
+// --- Relatório Operacional (estilo Crivo) ---
+.report-actions { display: flex; justify-content: flex-end; }
+.report__head { border-bottom: 2px solid var(--marca-azul); margin-bottom: 0.75rem; padding-bottom: 0.4rem; }
+.report__head h2 { margin: 0; color: var(--marca-azul); font-size: 1.15rem; }
+
+.rep-sec { margin-bottom: 1rem; }
+.rep-sec__title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--marca-teal);
+  border-bottom: 1px solid var(--cor-borda);
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+.kv { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.85rem; padding: 0.15rem 0; }
+.kv span { color: var(--cor-texto-claro); }
+
+.rep-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.rep-table td { border-bottom: 1px solid var(--cor-borda); padding: 0.3rem 0.4rem; vertical-align: top; }
+.rep-table td.k { color: var(--cor-texto-claro); width: 45%; }
+.rep-table td.origin { width: 90px; text-align: right; }
+
+.results-grid { display: flex; gap: 1.5rem; margin-bottom: 0.5rem; }
+.res-item { display: flex; flex-direction: column; gap: 0.15rem; }
+.res-item .muted { font-size: 0.72rem; }
+
+.just { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; }
+
+.src-block { margin-bottom: 0.75rem; }
+.src-block__head { display: flex; align-items: center; gap: 0.35rem; font-size: 0.88rem; margin-bottom: 0.3rem; }
+.src-block__head mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--marca-teal); }
+
+.tag {
+  font-size: 0.68rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.tag--online { background: color-mix(in srgb, var(--cor-ok) 18%, #fff); color: var(--cor-ok); }
+.tag--cache { background: color-mix(in srgb, var(--cor-alerta) 22%, #fff); color: #92400e; }
+
+.form-card__title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--marca-azul);
+  margin-bottom: 0.75rem;
+}
+
+.group { margin-bottom: 0.5rem; }
+.group__title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--marca-teal);
+  text-transform: capitalize;
+  border-bottom: 1px solid var(--cor-borda);
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.6rem;
+}
+.group__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem 0.85rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.row { display: flex; align-items: center; }
+.spread { justify-content: space-between; }
+.muted { color: var(--cor-texto-claro); font-size: 0.85rem; }
+.mono { font-family: ui-monospace, monospace; font-size: 0.82rem; }
+
+.outcome {
+  font-size: 1.05rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  background: var(--cor-fundo);
+}
+.outcome.Approved { color: var(--cor-ok); }
+.outcome.Denied { color: var(--cor-perigo); }
+.outcome.ManualReview, .outcome.ApprovedWithConditions { color: var(--cor-alerta); }
+
+.block { margin-top: 0.85rem; }
+.block__title {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--marca-azul);
+  border-bottom: 1px solid var(--cor-borda);
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.4rem;
+}
+.out code { font-family: ui-monospace, monospace; }
+
+.policy-group {
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 0.6rem;
+  background: color-mix(in srgb, var(--marca-teal) 4%, #fff);
+}
+.policy-group__title {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--marca-teal);
+  margin-bottom: 0.4rem;
+}
+.cat-group { margin-bottom: 0.4rem; }
+.cat-label {
+  font-weight: 600;
+  font-size: 0.72rem;
+  color: var(--marca-azul);
+  margin-bottom: 0.2rem;
+}
+.trace-step {
+  border-left: 3px solid var(--cor-borda);
+  padding: 0.25rem 0.6rem;
+  margin-bottom: 2px;
+}
+.seq { font-size: 0.72rem; color: var(--cor-texto-claro); }

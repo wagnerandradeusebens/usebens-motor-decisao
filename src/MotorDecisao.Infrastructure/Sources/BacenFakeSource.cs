@@ -44,7 +44,7 @@ public sealed class BacenFakeSource : IExternalSource
                     new SourceDatum(DividasAVencerMinimo12m, "Dívidas a vencer - mínimo dos últimos 12 meses (R$)."),
                     new SourceDatum(FlagDividasVencidas12m, "Indica dívidas vencidas nos últimos 12 meses (VERDADEIRO/FALSO).")
                 },
-                KeyField: "cpf")
+                KeyField: "cpf_cnpj")
         });
 
     /// <summary>
@@ -53,7 +53,7 @@ public sealed class BacenFakeSource : IExternalSource
     /// </summary>
     public bool IsAvailable(IFormulaContext context)
     {
-        context.TryGetField("cpf", out var cpfValue);
+        context.TryGetField("cpf_cnpj", out var cpfValue);
         var cpf = cpfValue.Type == FormulaValueType.Blank ? string.Empty : cpfValue.AsText();
         // Offset the seed so availability is independent of the data draw.
         var rng = new Random(StableSeed(cpf) ^ 0x5F3759DF);
@@ -75,7 +75,7 @@ public sealed class BacenFakeSource : IExternalSource
         // same CPF always produces the same SCR snapshot. All figures are drawn
         // from the same seed so a CPF's data is internally consistent — exactly the
         // whole-product snapshot the engine caches in one entry.
-        context.TryGetField("cpf", out var cpfValue);
+        context.TryGetField("cpf_cnpj", out var cpfValue);
         var cpf = cpfValue.Type == FormulaValueType.Blank ? string.Empty : cpfValue.AsText();
         var rng = new Random(StableSeed(cpf));
 

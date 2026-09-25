@@ -266,6 +266,9 @@ public sealed class FlowManagementService : IFlowManagementService
                 Label = f.Label,
                 Type = f.Type,
                 Required = f.Required,
+                Description = f.Description,
+                Example = f.Example,
+                Group = f.Group,
                 Order = f.Order
             });
         }
@@ -743,7 +746,7 @@ public sealed class FlowManagementService : IFlowManagementService
 
         var inputFields = version.InputFields
             .OrderBy(f => f.Order)
-            .Select(f => new GraphInputField(f.Name, f.Label, f.Type, f.Required, f.Order))
+            .Select(f => new GraphInputField(f.Name, f.Label, f.Type, f.Required, f.Order, f.Description, f.Example, f.Group))
             .ToList();
 
         return new VersionGraph(nodes, edges, rulesets, formulas, inputFields) { Tables = tables };

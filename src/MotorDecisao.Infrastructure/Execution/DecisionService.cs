@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MotorDecisao.Application.Execution;
+using MotorDecisao.Application.Flows;
 using MotorDecisao.Domain.Entities;
 using MotorDecisao.Domain.Enums;
 using MotorDecisao.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public sealed class DecisionService : IDecisionService
     private readonly IBundleProvider _bundles;
     private readonly FlowExecutor _executor;
     private readonly MotorDecisaoDbContext _db;
+    private readonly IPolicyInputSchemaService _schema;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -28,16 +30,30 @@ public sealed class DecisionService : IDecisionService
         ICompiledFlowProvider flows,
         IBundleProvider bundles,
         FlowExecutor executor,
-        MotorDecisaoDbContext db)
+        MotorDecisaoDbContext db,
+        IPolicyInputSchemaService schema)
     {
         _flows = flows;
         _bundles = bundles;
         _executor = executor;
         _db = db;
+        _schema = schema;
     }
 
     public async Task<DecisionResult> DecideAsync(DecisionRequest request, CancellationToken cancellationToken = default)
     {
+        // Contrato de entrada: nenhum campo obrigatório (declarado ou derivado de
+        // fonte) pode faltar. Valida contra o schema da versão publicada.
+        var schema = await _schema.GetPublishedAsync(request.FlowId, cancellationToken);
+        if (schema is not null)
+        {
+            var error = InputSchemaValidator.Validate(schema, request.Input);
+            if (error is not null)
+            {
+                throw new InvalidOperationException(error);
+            }
+        }
+
         // Preferência: bundle congelado ativo da principal (execução usa o retrato
         // imutável da publicação — principal + subs). Fallback: caminho antigo
         // (política publicada antes do congelamento, ou sem bundle).
@@ -90,6 +106,7 @@ public sealed class DecisionService : IDecisionService
                 Message = step.Message,
                 Category = step.Category.ToString(),
                 PolicyName = step.PolicyName,
+                SourceOrigin = step.SourceOrigin,
                 Detail = step.Detail.Count == 0 ? null : JsonSerializer.Serialize(step.Detail, JsonOptions)
             });
         }

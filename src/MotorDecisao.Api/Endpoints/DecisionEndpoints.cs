@@ -102,7 +102,7 @@ public static class DecisionEndpoints
                     .Select(t => new TraceStepResponse(
                         t.Sequence, t.NodeKey, t.NodeLabel, t.Expression, t.Result, t.Message,
                         string.IsNullOrWhiteSpace(t.Category) ? "Fluxo" : t.Category,
-                        t.PolicyName,
+                        t.PolicyName, t.SourceOrigin,
                         DeserializeOrEmpty<List<EvalStepResponse>>(t.Detail) ?? new()))
                     .ToList();
 

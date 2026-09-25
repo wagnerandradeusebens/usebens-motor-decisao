@@ -24,6 +24,10 @@ export const routes: Routes = [
         loadComponent: () => import('./editor/graph-editor').then((m) => m.GraphEditor),
       },
       {
+        path: 'consultas',
+        loadComponent: () => import('./pages/queries/queries-page').then((m) => m.QueriesPage),
+      },
+      {
         path: 'fontes',
         loadComponent: () => import('./pages/sources/sources-page').then((m) => m.SourcesPage),
       },

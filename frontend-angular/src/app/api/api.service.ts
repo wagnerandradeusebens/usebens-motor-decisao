@@ -10,6 +10,7 @@ import type {
   GlobalParameterTable,
   GlobalParameterTableInput,
   GlobalVariable,
+  PolicyInputSchema,
   SourceConfigDto,
   SourceDescriptorDto,
   VersionGraph,
@@ -45,6 +46,13 @@ export class ApiService {
   // --- Versions / graph ---
   getVersionGraph(flowId: string, versionId: string): Observable<VersionGraph> {
     return this.http.get<VersionGraph>(`${this.base}/flows/${flowId}/versions/${versionId}`);
+  }
+
+  /** Schema de entrada da versão: campos declarados + derivados das fontes. */
+  getInputSchema(flowId: string, versionId: string): Observable<PolicyInputSchema> {
+    return this.http.get<PolicyInputSchema>(
+      `${this.base}/flows/${flowId}/versions/${versionId}/input-schema`,
+    );
   }
 
   saveVersionGraph(flowId: string, versionId: string, graph: VersionGraph): Observable<VersionGraph> {

@@ -99,6 +99,38 @@ export interface GraphInputField {
   type: InputFieldType;
   required: boolean;
   order: number;
+  /** Descrição do campo (documenta a request). */
+  description?: string | null;
+  /** Valor de exemplo (usado no payload de exemplo). */
+  example?: string | null;
+  /** Grupo/assunto do campo (ex.: proponente, operacao). Vazio = raiz. */
+  group?: string | null;
+}
+
+/** Origem de um campo do schema de entrada. */
+export type InputFieldOrigin = 'Manual' | 'Source';
+
+/** Um campo do schema de entrada (request) da política. */
+export interface InputSchemaField {
+  name: string;
+  label: string;
+  type: InputFieldType;
+  required: boolean;
+  origin: InputFieldOrigin;
+  /** Fontes que exigem este campo como chave (ex.: ["SERASA/Score"]). Vazio se manual. */
+  requiredBySources: string[];
+  description?: string | null;
+  example?: string | null;
+  group?: string | null;
+}
+
+/** Schema de entrada de uma versão: contrato da request de decisão. */
+export interface PolicyInputSchema {
+  flowId: string;
+  flowVersionId: string;
+  fields: InputSchemaField[];
+  /** Exemplo do payload do POST /decisions, gerado a partir dos campos. */
+  exampleRequestJson: string;
 }
 
 /** Tipo de coluna de uma tabela de parâmetros. */
@@ -227,6 +259,8 @@ export interface TraceStep {
   category: TraceCategory;
   /** Política a que o passo pertence (principal ou subpolítica). Null em traces antigos. */
   policyName: string | null;
+  /** Para passos de fonte: origem do valor ('Online' | 'Cache'). Null nos demais. */
+  sourceOrigin?: string | null;
   detail: EvalStep[];
 }
 

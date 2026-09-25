@@ -97,6 +97,7 @@ public static class DependencyInjection
 
         // Flow authoring / publishing use cases (scoped: uses the DbContext).
         services.AddScoped<IFlowManagementService, FlowManagementService>();
+        services.AddScoped<IPolicyInputSchemaService, PolicyInputSchemaService>();
         services.AddScoped<IGlobalVariableService, GlobalVariableService>();
         services.AddScoped<IGlobalParameterTableService, GlobalParameterTableService>();
         services.AddScoped<ISourceConfigService, SourceConfigService>();

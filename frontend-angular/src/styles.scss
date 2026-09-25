@@ -487,3 +487,21 @@ f-flow {
   padding: 1.25rem 1.5rem 0.75rem;
   box-sizing: border-box;
 }
+
+// --- Impressão: exporta SÓ o Relatório Operacional (#report) como PDF ---
+@media print {
+  // Esconde tudo por padrão; revela apenas o relatório e seus descendentes.
+  body * { visibility: hidden; }
+  #report, #report * { visibility: visible; }
+  // Posiciona o relatório no topo da página impressa, ocupando a largura.
+  #report {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  // Elementos marcados para nunca imprimir (ações, menu, trilha).
+  .no-print { display: none !important; }
+}

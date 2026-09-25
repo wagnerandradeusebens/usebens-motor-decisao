@@ -34,6 +34,7 @@ import type {
   GraphInputField,
   GraphTable,
   InputFieldType,
+  InputSchemaField,
   RuleEffect,
   SourceDescriptorDto,
   ValidationWarning,
@@ -46,6 +47,7 @@ import { BranchDialog, BranchData, BranchTarget } from './branch-dialog';
 import { DecisionRunnerDialog, DecisionRunnerData } from './decision-runner-dialog';
 import { VariableDialog, VariableDialogData, VariableResult } from './variable-dialog';
 import { FieldDialog, FieldDialogData, FieldResult } from './field-dialog';
+import { RequestSchemaDialog, RequestSchemaData, RequestSchemaResult } from './request-schema-dialog';
 import { TableDialog, TableDialogData, TableResult } from './table-dialog';
 import { FormulaInput } from './formula-input';
 import {
@@ -133,6 +135,12 @@ export class GraphEditor {
   // Partes do grafo que o editor visual não desenha, mas precisa preservar/editar.
   protected readonly rulesets = signal<GraphRuleset[]>([]);
   protected readonly inputFields = signal<GraphInputField[]>([]);
+  /**
+   * Campos do schema DERIVADOS das fontes (origem Source): obrigatórios, exibidos
+   * travados (não editáveis/excluíveis) e recalculados pelo backend a partir das
+   * fontes usadas na política e nas referenciadas. Não são persistidos.
+   */
+  protected readonly sourceFields = signal<InputSchemaField[]>([]);
   protected readonly formulas = signal<GraphFormula[]>([]);
   /** Tabelas de parâmetros locais desta versão (lookup para PROCV/PROCV.FAIXA). */
   protected readonly tables = signal<GraphTable[]>([]);
@@ -212,6 +220,8 @@ export class GraphEditor {
       error: (e) => this.error.set(apiErrorMessage(e, 'Falha ao carregar a versão.')),
     });
 
+    this.loadInputSchema();
+
     // Catálogo de fontes externas para o autocomplete ([Fonte;Produto;Dado]).
     this.api.listSources().subscribe({
       next: (list) => this.sources.set(list),
@@ -270,6 +280,18 @@ export class GraphEditor {
   /** Nomes técnicos dos campos (para o autocomplete de 'campo'). */
   protected fieldNames(): string[] {
     return this.inputFields().map((f) => f.name).filter((n) => !!n);
+  }
+
+  /**
+   * Carrega o schema de entrada e separa os campos derivados de fonte (origem
+   * Source) para exibi-los travados. Chamado ao abrir e após salvar (as fontes
+   * usadas podem ter mudado com as edições).
+   */
+  private loadInputSchema(): void {
+    this.api.getInputSchema(this.flowId, this.versionId).subscribe({
+      next: (schema) => this.sourceFields.set(schema.fields.filter((f) => f.origin === 'Source')),
+      error: () => this.sourceFields.set([]),
+    });
   }
 
   private applyGraph(graph: VersionGraph): void {
@@ -889,6 +911,9 @@ export class GraphEditor {
       label: current?.label ?? '',
       type: current?.type ?? 'Number',
       required: current?.required ?? false,
+      description: current?.description ?? '',
+      example: current?.example ?? '',
+      group: current?.group ?? '',
       readOnly: this.readOnly,
     };
     const ref = this.dialog.open<FieldDialog, FieldDialogData, FieldResult>(FieldDialog, {
@@ -902,15 +927,15 @@ export class GraphEditor {
         if (i !== undefined) this.inputFields.update((fs) => fs.filter((_, j) => j !== i));
         return;
       }
-      const { name, label, type, required } = result;
+      const { name, label, type, required, description, example, group } = result;
       if (mode === 'create') {
-        this.inputFields.update((fs) => [...fs, { name, label, type, required, order: fs.length + 1 }]);
+        this.inputFields.update((fs) => [...fs, { name, label, type, required, description, example, group, order: fs.length + 1 }]);
       } else if (i !== undefined) {
         // Renomeou o campo? Propaga o novo nome para 'x' em todas as fórmulas.
         if (current && current.name !== name) {
           this.renameReference('field', current.name, name);
         }
-        this.inputFields.update((fs) => fs.map((f, j) => (j === i ? { ...f, name, label, type, required } : f)));
+        this.inputFields.update((fs) => fs.map((f, j) => (j === i ? { ...f, name, label, type, required, description, example, group } : f)));
       }
     });
   }
@@ -933,6 +958,8 @@ export class GraphEditor {
    * confirma com um snackbar simples.
    */
   private handleSaveWarnings(warnings: ValidationWarning[]): void {
+    // As fontes usadas podem ter mudado — recalcula os campos derivados.
+    this.loadInputSchema();
     this.warnings.set(warnings);
     if (warnings.length === 0) {
       this.snack.open('Rascunho salvo.', 'ok', { duration: 2500 });
@@ -979,6 +1006,32 @@ export class GraphEditor {
     this.api.createVersion(this.flowId, this.versionId).subscribe({
       next: (v) => this.router.navigate(['/politicas', this.flowId, 'versions', v.id]),
       error: (e) => this.error.set(apiErrorMessage(e, 'Falha ao criar nova versão.')),
+    });
+  }
+
+  /**
+   * Abre a definição da REQUEST oficial: edita os campos manuais (que vivem no
+   * mesmo signal inputFields, salvos com o grafo), mostra os campos derivados de
+   * fonte (travados) e o exemplo do payload. Ao aplicar, atualiza os campos
+   * manuais; o usuário salva normalmente para persistir.
+   */
+  protected openRequestSchema(): void {
+    const ref = this.dialog.open<RequestSchemaDialog, RequestSchemaData, RequestSchemaResult>(
+      RequestSchemaDialog,
+      {
+        data: {
+          flowId: this.flowId,
+          versionId: this.versionId,
+          fields: this.inputFields(),
+          readOnly: this.readOnly,
+        },
+        width: '860px',
+        maxWidth: '92vw',
+      },
+    );
+    ref.afterClosed().subscribe((result) => {
+      if (!result || this.readOnly) return;
+      this.inputFields.set(result.fields);
     });
   }
 

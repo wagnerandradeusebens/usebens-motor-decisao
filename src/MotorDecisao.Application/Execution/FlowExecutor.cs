@@ -84,6 +84,9 @@ public sealed class FlowExecutor
 
         var resolvedExternals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var resolvedVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Produtos (fonte+produto) buscados ONLINE nesta decisão — para marcar a
+        // origem correta no relatório das fontes (ver loop de fontes abaixo).
+        var onlineProducts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Garante que as fontes e variáveis que ESTA fórmula usa estejam no
         // contexto, resolvendo recursivamente (variável pode depender de fontes e
@@ -111,12 +114,30 @@ public sealed class FlowExecutor
             {
                 var key = $"{reference.Source}\u0001{reference.Product}\u0001{reference.Datum}";
                 if (!resolvedExternals.Add(key)) continue;
-                var value = await _sources.ResolveAsync(reference, context, cancellationToken);
-                context.SetExternal(reference.Source, reference.Product, reference.Datum, value);
+                var resolution = await _sources.ResolveWithOriginAsync(reference, context, cancellationToken);
+                context.SetExternal(reference.Source, reference.Product, reference.Datum, resolution.Value);
+
+                // Origem no relatório: o produto é buscado UMA vez por decisão.
+                // Se JÁ buscamos este (fonte+produto) ao vivo agora, os demais
+                // dados do mesmo produto também são "Online" (mesmo snapshot),
+                // não "Cache" — mesmo que o 2º dado tecnicamente leia do cache
+                // recém-gravado. Rastreamos os produtos buscados online nesta
+                // decisão para refletir a semântica do relatório.
+                var productKey = $"{reference.Source}\u0001{reference.Product}";
+                var origin = resolution.Origin;
+                if (origin == Sources.SourceOrigin.Online)
+                {
+                    onlineProducts.Add(productKey);
+                }
+                else if (onlineProducts.Contains(productKey))
+                {
+                    origin = Sources.SourceOrigin.Online;
+                }
+
                 trace.Add(new TraceStep(sequence++, "(fonte)", reference.Source,
-                    reference.ToString(), value.ToString(),
+                    reference.ToString(), resolution.Value.ToString(),
                     $"Consulta à fonte {reference}")
-                { Category = TraceCategory.Fonte });
+                { Category = TraceCategory.Fonte, SourceOrigin = origin.ToString() });
             }
 
             // Referências a outras políticas ((Política;Categoria;Variável)):

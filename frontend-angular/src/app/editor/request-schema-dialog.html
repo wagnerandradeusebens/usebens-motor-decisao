@@ -1,0 +1,96 @@
+<h2 mat-dialog-title>Estrutura da request</h2>
+<mat-dialog-content>
+  <p class="intro">
+    Define o contrato oficial da requisição desta política — os campos que o
+    sistema integrador deve enviar no <code>POST /decisions</code>. Campos
+    obrigatórios não podem faltar na chamada.
+  </p>
+
+  <div class="section-label">Campos da política</div>
+  @if (fields().length === 0) {
+    <p class="empty">Nenhum campo declarado. Adicione abaixo.</p>
+  }
+  @for (f of fields(); track $index) {
+    <div class="field-card">
+      <div class="field-card__row">
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Grupo (assunto)</mat-label>
+          <input matInput [ngModel]="f.group" (ngModelChange)="setGroup($index, $event)"
+                 [disabled]="data.readOnly" placeholder="ex.: proponente (vazio = raiz)" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Nome técnico</mat-label>
+          <input matInput [ngModel]="leafOf(f)" (ngModelChange)="setLeaf($index, $event)"
+                 [disabled]="data.readOnly" placeholder="ex.: cpf_cnpj" autocomplete="off" />
+          <mat-hint>Fórmula: <code>{{ "'" + (f.name || 'campo') + "'" }}</code></mat-hint>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="type">
+          <mat-label>Tipo</mat-label>
+          <mat-select [ngModel]="f.type" (ngModelChange)="patch($index, { type: $event })" [disabled]="data.readOnly">
+            @for (t of types; track t.value) { <mat-option [value]="t.value">{{ t.label }}</mat-option> }
+          </mat-select>
+        </mat-form-field>
+        <mat-checkbox [ngModel]="f.required" (ngModelChange)="patch($index, { required: $event })"
+                      [disabled]="data.readOnly">obrigatório</mat-checkbox>
+        @if (!data.readOnly) {
+          <button matIconButton (click)="remove($index)" title="Remover campo"><mat-icon>close</mat-icon></button>
+        }
+      </div>
+      <div class="field-card__row">
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Rótulo</mat-label>
+          <input matInput [ngModel]="f.label" (ngModelChange)="patch($index, { label: $event })"
+                 [disabled]="data.readOnly" placeholder="ex.: CPF/CNPJ" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Descrição</mat-label>
+          <input matInput [ngModel]="f.description" (ngModelChange)="patch($index, { description: $event })"
+                 [disabled]="data.readOnly" placeholder="o que é / formato esperado" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Exemplo</mat-label>
+          <input matInput [ngModel]="f.example" (ngModelChange)="patch($index, { example: $event })"
+                 [disabled]="data.readOnly" placeholder="ex.: 12345678900" autocomplete="off" />
+        </mat-form-field>
+      </div>
+    </div>
+  }
+  @if (!data.readOnly) {
+    <button matButton="outlined" (click)="add()"><mat-icon>add</mat-icon> Campo</button>
+  }
+
+  @if (hasSourceFields()) {
+    <div class="section-label">Campos exigidos por fontes (automáticos)</div>
+    <p class="hint">
+      <mat-icon>bolt</mat-icon>
+      Incluídos automaticamente pelas fontes usadas (nesta política ou nas
+      referenciadas). São sempre obrigatórios e não podem ser editados aqui.
+    </p>
+    @for (s of sourceFields(); track s.name) {
+      <div class="src-field">
+        <mat-icon class="src-field__icon">lock</mat-icon>
+        <div class="src-field__body">
+          <div class="src-field__name">
+            <code>{{ s.name }}</code>
+            <span class="badge">{{ s.type }}</span>
+            <span class="req">obrigatório</span>
+          </div>
+          <div class="src-field__sources">exigido por: {{ s.requiredBySources.join(', ') }}</div>
+        </div>
+      </div>
+    }
+  }
+
+  <div class="section-label">Exemplo do payload (POST /decisions)</div>
+  <div class="example">
+    <button matButton class="example__copy" (click)="copyExample()">
+      <mat-icon>content_copy</mat-icon> Copiar
+    </button>
+    <pre class="example__code">{{ exampleJson() }}</pre>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <span class="spacer"></span>
+  <button matButton mat-dialog-close>Fechar</button>
+  <button matButton="filled" (click)="confirm()" [disabled]="data.readOnly">Aplicar</button>
+</mat-dialog-actions>

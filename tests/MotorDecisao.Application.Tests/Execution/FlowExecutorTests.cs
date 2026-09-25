@@ -17,6 +17,14 @@ file sealed class EmptySourceCatalog : MotorDecisao.Application.Sources.ISourceC
         MotorDecisao.Application.Formulas.IFormulaContext context,
         System.Threading.CancellationToken cancellationToken = default) =>
         Task.FromResult(FormulaValue.Error(MotorDecisao.Application.Formulas.FormulaErrorKind.NotAvailable));
+
+    public Task<MotorDecisao.Application.Sources.SourceResolution> ResolveWithOriginAsync(
+        MotorDecisao.Application.Sources.ExternalRef reference,
+        MotorDecisao.Application.Formulas.IFormulaContext context,
+        System.Threading.CancellationToken cancellationToken = default) =>
+        Task.FromResult(new MotorDecisao.Application.Sources.SourceResolution(
+            FormulaValue.Error(MotorDecisao.Application.Formulas.FormulaErrorKind.NotAvailable),
+            MotorDecisao.Application.Sources.SourceOrigin.Online));
 }
 
 public class FlowExecutorTests
@@ -469,6 +477,12 @@ public class FlowExecutorTests
             Calls++;
             return Task.FromResult(FormulaValue.Number(_value));
         }
+        public async Task<MotorDecisao.Application.Sources.SourceResolution> ResolveWithOriginAsync(
+            MotorDecisao.Application.Sources.ExternalRef reference,
+            MotorDecisao.Application.Formulas.IFormulaContext context,
+            System.Threading.CancellationToken cancellationToken = default)
+            => new(await ResolveAsync(reference, context, cancellationToken),
+                MotorDecisao.Application.Sources.SourceOrigin.Online);
     }
 
     // --- Referência cross-política ((Política;Categoria;Var)) ------------
@@ -650,6 +664,12 @@ public class FlowExecutorTests
             MotorDecisao.Application.Formulas.IFormulaContext context,
             System.Threading.CancellationToken cancellationToken = default)
             => Task.FromResult(FormulaValue.Number(_value));
+        public async Task<MotorDecisao.Application.Sources.SourceResolution> ResolveWithOriginAsync(
+            MotorDecisao.Application.Sources.ExternalRef reference,
+            MotorDecisao.Application.Formulas.IFormulaContext context,
+            System.Threading.CancellationToken cancellationToken = default)
+            => new(await ResolveAsync(reference, context, cancellationToken),
+                MotorDecisao.Application.Sources.SourceOrigin.Online);
     }
 
     // --- Matrix ----------------------------------------------------------

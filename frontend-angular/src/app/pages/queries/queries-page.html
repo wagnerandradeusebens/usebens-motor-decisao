@@ -1,0 +1,208 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">Consultas</h1>
+      <p class="page-header__subtitle">
+        Escolha uma consulta (política publicada), preencha os campos e execute.
+      </p>
+    </div>
+  </header>
+
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  <mat-card class="picker" appearance="outlined">
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Consulta</mat-label>
+      <mat-select [ngModel]="selectedId()" (ngModelChange)="select($event)">
+        @for (p of policies(); track p.id) {
+          <mat-option [value]="p.id">{{ p.name }}</mat-option>
+        }
+      </mat-select>
+      @if (policies().length === 0) {
+        <mat-hint>Nenhuma política publicada disponível.</mat-hint>
+      }
+    </mat-form-field>
+  </mat-card>
+
+  @if (loadingSchema()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (selectedId() && !loadingSchema()) {
+    <mat-card class="form-card" appearance="outlined">
+      <div class="form-card__title">{{ selectedName() }}</div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Referência (opcional)</mat-label>
+        <input matInput [(ngModel)]="reference" placeholder="ex.: PROP-123" autocomplete="off" />
+      </mat-form-field>
+
+      @for (g of groups(); track g.group) {
+        <div class="group">
+          <div class="group__title">{{ g.label }}</div>
+          <div class="group__grid">
+            @for (f of g.fields; track f.name) {
+              @if (f.type === 'boolean') {
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ f.label }}{{ f.required ? ' *' : '' }}</mat-label>
+                  <mat-select [ngModel]="f.value" (ngModelChange)="setValue(f.name, $event)">
+                    <mat-option value="true">verdadeiro</mat-option>
+                    <mat-option value="false">falso</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              } @else {
+                <mat-form-field appearance="outline">
+                  <mat-label>{{ f.label }}{{ f.required ? ' *' : '' }}</mat-label>
+                  <input matInput [ngModel]="f.value" (ngModelChange)="setValue(f.name, $event)"
+                         [type]="f.type === 'number' ? 'number' : 'text'"
+                         [placeholder]="f.type === 'date' ? 'aaaa-mm-dd' : ''" autocomplete="off" />
+                </mat-form-field>
+              }
+            }
+          </div>
+        </div>
+      }
+
+      <div class="actions">
+        <button matButton="filled" (click)="consultar()" [disabled]="running()">
+          <mat-icon>search</mat-icon>
+          {{ running() ? 'Consultando…' : 'Consultar' }}
+        </button>
+      </div>
+    </mat-card>
+  }
+
+  @if (result(); as r) {
+    <div class="report-actions no-print">
+      <button matButton="filled" (click)="exportarPdf()">
+        <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
+      </button>
+    </div>
+
+    <!-- RELATÓRIO OPERACIONAL (estilo Crivo) — o que sai no PDF. -->
+    <mat-card class="report" id="report" appearance="outlined">
+      <div class="report__head">
+        <h2>Relatório Operacional</h2>
+        <div class="muted">Resultado da Análise</div>
+      </div>
+
+      <!-- 1. Dados da Operação -->
+      <section class="rep-sec">
+        <div class="rep-sec__title">Dados da Operação</div>
+        <div class="kv"><span>Consulta</span><strong>{{ selectedName() }}</strong></div>
+        <div class="kv"><span>Código da operação</span><strong>{{ r.executionId || '—' }}</strong></div>
+        <div class="kv"><span>Referência</span><strong>{{ reference || '—' }}</strong></div>
+        @if (consultedAt(); as dt) {
+          <div class="kv"><span>Data/hora</span><strong>{{ dt.toLocaleString('pt-BR') }}</strong></div>
+        }
+        <div class="kv"><span>Status</span><strong>{{ r.status }}</strong></div>
+      </section>
+
+      <!-- 2. Campos e parâmetros informados -->
+      <section class="rep-sec">
+        <div class="rep-sec__title">Campos e parâmetros informados</div>
+        @if (informedFields().length === 0) {
+          <div class="muted">Nenhum campo informado.</div>
+        } @else {
+          <table class="rep-table">
+            <tbody>
+              @for (f of informedFields(); track f.name) {
+                <tr><td class="k">{{ f.label }}</td><td>{{ f.value }}</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <!-- 3. Resultados -->
+      <section class="rep-sec">
+        <div class="rep-sec__title">Resultados</div>
+        <div class="results-grid">
+          <div class="res-item">
+            <span class="muted">Resposta</span>
+            <strong class="outcome" [class]="r.outcome">{{ r.outcome }}</strong>
+          </div>
+          <div class="res-item"><span class="muted">Pontos</span><strong>{{ r.score }}</strong></div>
+          <div class="res-item"><span class="muted">Limite</span><strong>{{ r.limit }}</strong></div>
+        </div>
+        @if (r.error) {
+          <div class="error-box"><mat-icon>error_outline</mat-icon>{{ r.error }}</div>
+        }
+        @if (outputEntries(r).length > 0) {
+          <table class="rep-table">
+            <tbody>
+              @for (o of outputEntries(r); track o.key) {
+                <tr><td class="k">{{ o.key }}</td><td>{{ o.value }}</td></tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+
+      <!-- 4. Justificativas -->
+      <section class="rep-sec">
+        <div class="rep-sec__title">Justificativas</div>
+        @if (r.justifications.length === 0) {
+          <div class="muted">Sem justificativas.</div>
+        } @else {
+          <ul class="just">@for (j of r.justifications; track $index) { <li>{{ j }}</li> }</ul>
+        }
+      </section>
+
+      <!-- 5. Relatório das Fontes -->
+      <section class="rep-sec">
+        <div class="rep-sec__title">Relatório das Fontes</div>
+        @if (sourcesOf(r).length === 0) {
+          <div class="muted">Nenhuma fonte consultada.</div>
+        } @else {
+          @for (s of sourcesOf(r); track s.source + '/' + s.product) {
+            <div class="src-block">
+              <div class="src-block__head">
+                <mat-icon>cloud</mat-icon>
+                <strong>{{ s.source }}</strong><span class="muted">· {{ s.product }}</span>
+              </div>
+              <table class="rep-table">
+                <tbody>
+                  @for (d of s.data; track d.datum) {
+                    <tr>
+                      <td class="k">{{ d.datum }}</td>
+                      <td>{{ d.value }}</td>
+                      <td class="origin">
+                        <span class="tag" [class.tag--online]="d.online" [class.tag--cache]="!d.online">
+                          {{ d.online ? 'online' : 'cache' }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </section>
+    </mat-card>
+
+    <!-- Explica Operação (trilha passo a passo) — fora do PDF. -->
+    <mat-card class="result no-print" appearance="outlined">
+      <div class="block__title">Explica Operação (passo a passo)</div>
+      @for (p of policyGroups(r); track p.policyName) {
+        <div class="policy-group">
+          <div class="policy-group__title">{{ p.label }}</div>
+          @for (cat of p.categories; track cat.category) {
+            <div class="cat-group">
+              <div class="cat-label">{{ cat.label }}</div>
+              @for (t of cat.steps; track t.sequence) {
+                <div class="trace-step">
+                  <div class="seq">#{{ t.sequence }} · {{ t.nodeLabel }}</div>
+                  @if (t.result) { <div class="mono">{{ t.result }}</div> }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </mat-card>
+  }
+</div>

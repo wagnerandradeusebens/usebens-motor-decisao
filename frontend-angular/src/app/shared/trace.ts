@@ -79,6 +79,60 @@ export function groupByPolicy(trace: TraceStep[]): PolicyTraceGroup[] {
   }));
 }
 
+/** Um dado coletado de uma fonte: nome, valor e origem (online/cache). */
+export interface SourceDatumReport {
+  datum: string;
+  value: string;
+  online: boolean;
+}
+
+/** Bloco do "Relatório das Fontes": uma fonte/produto e seus dados coletados. */
+export interface SourceReportGroup {
+  source: string;
+  product: string;
+  data: SourceDatumReport[];
+}
+
+/**
+ * Monta o "Relatório das Fontes" (estilo Crivo) a partir da trilha: pega os
+ * passos de categoria Fonte, lê a referência `[Fonte;Produto;Dado]` da expressão
+ * e agrupa por Fonte → Produto, listando cada dado com seu valor e se veio de
+ * consulta online ou do cache. A ordem de aparição é preservada.
+ */
+export function sourcesReport(trace: TraceStep[]): SourceReportGroup[] {
+  const order: string[] = [];
+  const map = new Map<string, SourceReportGroup>();
+
+  for (const step of trace) {
+    if (step.category !== 'Fonte') continue;
+    const ref = parseSourceRef(step.expression);
+    if (!ref) continue;
+    // O dado "Disponibilidade" é status, não faz parte do laudo de dados.
+    const key = `${ref.source}\u0001${ref.product}`;
+    let group = map.get(key);
+    if (!group) {
+      group = { source: ref.source, product: ref.product, data: [] };
+      map.set(key, group);
+      order.push(key);
+    }
+    group.data.push({
+      datum: ref.datum,
+      value: step.result ?? '',
+      online: (step.sourceOrigin ?? 'Online') !== 'Cache',
+    });
+  }
+
+  return order.map((k) => map.get(k)!);
+}
+
+/** Extrai (Fonte, Produto, Dado) de uma expressão `[Fonte;Produto;Dado]`. */
+function parseSourceRef(expr: string | null): { source: string; product: string; datum: string } | null {
+  if (!expr) return null;
+  const m = /^\[([^;]+);([^;]+);([^\]]+)\]$/.exec(expr.trim());
+  if (!m) return null;
+  return { source: m[1].trim(), product: m[2].trim(), datum: m[3].trim() };
+}
+
 /** Monta um log textual legível de uma execução (para download .txt). */
 export function toTextLog(d: ExecutionDetail): string {
   const lines: string[] = [];

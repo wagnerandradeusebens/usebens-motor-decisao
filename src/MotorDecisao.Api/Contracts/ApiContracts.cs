@@ -43,7 +43,7 @@ public sealed record DecisionApiResponse(
         r.Justifications, r.Outputs, r.Status, r.Error,
         r.Trace.Select(t => new TraceStepResponse(
             t.Sequence, t.NodeKey, t.NodeLabel, t.Expression, t.Result, t.Message,
-            t.Category.ToString(), t.PolicyName,
+            t.Category.ToString(), t.PolicyName, t.SourceOrigin,
             t.Detail.Select(d => new EvalStepResponse(d.Depth, d.Expression, d.Value)).ToList())).ToList());
 }
 
@@ -59,6 +59,7 @@ public sealed record TraceStepResponse(
     string? Message,
     string Category,
     string? PolicyName,
+    string? SourceOrigin,
     IReadOnlyList<EvalStepResponse> Detail);
 
 public sealed record ExecutionSummaryResponse(

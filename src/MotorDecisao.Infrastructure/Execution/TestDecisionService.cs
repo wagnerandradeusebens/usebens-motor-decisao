@@ -1,4 +1,5 @@
 using MotorDecisao.Application.Execution;
+using MotorDecisao.Application.Flows;
 using MotorDecisao.Application.PublishedFlows;
 
 namespace MotorDecisao.Infrastructure.Execution;
@@ -18,11 +19,14 @@ public sealed class TestDecisionService : ITestDecisionService
 {
     private readonly IPublishedFlowLoader _loader;
     private readonly FlowExecutor _executor;
+    private readonly IPolicyInputSchemaService _schema;
 
-    public TestDecisionService(IPublishedFlowLoader loader, FlowExecutor executor)
+    public TestDecisionService(
+        IPublishedFlowLoader loader, FlowExecutor executor, IPolicyInputSchemaService schema)
     {
         _loader = loader;
         _executor = executor;
+        _schema = schema;
     }
 
     public async Task<DecisionResult> TestAsync(
@@ -33,6 +37,18 @@ public sealed class TestDecisionService : ITestDecisionService
         {
             throw new InvalidOperationException(
                 $"Versão {versionId} não encontrada no fluxo {flowId}.");
+        }
+
+        // Mesmo contrato de entrada da decisão de produção, mas contra o schema
+        // DESTA versão (que pode ser rascunho).
+        var schemaResult = await _schema.GetByVersionAsync(flowId, versionId, cancellationToken);
+        if (schemaResult.Success && schemaResult.Value is not null)
+        {
+            var error = InputSchemaValidator.Validate(schemaResult.Value, request.Input);
+            if (error is not null)
+            {
+                throw new InvalidOperationException(error);
+            }
         }
 
         // Compila o grafo da versão (pode lançar FlowCompilationException, que o

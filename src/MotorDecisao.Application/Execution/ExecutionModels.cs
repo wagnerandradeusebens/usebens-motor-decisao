@@ -44,6 +44,13 @@ public sealed record TraceStep(
     /// </summary>
     public string? PolicyName { get; init; }
 
+    /// <summary>
+    /// Para passos de FONTE: origem do valor (<c>Online</c> ou <c>Cache</c>), para
+    /// o relatório das fontes distinguir consulta ao vivo de reaproveitamento de
+    /// cache. <c>null</c> em passos que não são de fonte.
+    /// </summary>
+    public string? SourceOrigin { get; init; }
+
     /// <summary>Deep resolution tree of the step's formula, when applicable.</summary>
     public IReadOnlyList<EvalStep> Detail { get; init; } = Array.Empty<EvalStep>();
 }

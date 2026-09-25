@@ -45,6 +45,12 @@ public class ExecutionTrace : Entity
     public string? PolicyName { get; set; }
 
     /// <summary>
+    /// Para passos de fonte: origem do valor (<c>Online</c>/<c>Cache</c>) — para o
+    /// relatório das fontes. <c>null</c> nos demais passos.
+    /// </summary>
+    public string? SourceOrigin { get; set; }
+
+    /// <summary>
     /// Serialized deep resolution tree of the step's formula (a JSON array of
     /// {depth, expression, value} entries), when applicable.
     /// </summary>

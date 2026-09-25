@@ -231,6 +231,54 @@
   display: inline-block;
 }
 
+// Marca de campo obrigatório e campos derivados de fonte (travados).
+.req-mark {
+  color: var(--cor-perigo);
+  font-weight: 700;
+  margin-left: 2px;
+}
+.var-row--derived {
+  background: color-mix(in srgb, var(--marca-teal) 6%, #fff);
+  cursor: default;
+}
+.var-row--derived .var-row__name {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.src-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: var(--marca-teal);
+  flex-shrink: 0;
+}
+.lock-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  color: var(--cor-texto-claro);
+}
+.palette__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--cor-texto-claro);
+  padding: 0.4rem 0.2rem 0.1rem;
+}
+.palette__hint mat-icon,
+.palette__hint .inline {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.palette__hint .inline {
+  color: var(--marca-teal);
+  vertical-align: middle;
+}
+
 .w-full {
   width: 100%;
   display: block;

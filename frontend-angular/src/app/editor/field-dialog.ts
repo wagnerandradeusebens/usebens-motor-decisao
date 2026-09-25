@@ -15,6 +15,9 @@ export interface FieldDialogData {
   label: string;
   type: InputFieldType;
   required: boolean;
+  description?: string | null;
+  example?: string | null;
+  group?: string | null;
   readOnly: boolean;
 }
 
@@ -23,6 +26,9 @@ export interface FieldResult {
   label: string;
   type: InputFieldType;
   required: boolean;
+  description?: string | null;
+  example?: string | null;
+  group?: string | null;
   deleted?: boolean;
 }
 
@@ -61,12 +67,19 @@ const TYPES: { value: InputFieldType; label: string }[] = [
           </div>
         </div>
       }
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Nome técnico</mat-label>
-        <input matInput [(ngModel)]="name" [disabled]="data.readOnly"
-               placeholder="ex.: renda_mensal" autocomplete="off" />
-        <mat-hint>Usado nas fórmulas como <code>{{ "'" + (name || 'campo') + "'" }}</code>.</mat-hint>
-      </mat-form-field>
+      <div class="row">
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Grupo (assunto)</mat-label>
+          <input matInput [(ngModel)]="group" [disabled]="data.readOnly"
+                 placeholder="ex.: proponente (vazio = raiz)" autocomplete="off" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="grow">
+          <mat-label>Nome técnico</mat-label>
+          <input matInput [(ngModel)]="name" [disabled]="data.readOnly"
+                 placeholder="ex.: cpf_cnpj" autocomplete="off" />
+          <mat-hint>Fórmula: <code>{{ "'" + fullName() + "'" }}</code></mat-hint>
+        </mat-form-field>
+      </div>
 
       <mat-form-field appearance="outline" class="full">
         <mat-label>Rótulo</mat-label>
@@ -85,6 +98,17 @@ const TYPES: { value: InputFieldType; label: string }[] = [
         </mat-form-field>
         <mat-checkbox [(ngModel)]="required" [disabled]="data.readOnly">obrigatório</mat-checkbox>
       </div>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Descrição</mat-label>
+        <input matInput [(ngModel)]="description" [disabled]="data.readOnly"
+               placeholder="o que é / formato esperado" autocomplete="off" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Exemplo</mat-label>
+        <input matInput [(ngModel)]="example" [disabled]="data.readOnly"
+               placeholder="ex.: 12345678900" autocomplete="off" />
+      </mat-form-field>
     </mat-dialog-content>
     <mat-dialog-actions>
       @if (data.mode === 'edit' && !data.readOnly) {
@@ -110,6 +134,7 @@ const TYPES: { value: InputFieldType; label: string }[] = [
     mat-dialog-content { min-width: 640px; max-width: 100%; padding-top: 1.75rem; }
     .full { width: 100%; display: block; }
     .row { display: flex; align-items: center; gap: 1rem; }
+    .grow { flex: 1; }
     .type { flex: 1; }
     .spacer { flex: 1 1 auto; }
     .danger { color: var(--cor-perigo); }
@@ -127,22 +152,48 @@ export class FieldDialog {
   protected label: string;
   protected type: InputFieldType;
   protected required: boolean;
+  protected description: string;
+  protected example: string;
+  protected group: string;
   protected readonly confirmingDelete = signal(false);
 
   constructor(
     private readonly ref: MatDialogRef<FieldDialog, FieldResult>,
     @Inject(MAT_DIALOG_DATA) protected readonly data: FieldDialogData,
   ) {
-    this.name = data.name;
+    this.group = (data.group ?? '').trim();
+    // O name recebido pode ser o caminho completo "grupo.folha"; extrai a folha.
+    this.name = this.group && data.name.startsWith(this.group + '.')
+      ? data.name.slice(this.group.length + 1)
+      : data.name;
     this.label = data.label;
     this.type = data.type;
     this.required = data.required;
+    this.description = data.description ?? '';
+    this.example = data.example ?? '';
+  }
+
+  /** Caminho completo do campo (grupo.folha ou só folha). */
+  protected fullName(): string {
+    const g = this.group.trim();
+    const l = (this.name || 'campo').trim();
+    return g ? `${g}.${l}` : l;
   }
 
   protected confirm(): void {
-    const name = this.name.trim();
-    if (!name) return;
-    this.ref.close({ name, label: this.label.trim() || name, type: this.type, required: this.required });
+    const leaf = this.name.trim();
+    if (!leaf) return;
+    const g = this.group.trim();
+    const name = g ? `${g}.${leaf}` : leaf;
+    this.ref.close({
+      name,
+      label: this.label.trim() || leaf,
+      type: this.type,
+      required: this.required,
+      description: this.description.trim() || null,
+      example: this.example.trim() || null,
+      group: g || null,
+    });
   }
 
   protected delete(): void {
@@ -151,6 +202,9 @@ export class FieldDialog {
       label: this.data.label,
       type: this.data.type,
       required: this.data.required,
+      description: this.data.description,
+      example: this.data.example,
+      group: this.data.group,
       deleted: true,
     });
   }

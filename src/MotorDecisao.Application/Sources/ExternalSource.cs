@@ -114,6 +114,22 @@ public static class SourceData
 /// The set of registered sources. Lists them for the catalog/autocomplete and
 /// resolves an <see cref="ExternalRef"/> to a value at decision time.
 /// </summary>
+/// <summary>De onde veio o valor de uma consulta a fonte (para o relatório).</summary>
+public enum SourceOrigin
+{
+    /// <summary>Consulta feita agora, direto na fonte (chamada real).</summary>
+    Online,
+
+    /// <summary>Reaproveitado do cache (consulta anterior, dentro da validade).</summary>
+    Cache,
+}
+
+/// <summary>
+/// Resultado de resolver um <see cref="ExternalRef"/>: o valor e de onde ele veio
+/// (online x cache), para o relatório operacional distinguir a origem.
+/// </summary>
+public readonly record struct SourceResolution(Formulas.FormulaValue Value, SourceOrigin Origin);
+
 public interface ISourceCatalog
 {
     /// <summary>All registered sources' metadata.</summary>
@@ -124,6 +140,15 @@ public interface ISourceCatalog
     /// <c>#NOME?</c> error so it surfaces like an unknown name in a formula.
     /// </summary>
     Task<Formulas.FormulaValue> ResolveAsync(
+        ExternalRef reference,
+        Formulas.IFormulaContext context,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Como <see cref="ResolveAsync"/>, mas também informa a ORIGEM do valor
+    /// (online x cache) para o relatório. O valor é idêntico ao de ResolveAsync.
+    /// </summary>
+    Task<SourceResolution> ResolveWithOriginAsync(
         ExternalRef reference,
         Formulas.IFormulaContext context,
         CancellationToken cancellationToken = default);

@@ -52,6 +52,7 @@ public class ExecutionTraceConfiguration : IEntityTypeConfiguration<ExecutionTra
         builder.Property(x => x.Message).HasMaxLength(2000);
         builder.Property(x => x.Category).HasMaxLength(20).IsRequired().HasDefaultValue("Fluxo");
         builder.Property(x => x.PolicyName).HasMaxLength(200);
+        builder.Property(x => x.SourceOrigin).HasMaxLength(20);
         builder.Property(x => x.Detail).HasColumnType("jsonb");
 
         builder.HasIndex(x => new { x.DecisionExecutionId, x.Sequence });

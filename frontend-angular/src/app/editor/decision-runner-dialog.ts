@@ -8,7 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiService } from '../api/api.service';
-import type { DecisionResponse, GraphInputField } from '../api/models';
+import type { DecisionResponse, GraphInputField, PolicyInputSchema } from '../api/models';
 import { apiErrorMessage } from '../shared/format';
 import { groupByPolicy, PolicyTraceGroup } from '../shared/trace';
 
@@ -16,6 +16,10 @@ interface RunField {
   key: string;
   value: string;
   type: 'number' | 'text' | 'boolean' | 'date';
+  /** Obrigatório (declarado ou exigido por fonte). Não pode faltar na requisição. */
+  required?: boolean;
+  /** Fontes que exigem o campo (tooltip). Vazio para campos manuais. */
+  sources?: string[];
 }
 
 export interface DecisionRunnerData {
@@ -81,6 +85,65 @@ export class DecisionRunnerDialog {
       type: (f.type.toLowerCase() as RunField['type']) ?? 'text',
     }));
     this.fields.set(declared.length ? declared : [{ key: '', value: '', type: 'number' }]);
+
+    // Busca o schema (campos declarados + obrigatórios derivados das fontes) para
+    // marcar obrigatórios e garantir que os campos-chave apareçam no formulário.
+    if (data.versionId) {
+      this.api.getInputSchema(data.flowId, data.versionId).subscribe({
+        next: (schema) => this.applySchema(schema),
+      });
+    }
+  }
+
+  /**
+   * Mescla o schema no formulário: marca os obrigatórios (e suas fontes) e
+   * adiciona os campos que faltam (ex.: campos-chave de fonte). Preserva valores
+   * já digitados.
+   */
+  private applySchema(schema: PolicyInputSchema): void {
+    this.fields.update((current) => {
+      const byKey = new Map(current.map((f) => [f.key.trim().toLowerCase(), f]));
+      for (const sf of schema.fields) {
+        const existing = byKey.get(sf.name.toLowerCase());
+        if (existing) {
+          existing.required = sf.required || existing.required;
+          existing.sources = sf.requiredBySources;
+        } else {
+          const nf: RunField = {
+            key: sf.name,
+            value: '',
+            type: (sf.type.toLowerCase() as RunField['type']) ?? 'text',
+            required: sf.required,
+            sources: sf.requiredBySources,
+          };
+          byKey.set(sf.name.toLowerCase(), nf);
+        }
+      }
+      // Mantém a ordem: primeiro os já existentes, depois os novos do schema.
+      const seen = new Set<string>();
+      const ordered: RunField[] = [];
+      for (const f of current) {
+        ordered.push(byKey.get(f.key.trim().toLowerCase()) ?? f);
+        seen.add(f.key.trim().toLowerCase());
+      }
+      for (const sf of schema.fields) {
+        const k = sf.name.toLowerCase();
+        if (!seen.has(k)) {
+          ordered.push(byKey.get(k)!);
+          seen.add(k);
+        }
+      }
+      return ordered;
+    });
+  }
+
+  /** Tooltip de um campo: se obrigatório e de fonte, mostra as fontes. */
+  protected fieldHint(f: RunField): string {
+    if (!f.required) return '';
+    if (f.sources && f.sources.length > 0) {
+      return 'Obrigatório · exigido por: ' + f.sources.join(', ');
+    }
+    return 'Obrigatório';
   }
 
   protected setField(i: number, patch: Partial<RunField>): void {
@@ -105,6 +168,17 @@ export class DecisionRunnerDialog {
   protected run(): void {
     this.error.set(null);
     this.result.set(null);
+
+    // Valida obrigatórios antes de enviar (mesma regra do backend): dá um
+    // feedback imediato em vez de esperar o 400.
+    const missing = this.fields()
+      .filter((f) => f.required && !String(f.value ?? '').trim())
+      .map((f) => f.key);
+    if (missing.length > 0) {
+      this.error.set('Preencha os campos obrigatórios: ' + missing.join(', ') + '.');
+      return;
+    }
+
     this.running.set(true);
     const payload: Record<string, unknown> = {};
     for (const f of this.fields()) {

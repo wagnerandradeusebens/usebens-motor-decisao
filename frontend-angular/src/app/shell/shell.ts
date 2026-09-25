@@ -35,6 +35,7 @@ interface NavItem {
 export class Shell {
   protected readonly nav: NavItem[] = [
     { label: 'Políticas', icon: 'account_tree', link: '/politicas', exact: false },
+    { label: 'Consultas', icon: 'search', link: '/consultas', exact: false },
     { label: 'Fontes', icon: 'cloud', link: '/fontes', exact: false },
     { label: 'Variáveis Globais', icon: 'functions', link: '/variaveis-globais', exact: false },
     { label: 'Tabelas Globais', icon: 'table_chart', link: '/tabelas-globais', exact: false },

@@ -23,7 +23,7 @@ public sealed class SerasaFakeSource : IExternalSource
                 Name: "Score",
                 Description: "Score de crédito.",
                 Data: new[] { new SourceDatum("Pontuacao", "Pontuação de 1 a 1000.") },
-                KeyField: "cpf")
+                KeyField: "cpf_cnpj")
         });
 
     /// <summary>Fake availability: up ~90% of the time (random per call).</summary>
@@ -40,8 +40,8 @@ public sealed class SerasaFakeSource : IExternalSource
                 new Dictionary<string, FormulaValue>());
         }
 
-        // Reads cpf from the proposal context (demonstrates context access).
-        _ = context.TryGetField("cpf", out _);
+        // Reads cpf_cnpj from the proposal context (demonstrates context access).
+        _ = context.TryGetField("cpf_cnpj", out _);
 
         var score = Random.Shared.Next(1, 1001); // 1..1000 inclusive
         var data = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase)

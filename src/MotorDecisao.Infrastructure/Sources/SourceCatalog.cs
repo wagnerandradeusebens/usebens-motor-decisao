@@ -28,18 +28,24 @@ public sealed class SourceCatalog : ISourceCatalog
         ExternalRef reference,
         IFormulaContext context,
         CancellationToken cancellationToken = default)
+        => (await ResolveWithOriginAsync(reference, context, cancellationToken)).Value;
+
+    public async Task<SourceResolution> ResolveWithOriginAsync(
+        ExternalRef reference,
+        IFormulaContext context,
+        CancellationToken cancellationToken = default)
     {
         if (!_sources.TryGetValue(reference.Source, out var source))
         {
             // Unknown source behaves like an unknown name in a formula.
-            return FormulaValue.Error(FormulaErrorKind.Name);
+            return new SourceResolution(FormulaValue.Error(FormulaErrorKind.Name), SourceOrigin.Online);
         }
 
         // O dado de disponibilidade é status momentâneo — respondido na hora pelo
-        // catálogo e NUNCA cacheado (pode mudar entre consultas).
+        // catálogo e NUNCA cacheado (pode mudar entre consultas). É sempre online.
         if (string.Equals(reference.Datum, SourceData.Availability, StringComparison.OrdinalIgnoreCase))
         {
-            return FormulaValue.Boolean(source.IsAvailable(context));
+            return new SourceResolution(FormulaValue.Boolean(source.IsAvailable(context)), SourceOrigin.Online);
         }
 
         var parameters = await _config.GetAsync(reference.Source, cancellationToken);
@@ -52,7 +58,8 @@ public sealed class SourceCatalog : ISourceCatalog
         if (businessKey.Length == 0)
         {
             var direct = await ResolveProductWithRetryAsync(source, reference.Product, context, parameters, cancellationToken);
-            return direct is null ? FormulaValue.Error(FormulaErrorKind.NotAvailable) : PickDatum(direct, reference.Datum);
+            var v = direct is null ? FormulaValue.Error(FormulaErrorKind.NotAvailable) : PickDatum(direct, reference.Datum);
+            return new SourceResolution(v, SourceOrigin.Online);
         }
 
         // 1) Cache primeiro: se já temos a RESPOSTA do produto para esta chave
@@ -60,7 +67,7 @@ public sealed class SourceCatalog : ISourceCatalog
         var cached = await _cache.TryGetAsync(reference.Source, reference.Product, businessKey, parameters.CacheTtlHours, cancellationToken);
         if (cached is not null)
         {
-            return PickDatum(cached, reference.Datum);
+            return new SourceResolution(PickDatum(cached, reference.Datum), SourceOrigin.Cache);
         }
 
         // 2) Miss: consulta a fonte UMA vez (produto inteiro) com retry/timeout,
@@ -68,13 +75,13 @@ public sealed class SourceCatalog : ISourceCatalog
         var data = await ResolveProductWithRetryAsync(source, reference.Product, context, parameters, cancellationToken);
         if (data is null)
         {
-            return FormulaValue.Error(FormulaErrorKind.NotAvailable);
+            return new SourceResolution(FormulaValue.Error(FormulaErrorKind.NotAvailable), SourceOrigin.Online);
         }
         if (data.Count > 0)
         {
             await _cache.SetAsync(reference.Source, reference.Product, businessKey, data, cancellationToken);
         }
-        return PickDatum(data, reference.Datum);
+        return new SourceResolution(PickDatum(data, reference.Datum), SourceOrigin.Online);
     }
 
     /// <summary>Lê um dado do mapa de resposta do produto; ausente → erro de nome.</summary>
