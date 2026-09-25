@@ -1,0 +1,49 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">Variáveis Globais</h1>
+      <p class="page-header__subtitle">
+        Compartilhadas entre todas as políticas. Uma variável local de mesmo nome tem prioridade.
+      </p>
+    </div>
+    <button matButton="filled" (click)="openNew()">
+      <mat-icon>add</mat-icon>
+      Nova variável global
+    </button>
+  </header>
+
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else if (items().length === 0) {
+    <div class="empty-state">
+      <mat-icon>functions</mat-icon>
+      <div>Nenhuma variável global criada.</div>
+      <button matButton="filled" (click)="openNew()"><mat-icon>add</mat-icon> Criar a primeira</button>
+    </div>
+  } @else {
+    @for (v of items(); track v.id) {
+      <mat-card class="gv" appearance="outlined">
+        <div class="row spread">
+          <strong class="mono">{{ v.key }}</strong>
+          <div class="row" style="gap: 6px">
+            <button matButton (click)="openEdit(v)">
+              <mat-icon>edit</mat-icon>
+              Editar
+            </button>
+            <button matButton (click)="remove(v)">
+              <mat-icon>delete</mat-icon>
+              Excluir
+            </button>
+          </div>
+        </div>
+        <div class="gv__expr mono muted">
+          = {{ v.expression || '(vazia)' }}
+        </div>
+      </mat-card>
+    }
+  }
+</div>

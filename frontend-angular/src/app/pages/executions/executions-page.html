@@ -1,0 +1,146 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">Execuções</h1>
+      <p class="page-header__subtitle">Histórico de decisões desta política, com a trilha passo a passo.</p>
+    </div>
+    <a mat-button [routerLink]="['/politicas', flowId]">
+      <mat-icon>arrow_back</mat-icon>
+      voltar à política
+    </a>
+  </header>
+
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  <div class="exec-grid">
+    <!-- Lista -->
+    <mat-card class="exec-list" appearance="outlined">
+      @if (loading()) {
+        <mat-progress-bar mode="indeterminate" />
+      } @else if (items().length === 0) {
+        <p class="muted empty">Nenhuma execução ainda. Rode um teste na política.</p>
+      } @else {
+        @for (e of items(); track e.id) {
+          <div
+            class="exec-row"
+            [class.exec-row--active]="detail()?.id === e.id"
+            (click)="open(e.id)"
+          >
+            <div class="row spread">
+              <strong class="outcome" [class]="e.outcome">{{ e.outcome }}</strong>
+              <span class="muted small">{{ fmt(e.createdAt) }}</span>
+            </div>
+            <div class="muted small">
+              {{ e.proposalReference ?? 'sem referência' }} · pontos {{ e.score }}
+            </div>
+          </div>
+        }
+      }
+    </mat-card>
+
+    <!-- Detalhe -->
+    <mat-card class="exec-detail" appearance="outlined">
+      @if (!detail()) {
+        <p class="muted">Selecione uma execução para ver o log detalhado.</p>
+      } @else {
+        <div class="row spread">
+          <strong class="outcome" [class]="detail()!.outcome">{{ detail()!.outcome }}</strong>
+          <span class="muted">
+            pontos {{ detail()!.score }} · limite {{ detail()!.limit }} · {{ detail()!.status }}
+          </span>
+        </div>
+
+        <div class="row" style="gap: 8px; margin: 0.5rem 0">
+          <button matButton="outlined" (click)="downloadTxt()">
+            <mat-icon>download</mat-icon> Baixar trilha (texto)
+          </button>
+          <button matButton="outlined" (click)="downloadJson()">
+            <mat-icon>download</mat-icon> Baixar (JSON)
+          </button>
+        </div>
+
+        @if (detail()!.error) {
+          <div class="error-box">{{ detail()!.error }}</div>
+        }
+
+        <div class="field">
+          <div class="field__label">Entrada</div>
+          <pre class="code-block">{{ pretty(detail()!.inputData) }}</pre>
+        </div>
+
+        @if (detail()!.justifications.length > 0) {
+          <div class="field">
+            <div class="field__label">Justificativas</div>
+            <ul class="just">
+              @for (j of detail()!.justifications; track $index) {
+                <li class="muted">{{ j }}</li>
+              }
+            </ul>
+          </div>
+        }
+
+        @if (outputEntries(detail()!).length > 0) {
+          <div class="field">
+            <div class="field__label">Parâmetros de saída</div>
+            @for (o of outputEntries(detail()!); track o.key) {
+              <div class="row spread small"><code>{{ o.key }}</code><span>{{ o.value }}</span></div>
+            }
+          </div>
+        }
+
+        <div class="field">
+          <div class="field__label">Log passo a passo (por bloco)</div>
+          @for (g of groups(); track g.category) {
+            <div class="block">
+              <div class="block__title">
+                {{ g.label }} <span class="muted">· {{ g.steps.length }}</span>
+              </div>
+              @for (t of g.steps; track t.sequence) {
+                @if (t.detail.length > 0) {
+                  <mat-expansion-panel class="step-panel">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title class="step-title">
+                        #{{ t.sequence }} · {{ t.nodeLabel }}{{ t.expression ? ' · ' + t.expression : '' }}
+                      </mat-panel-title>
+                    </mat-expansion-panel-header>
+                    @if (t.result) {
+                      <div class="mono step-result">{{ t.result }}</div>
+                    }
+                    @if (t.message) {
+                      <div class="muted small">{{ t.message }}</div>
+                    }
+                    <div class="detail">
+                      @for (s of t.detail; track $index) {
+                        <div [style.padding-left.rem]="s.depth * 1.1">
+                          <code>{{ s.expression }}</code> <span class="muted">=</span> <strong>{{ s.value }}</strong>
+                        </div>
+                      }
+                    </div>
+                  </mat-expansion-panel>
+                } @else {
+                  <div class="step">
+                    <div class="step-title">
+                      #{{ t.sequence }} · {{ t.nodeLabel }}{{ t.expression ? ' · ' + t.expression : '' }}
+                    </div>
+                    @if (t.result) {
+                      <div class="mono step-result">{{ t.result }}</div>
+                    }
+                    @if (t.message) {
+                      <div class="muted small">{{ t.message }}</div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+
+        <div class="muted tiny">
+          Execução {{ detail()!.id }} · criada {{ fmt(detail()!.createdAt) }} · concluída {{ fmt(detail()!.completedAt) }}
+        </div>
+      }
+    </mat-card>
+  </div>
+</div>

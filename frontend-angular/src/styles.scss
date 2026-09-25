@@ -1,0 +1,224 @@
+// Angular Material 3 theming. Uses mat.theme() to emit the CSS system variables
+// the components read. Brand accents (Usebens/OKR) are layered on top via the
+// system variables so we don't have to author full tonal palettes by hand.
+@use '@angular/material' as mat;
+
+// --- Brand tokens (Usebens / OKR) ---------------------------------------
+:root {
+  --marca-azul: #1b3760;        // primária
+  --marca-azul-2: #24487a;      // hover/gradiente
+  --marca-teal: #31b6a5;        // acento
+  --marca-azul-medio: #2f5c9e;
+
+  --cor-borda: #e6ebf2;
+  --cor-fundo: #f4f6fa;
+  --cor-superficie: #ffffff;
+  --cor-alerta: #d97706;
+  --cor-perigo: #dc2626;
+  --cor-ok: #15803d;
+
+  --raio: 14px;
+  --raio-sm: 10px;
+  --sombra-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --sombra-elev: 0 6px 16px rgba(16, 24, 40, 0.12);
+}
+
+html {
+  height: 100%;
+  color-scheme: light;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$cyan-palette,
+      ),
+      typography: Roboto,
+      density: -1,
+    )
+  );
+
+  // Aproxima as cores do sistema Material da marca (azul/teal).
+  --mat-sys-primary: var(--marca-azul);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-tertiary: var(--marca-teal);
+  --mat-sys-surface: var(--cor-superficie);
+  --mat-sys-surface-container: #ffffff;
+  --mat-sys-surface-container-low: #fbfcfe;
+  --mat-sys-outline-variant: var(--cor-borda);
+  --mat-sys-corner-medium: var(--raio);
+  --mat-sys-corner-large: var(--raio);
+}
+
+body {
+  background-color: var(--cor-fundo);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+// --- Layout / utilitários globais ---------------------------------------
+.spacer { flex: 1 1 auto; }
+.page { padding: 1.5rem 1.75rem; max-width: 1200px; margin: 0 auto; }
+.row { display: flex; align-items: center; gap: 0.5rem; }
+.row.spread { justify-content: space-between; }
+.muted { color: var(--mat-sys-on-surface-variant); }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+// Cabeçalho padrão das páginas (título + subtítulo + ações à direita).
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.page-header__title {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--marca-azul);
+}
+.page-header__subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  color: var(--mat-sys-on-surface-variant);
+  max-width: 68ch;
+}
+
+// Cartões com um respiro e sombra suave por padrão.
+.mat-mdc-card {
+  border-radius: var(--raio) !important;
+  box-shadow: var(--sombra-card) !important;
+  border: 1px solid var(--cor-borda);
+}
+.mat-mdc-card.mat-mdc-card-outlined {
+  box-shadow: none !important;
+}
+
+// Estado de erro consistente em todas as telas.
+.error-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: var(--cor-perigo);
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--raio-sm);
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+// Estado vazio (nenhum dado ainda).
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+.empty-state mat-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 40px;
+  opacity: 0.5;
+}
+
+// Desfecho da decisão (labels de status).
+.outcome { font-weight: 600; }
+.outcome.Approved { color: var(--cor-ok); }
+.outcome.ApprovedWithConditions { color: #0891b2; }
+.outcome.ManualReview { color: var(--cor-alerta); }
+.outcome.Denied { color: var(--cor-perigo); }
+.outcome.Pending { color: var(--mat-sys-on-surface-variant); }
+
+// Barra de rolagem discreta.
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+// ===========================================================================
+// Editor de grafo (@foblex/flow) — estilos GLOBAIS
+// A lib reparenta os nós para o próprio container, então estes estilos precisam
+// ser globais (fora do encapsulamento do componente) para serem aplicados.
+// ===========================================================================
+f-flow {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--cor-fundo);
+}
+f-canvas {
+  // deixa o padrão de fundo (pontos) do f-background visível
+}
+
+// Nós no canvas (espelham o visual do editor React Flow).
+.rf-node {
+  position: relative;
+  min-width: 132px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 2px solid var(--cor-borda);
+  background: #ffffff;
+  color: var(--mat-sys-on-surface);
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+  cursor: pointer;
+  user-select: none;
+  font: var(--mat-sys-body-medium);
+}
+.rf-node .kind {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mat-sys-on-surface-variant);
+  margin-bottom: 2px;
+}
+.rf-node .node-label {
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.rf-node.Start { border-color: var(--marca-teal); }
+.rf-node.Decision { border-color: #7c3aed; }
+.rf-node.Condition { border-color: var(--cor-alerta); }
+.rf-node.Ruleset { border-color: var(--marca-azul-medio); }
+.rf-node.Computation { border-color: #64748b; }
+.rf-node.DataSource { border-color: #db2777; }
+.rf-node.Action { border-color: #0891b2; }
+.rf-node.Matrix { border-color: #ca8a04; }
+.rf-node.Comment {
+  border-color: #eab308;
+  border-style: dashed;
+  background: #fefce8;
+  box-shadow: none;
+  max-width: 230px;
+}
+.rf-node.Comment .comment-text {
+  font-size: 0.82rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+// Conectores (bolinhas de entrada/saída).
+.rf-node .conn {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--marca-azul);
+  border: 2px solid #fff;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+.rf-node .conn--in { top: -7px; }
+.rf-node .conn--out { bottom: -7px; }
+.rf-node .conn--true { left: 30%; background: #22c55e; }
+.rf-node .conn--false { left: 70%; background: #ef4444; }

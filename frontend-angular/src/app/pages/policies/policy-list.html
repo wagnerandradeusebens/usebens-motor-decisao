@@ -1,0 +1,123 @@
+<div class="page policies">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">Políticas</h1>
+      <p class="page-header__subtitle">
+        Fluxos de decisão de crédito. Selecione uma política para ver o histórico de versões.
+      </p>
+    </div>
+    <button matButton="filled" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Nova política
+    </button>
+  </header>
+
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  <!-- Lista de políticas -->
+  <mat-card class="policies__list" appearance="outlined">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    } @else if (flows().length === 0) {
+      <div class="empty-state">
+        <mat-icon>account_tree</mat-icon>
+        <div>Nenhuma política ainda.</div>
+        <button matButton="filled" (click)="openCreate()">
+          <mat-icon>add</mat-icon> Criar a primeira
+        </button>
+      </div>
+    } @else {
+      @for (f of flows(); track f.id) {
+        <div
+          class="policies__row"
+          [class.policies__row--active]="f.id === selectedId()"
+          (click)="select(f.id)"
+        >
+          <div class="row" style="gap: 10px">
+            <span
+              class="policies__dot"
+              [class.policies__dot--on]="isPublished(f)"
+              [title]="isPublished(f) ? 'Publicada' : 'Sem versão publicada'"
+            ></span>
+            <div>
+              <strong>{{ f.name }}</strong>
+              @if (f.description) {
+                <div class="muted">{{ f.description }}</div>
+              }
+            </div>
+          </div>
+          <div class="row" style="gap: 12px">
+            <mat-chip-set>
+              <mat-chip [highlighted]="isPublished(f)">
+                {{ isPublished(f) ? 'Publicada' : 'Rascunho' }}
+              </mat-chip>
+            </mat-chip-set>
+            <span class="muted">{{ f.versions.length }} versão(ões)</span>
+            <button matButton (click)="remove(f.id, f.name, $event)">
+              <mat-icon>delete</mat-icon>
+              Excluir
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </mat-card>
+
+  <!-- Histórico da política selecionada -->
+  <mat-card class="policies__history" appearance="outlined">
+    <div class="row spread">
+      <h2 class="policies__history-title">
+        Histórico @if (selected(); as s) { · {{ s.name }} }
+      </h2>
+      @if (selected(); as s) {
+        <a mat-button [routerLink]="['/politicas', s.id, 'execucoes']">
+          Ver execuções
+          <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+        </a>
+      }
+    </div>
+
+    @if (!selected()) {
+      <p class="muted">Selecione uma política acima para ver o histórico.</p>
+    } @else if (selected()!.versions.length === 0) {
+      <p class="muted">Sem versões.</p>
+    } @else {
+      <table mat-table [dataSource]="sortedVersions(selected()!)" class="full">
+        <ng-container matColumnDef="version">
+          <th mat-header-cell *matHeaderCellDef>Versão</th>
+          <td mat-cell *matCellDef="let v">v{{ v.versionNumber }}</td>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let v">
+            <mat-chip-set><mat-chip>{{ v.status }}</mat-chip></mat-chip-set>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="created">
+          <th mat-header-cell *matHeaderCellDef>Criada</th>
+          <td mat-cell *matCellDef="let v">{{ fmt(v.createdAt) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="updated">
+          <th mat-header-cell *matHeaderCellDef>Atualizada</th>
+          <td mat-cell *matCellDef="let v">{{ fmt(v.updatedAt) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="published">
+          <th mat-header-cell *matHeaderCellDef>Publicada</th>
+          <td mat-cell *matCellDef="let v">{{ fmt(v.publishedAt) }}</td>
+        </ng-container>
+        <ng-container matColumnDef="open">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let v">
+            <a mat-button [routerLink]="['/politicas', selected()!.id, 'versions', v.id]">
+              {{ v.status === 'Draft' ? 'Editar' : 'Abrir' }}
+            </a>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="historyColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: historyColumns"></tr>
+      </table>
+    }
+  </mat-card>
+</div>

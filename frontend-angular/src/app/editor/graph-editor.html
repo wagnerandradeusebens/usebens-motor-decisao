@@ -1,0 +1,258 @@
+<div class="editor">
+  <!-- Paleta (menu estilo Crivo) -->
+  <aside class="palette">
+    <mat-accordion class="palette__accordion" multi>
+      <!-- Regra: blocos arrastáveis para o canvas -->
+      <mat-expansion-panel [expanded]="true">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Regra</mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="palette__hint">Arraste para o canvas.</div>
+        @for (item of palette; track item.kind) {
+          <div class="palette-item" fExternalItem [fData]="item.kind">
+            {{ item.label }}
+          </div>
+        }
+        <div class="palette__hint">
+          Duplo-clique num nó para configurá-lo. Selecione e tecle Delete para remover.
+        </div>
+      </mat-expansion-panel>
+
+      <!-- Minhas Variáveis (locais desta versão) -->
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>Minhas Variáveis</mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="palette__hint">Variáveis locais desta política. Referencie nas fórmulas como <code>{{ '{nome}' }}</code>.</div>
+        @for (v of formulas(); track $index) {
+          <div class="side-item">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>nome</mat-label>
+              <input matInput [ngModel]="v.key" [disabled]="readOnly"
+                (ngModelChange)="patchFormula($index, { key: $event })" placeholder="ex.: comprometimento" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>fórmula</mat-label>
+              <textarea matInput rows="2" [ngModel]="v.expression" [disabled]="readOnly"
+                (ngModelChange)="patchFormula($index, { expression: $event })"
+                placeholder="ex.: 'divida' / 'renda'"></textarea>
+            </mat-form-field>
+            @if (!readOnly) {
+              <button matButton (click)="removeFormula($index)"><mat-icon>close</mat-icon> Remover</button>
+            }
+          </div>
+        }
+        @if (!readOnly) {
+          <button matButton (click)="addFormula()"><mat-icon>add</mat-icon> Variável</button>
+        }
+      </mat-expansion-panel>
+
+      <!-- Campos de entrada -->
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>Campos</mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="palette__hint">Campos que chegam na proposta (usados no autocomplete e no teste).</div>
+        @for (f of inputFields(); track $index) {
+          <div class="side-item">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>nome técnico</mat-label>
+              <input matInput [ngModel]="f.name" [disabled]="readOnly"
+                (ngModelChange)="patchField($index, { name: $event })" placeholder="ex.: renda_mensal" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>rótulo</mat-label>
+              <input matInput [ngModel]="f.label" [disabled]="readOnly"
+                (ngModelChange)="patchField($index, { label: $event })" placeholder="ex.: Renda mensal" />
+            </mat-form-field>
+            <div class="side-row">
+              <mat-form-field appearance="outline" class="type">
+                <mat-label>tipo</mat-label>
+                <mat-select [ngModel]="f.type" [disabled]="readOnly"
+                  (ngModelChange)="patchField($index, { type: $event })">
+                  @for (t of fieldTypes; track t) {
+                    <mat-option [value]="t">{{ fieldTypeLabel[t] }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+              <mat-checkbox [ngModel]="f.required" [disabled]="readOnly"
+                (ngModelChange)="patchField($index, { required: $event })">obrigatório</mat-checkbox>
+              @if (!readOnly) {
+                <button matIconButton (click)="removeField($index)"><mat-icon>close</mat-icon></button>
+              }
+            </div>
+          </div>
+        }
+        @if (!readOnly) {
+          <button matButton (click)="addField()"><mat-icon>add</mat-icon> Campo</button>
+        }
+      </mat-expansion-panel>
+
+      <!-- Conjuntos de regras (scorecard) -->
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>Regras (scorecard)</mat-panel-title>
+        </mat-expansion-panel-header>
+        @for (rs of rulesets(); track rs.rulesetKey; let ri = $index) {
+          <div class="side-ruleset">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Conjunto</mat-label>
+              <input matInput [ngModel]="rs.name" [disabled]="readOnly"
+                (ngModelChange)="patchRuleset(ri, { name: $event })" />
+            </mat-form-field>
+            @for (r of rs.rules; track $index; let ru = $index) {
+              <div class="side-rule">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>nome</mat-label>
+                  <input matInput [ngModel]="r.name" [disabled]="readOnly"
+                    (ngModelChange)="patchRule(ri, ru, { name: $event })" />
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>condição</mat-label>
+                  <textarea matInput rows="2" [ngModel]="r.conditionExpression" [disabled]="readOnly"
+                    (ngModelChange)="patchRule(ri, ru, { conditionExpression: $event })"
+                    placeholder="ex.: 'score' > 600"></textarea>
+                </mat-form-field>
+                <div class="side-row">
+                  <mat-form-field appearance="outline" class="type">
+                    <mat-label>efeito</mat-label>
+                    <mat-select [ngModel]="r.effect" [disabled]="readOnly"
+                      (ngModelChange)="patchRule(ri, ru, { effect: $event })">
+                      @for (ef of effects; track ef) {
+                        <mat-option [value]="ef">{{ ef }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  @if (r.effect === 'Score') {
+                    <mat-form-field appearance="outline" class="type">
+                      <mat-label>pontos</mat-label>
+                      <input matInput type="number" [ngModel]="r.scoreWeight" [disabled]="readOnly"
+                        (ngModelChange)="patchRule(ri, ru, { scoreWeight: toNumber($event) })" />
+                    </mat-form-field>
+                  }
+                  @if (r.effect === 'Decision') {
+                    <mat-form-field appearance="outline" class="type">
+                      <mat-label>desfecho</mat-label>
+                      <mat-select [ngModel]="r.forcedOutcome" [disabled]="readOnly"
+                        (ngModelChange)="patchRule(ri, ru, { forcedOutcome: $event })">
+                        @for (o of branchOutcomes; track o) {
+                          <mat-option [value]="o">{{ o }}</mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  }
+                  @if (!readOnly) {
+                    <button matIconButton (click)="removeRule(ri, ru)"><mat-icon>close</mat-icon></button>
+                  }
+                </div>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>mensagem (trilha)</mat-label>
+                  <input matInput [ngModel]="r.message" [disabled]="readOnly"
+                    (ngModelChange)="patchRule(ri, ru, { message: $event || null })" />
+                </mat-form-field>
+              </div>
+            }
+            @if (!readOnly) {
+              <button matButton (click)="addRule(ri)"><mat-icon>add</mat-icon> Regra</button>
+            }
+          </div>
+        }
+        @if (!readOnly) {
+          <button matButton="outlined" (click)="addRuleset()"><mat-icon>add</mat-icon> Conjunto</button>
+        }
+        <div class="palette__hint">Associe um conjunto a um nó "Conjunto de regras" (config do nó).</div>
+      </mat-expansion-panel>
+    </mat-accordion>
+
+    <a mat-button [routerLink]="['/politicas', flowId]" class="palette__back">
+      <mat-icon>arrow_back</mat-icon> voltar à política
+    </a>
+  </aside>
+
+  <!-- Canvas -->
+  <section class="canvas-wrap">
+    <div class="toolbar">
+      <mat-chip-set><mat-chip [highlighted]="status() === 'Published'">{{ status() }}</mat-chip></mat-chip-set>
+      <button matButton="outlined" (click)="save()" [disabled]="readOnly">
+        <mat-icon>save</mat-icon> Salvar
+      </button>
+      <button matButton="filled" (click)="publish()" [disabled]="readOnly">
+        <mat-icon>publish</mat-icon> Publicar
+      </button>
+      <button matButton="outlined" (click)="openTest()" [disabled]="status() !== 'Published'">
+        <mat-icon>play_arrow</mat-icon> Testar
+      </button>
+      <a mat-button [routerLink]="['/politicas', flowId, 'execucoes']">
+        <mat-icon>receipt_long</mat-icon> Execuções
+      </a>
+      @if (error(); as err) {
+        <span class="toolbar__error">{{ err }}</span>
+      }
+    </div>
+
+    @if (readOnly) {
+      <div class="readonly-banner">
+        <span>
+          Esta versão está
+          <strong>{{ status() === 'Published' ? 'publicada' : 'arquivada' }}</strong>
+          e é somente leitura.
+        </span>
+        <button matButton="filled" (click)="createDraft()">Criar rascunho para editar</button>
+      </div>
+    }
+
+    <f-flow
+      fDraggable
+      (fLoaded)="onLoaded()"
+      (fCreateNode)="onCreateNode($event)"
+      (fCreateConnection)="onCreateConnection($event)"
+      class="flow"
+    >
+      <f-canvas>
+        <f-background><f-circle-pattern /></f-background>
+
+        @for (node of nodes(); track node.id) {
+          <div
+            fNode
+            [fNodeId]="node.id"
+            [fNodePosition]="{ x: node.x, y: node.y }"
+            (fNodePositionChange)="onNodePositionChanged(node.id, $event)"
+            class="rf-node"
+            [class]="node.kind"
+            (dblclick)="openConfig(node)"
+          >
+            @if (hasInput(node.kind)) {
+              <div fNodeInput [fInputId]="node.id" [fInputConnectableSide]="side.TOP" class="conn conn--in"></div>
+            }
+
+            @if (node.kind === 'Comment') {
+              <div class="kind">Comentário</div>
+              <div class="comment-text">{{ node.label || 'Comentário…' }}</div>
+            } @else {
+              <div class="kind">{{ node.kind }}</div>
+              <div class="node-label">{{ node.label }}</div>
+            }
+
+            @if (isCondition(node.kind)) {
+              <div fNodeOutput [fOutputId]="node.id + ':true'" [fOutputConnectableSide]="side.BOTTOM"
+                   class="conn conn--out conn--true" title="Verdadeiro"></div>
+              <div fNodeOutput [fOutputId]="node.id + ':false'" [fOutputConnectableSide]="side.BOTTOM"
+                   class="conn conn--out conn--false" title="Falso"></div>
+            } @else if (hasOutput(node.kind)) {
+              <div fNodeOutput [fOutputId]="node.id" [fOutputConnectableSide]="side.BOTTOM" class="conn conn--out"></div>
+            }
+          </div>
+        }
+
+        @for (edge of edges(); track edge.id) {
+          <f-connection
+            [fOutputId]="edge.source + (edge.sourceHandle ? ':' + edge.sourceHandle : '')"
+            [fInputId]="edge.target"
+          ></f-connection>
+        }
+      </f-canvas>
+
+      <f-minimap />
+    </f-flow>
+  </section>
+</div>

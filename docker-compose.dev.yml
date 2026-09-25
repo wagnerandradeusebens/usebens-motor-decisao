@@ -1,0 +1,87 @@
+# ===========================================================================
+# usebens-motor-decisao — infraestrutura local de desenvolvimento
+# ===========================================================================
+# Sobe as dependências de apoio para rodar o motor localmente.
+#
+# ATIVO HOJE: apenas Redis (cache dos fluxos publicados).
+# O PostgreSQL NÃO está aqui de propósito: o projeto usa o RDS compartilhado
+# (schema usebens_motor_decisao) via AWS Secrets Manager.
+#
+# MongoDB e RabbitMQ estão definidos porém DESLIGADOS por padrão (profiles).
+# Só serão usados quando houver necessidade real:
+#   - Mongo: candidato a guardar trilhas de execução / documentos de alto volume.
+#   - RabbitMQ: candidato a decisão assíncrona / em lote ou invalidação de cache.
+# Para ligá-los quando for a hora:
+#   docker compose -f docker-compose.dev.yml --profile mongo up -d
+#   docker compose -f docker-compose.dev.yml --profile rabbitmq up -d
+#
+# Uso comum:
+#   docker compose -f docker-compose.dev.yml up -d      # sobe o Redis
+#   docker compose -f docker-compose.dev.yml ps         # status
+#   docker compose -f docker-compose.dev.yml logs -f    # logs
+#   docker compose -f docker-compose.dev.yml down        # para (mantém dados)
+#   docker compose -f docker-compose.dev.yml down -v     # para e APAGA os dados
+#
+# Credenciais abaixo são só para desenvolvimento local — não use em produção.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: motor-redis
+    restart: unless-stopped
+    # Senha de dev (a app conecta com requirepass). Remova --requirepass se
+    # preferir Redis sem autenticação localmente.
+    command: ["redis-server", "--requirepass", "motor"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "motor", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Desligados por padrão (ative com --profile quando precisar) ---------
+  mongo:
+    image: mongo:7
+    container_name: motor-mongo
+    profiles: ["mongo"]
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: motor
+      MONGO_INITDB_ROOT_PASSWORD: motor
+      MONGO_INITDB_DATABASE: motor_decisao
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: motor-rabbitmq
+    profiles: ["rabbitmq"]
+    restart: unless-stopped
+    ports:
+      - "5672:5672"    # AMQP (a aplicação conecta aqui)
+      - "15672:15672"  # Console de gerenciamento (http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: motor
+      RABBITMQ_DEFAULT_PASS: motor
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  redis-data:
+  mongo-data:
+  rabbitmq-data:

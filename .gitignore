@@ -1,0 +1,45 @@
+# ---- .NET ----
+bin/
+obj/
+out/
+aux/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+project.lock.json
+artifacts/
+
+# Build results / publish
+publish/
+*.dll
+*.pdb
+
+# Rider / VS
+.idea/
+.vs/
+
+# ---- Secrets / local config ----
+.env
+appsettings.*.Local.json
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Front-end (React / Angular) ----
+node_modules/
+dist/
+.angular/
+frontend/dist/
+frontend-angular/dist/
+npm-debug.log*
+yarn-error.log
+
+# ---- Python (venv de apoio, se houver) ----
+.venv/
+__pycache__/
+*.pyc
+
+# ---- Logs locais ----
+*.log

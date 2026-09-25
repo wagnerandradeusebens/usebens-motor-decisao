@@ -1,0 +1,58 @@
+mat-dialog-content {
+  min-width: 540px;
+  max-width: 680px;
+}
+
+.full {
+  width: 100%;
+  display: block;
+}
+
+.section-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0.4rem;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.field-row .key { flex: 1; }
+.field-row .type { width: 130px; }
+.field-row .val { flex: 1; }
+
+.run-bar {
+  margin: 0.5rem 0;
+}
+
+.result {
+  margin-top: 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-sm);
+  padding: 0.85rem;
+  background: var(--cor-fundo);
+}
+.block {
+  margin-top: 0.7rem;
+}
+.block ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+.out {
+  font-size: 0.82rem;
+}
+.trace .trace-step {
+  border-left: 3px solid var(--cor-borda);
+  padding: 0.3rem 0.6rem;
+  margin-bottom: 2px;
+}
+.trace .seq {
+  font-size: 0.72rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+.small { font-size: 0.8rem; }
+.mono { font-family: ui-monospace, monospace; font-size: 0.82rem; }
+code { font-family: ui-monospace, monospace; }

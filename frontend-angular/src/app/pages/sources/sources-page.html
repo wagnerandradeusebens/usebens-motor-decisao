@@ -1,0 +1,49 @@
+<div class="page">
+  <header class="page-header">
+    <div>
+      <h1 class="page-header__title">Fontes de dados</h1>
+      <p class="page-header__subtitle">
+        Integrações disponíveis. Use nas fórmulas com <code>[Fonte;Produto;Dado]</code>,
+        ex.: <code>[SERASA;Score;Pontuacao]</code>.
+      </p>
+    </div>
+  </header>
+
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else if (sources().length === 0) {
+    <div class="empty-state"><mat-icon>cloud_off</mat-icon><div>Nenhuma integração disponível ainda.</div></div>
+  } @else {
+    @for (s of sources(); track s.name) {
+      <mat-card class="source" appearance="outlined">
+        <div class="row spread">
+          <strong>{{ s.name }}</strong>
+          <mat-chip-set><mat-chip highlighted>integração</mat-chip></mat-chip-set>
+        </div>
+        @if (s.description) {
+          <div class="muted desc">{{ s.description }}</div>
+        }
+
+        @for (p of s.products; track p.name) {
+          <div class="product">
+            <div class="product__name">{{ p.name }}</div>
+            @if (p.description) {
+              <div class="muted">{{ p.description }}</div>
+            }
+            <div class="product__data">
+              @for (d of p.data; track d.name) {
+                <code class="datum" [title]="d.description ?? ''">
+                  [{{ s.name }};{{ p.name }};{{ d.name }}]
+                </code>
+              }
+            </div>
+          </div>
+        }
+      </mat-card>
+    }
+  }
+</div>

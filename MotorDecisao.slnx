@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MotorDecisao.Api/MotorDecisao.Api.csproj" />
+    <Project Path="src/MotorDecisao.Application/MotorDecisao.Application.csproj" />
+    <Project Path="src/MotorDecisao.Domain/MotorDecisao.Domain.csproj" />
+    <Project Path="src/MotorDecisao.Infrastructure/MotorDecisao.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MotorDecisao.Api.Tests/MotorDecisao.Api.Tests.csproj" />
+    <Project Path="tests/MotorDecisao.Application.Tests/MotorDecisao.Application.Tests.csproj" />
+  </Folder>
+</Solution>

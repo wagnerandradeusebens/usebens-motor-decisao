@@ -1,0 +1,33 @@
+.source {
+  margin-bottom: 0.85rem;
+}
+
+.desc {
+  margin-bottom: 0.5rem;
+}
+
+.product {
+  margin-top: 0.6rem;
+}
+.product__name {
+  font-weight: 600;
+}
+.product__data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.datum {
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.8rem;
+  font-family: ui-monospace, monospace;
+}
+
+code {
+  font-family: ui-monospace, monospace;
+}

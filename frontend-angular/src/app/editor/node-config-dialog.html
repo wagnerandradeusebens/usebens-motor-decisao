@@ -1,0 +1,244 @@
+<h2 mat-dialog-title>Configurar: {{ label || kind }}</h2>
+<mat-dialog-content>
+  @if (kind !== 'Comment') {
+    <mat-form-field appearance="outline" class="full">
+      <mat-label>Rótulo</mat-label>
+      <input matInput [(ngModel)]="label" [disabled]="readOnly" />
+    </mat-form-field>
+  }
+
+  @switch (kind) {
+    @case ('Condition') {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Expressão (booleana)</mat-label>
+        <textarea matInput rows="3" [(ngModel)]="expression" [disabled]="readOnly"
+          placeholder="Ex.: 'idade' >= 18"></textarea>
+      </mat-form-field>
+      <p class="hint muted">{{ hint }}</p>
+      <p class="hint muted">Saídas: verde = verdadeiro, vermelho = falso.</p>
+      @if (!readOnly) {
+        <div class="branch-actions">
+          <button matButton="outlined" (click)="configureBranch('true')">
+            <mat-icon>call_split</mat-icon> Configurar Verdadeiro
+          </button>
+          <button matButton="outlined" (click)="configureBranch('false')">
+            <mat-icon>call_split</mat-icon> Configurar Falso
+          </button>
+        </div>
+        <p class="hint muted">Defina o destino de cada saída (ir para um nó ou desfecho final).</p>
+      }
+    }
+
+    @case ('Computation') {
+      <div class="section-label">Cálculos</div>
+      @for (a of assignments(); track $index) {
+        <div class="item">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Campo destino</mat-label>
+            <input matInput [ngModel]="a.targetField" [disabled]="readOnly"
+              (ngModelChange)="setAssignment($index, { targetField: $event })"
+              placeholder="ex.: comprometimento" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Expressão</mat-label>
+            <textarea matInput rows="2" [ngModel]="a.expression" [disabled]="readOnly"
+              (ngModelChange)="setAssignment($index, { expression: $event })"
+              placeholder="ex.: 'divida' / 'renda'"></textarea>
+          </mat-form-field>
+          @if (!readOnly) {
+            <button matButton (click)="removeAssignment($index)">Remover</button>
+          }
+        </div>
+      }
+      @if (!readOnly) {
+        <button matButton="outlined" (click)="addAssignment()">+ Adicionar cálculo</button>
+      }
+      <p class="hint muted">{{ hint }}</p>
+    }
+
+    @case ('Decision') {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Desfecho</mat-label>
+        <mat-select [(ngModel)]="outcome" [disabled]="readOnly">
+          @for (o of outcomes; track o) {
+            <mat-option [value]="o">{{ o }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Mensagem</mat-label>
+        <input matInput [(ngModel)]="message" [disabled]="readOnly" placeholder="Opcional" />
+      </mat-form-field>
+    }
+
+    @case ('DataSource') {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Fonte de dados</mat-label>
+        <input matInput [(ngModel)]="source" [disabled]="readOnly" placeholder="ex.: bureau_serasa" />
+      </mat-form-field>
+      <p class="hint muted">Integração externa é resolvida no backend.</p>
+    }
+
+    @case ('Comment') {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Texto do comentário</mat-label>
+        <textarea matInput rows="4" [(ngModel)]="text" [disabled]="readOnly"
+          placeholder="Anotação visível no fluxo. Não afeta a execução."></textarea>
+      </mat-form-field>
+      <p class="hint muted">Puramente visual: ignorado pela execução.</p>
+    }
+
+    @case ('Action') {
+      <div class="section-label">Ações (executadas em ordem)</div>
+      @for (a of actions(); track $index) {
+        <div class="item">
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Tipo</mat-label>
+            <mat-select [ngModel]="a.type" [disabled]="readOnly"
+              (ngModelChange)="setAction($index, { type: $event })">
+              @for (t of actionTypes; track t.value) {
+                <mat-option [value]="t.value">{{ t.label }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+          @if (a.type === 'SetOutput') {
+            <mat-form-field appearance="outline" class="full">
+              <mat-label>Nome do parâmetro</mat-label>
+              <input matInput [ngModel]="a.name" [disabled]="readOnly"
+                (ngModelChange)="setAction($index, { name: $event })" placeholder="ex.: taxa" />
+            </mat-form-field>
+          }
+          <mat-form-field appearance="outline" class="full">
+            <mat-label>Expressão</mat-label>
+            <textarea matInput rows="2" [ngModel]="a.expression" [disabled]="readOnly"
+              (ngModelChange)="setAction($index, { expression: $event })"
+              placeholder='ex.: 30  ou  "cliente ok"'></textarea>
+          </mat-form-field>
+          @if (!readOnly) {
+            <button matButton (click)="removeAction($index)">Remover</button>
+          }
+        </div>
+      }
+      @if (!readOnly) {
+        <button matButton="outlined" (click)="addAction()">+ Adicionar ação</button>
+      }
+      <p class="hint muted">Contadores: leia nas fórmulas como <code>'pontos'</code> e <code>'limite'</code>.</p>
+    }
+
+    @case ('Matrix') {
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Modo</mat-label>
+        <mat-select [ngModel]="matrix().mode" [disabled]="readOnly" (ngModelChange)="setMatrixMode($event)">
+          <mat-option value="Points">Pontos</mat-option>
+          <mat-option value="Limit">Limite</mat-option>
+          <mat-option value="Decision">Decisão</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Expressão das linhas</mat-label>
+        <input matInput [ngModel]="matrix().rowExpression" [disabled]="readOnly"
+          (ngModelChange)="setMatrixExpr('rowExpression', $event)" placeholder="ex.: 'renda'" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>Expressão das colunas</mat-label>
+        <input matInput [ngModel]="matrix().colExpression" [disabled]="readOnly"
+          (ngModelChange)="setMatrixExpr('colExpression', $event)" placeholder="ex.: [SERASA;Score;Pontuacao]" />
+      </mat-form-field>
+
+      <!-- Faixas -->
+      @for (which of ['rowBands', 'colBands']; track which) {
+        <div class="section-label">{{ which === 'rowBands' ? 'Faixas das linhas' : 'Faixas das colunas' }}</div>
+        @for (b of (which === 'rowBands' ? matrix().rowBands : matrix().colBands); track $index) {
+          <div class="band-row">
+            <mat-form-field appearance="outline" class="band-label">
+              <mat-label>rótulo</mat-label>
+              <input matInput [ngModel]="b.label" [disabled]="readOnly"
+                (ngModelChange)="patchBand($any(which), $index, { label: $event })" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="band-num">
+              <mat-label>min</mat-label>
+              <input matInput type="number" [ngModel]="b.min" [disabled]="readOnly"
+                (ngModelChange)="patchBand($any(which), $index, { min: toNumberOrNull($event) })" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="band-num">
+              <mat-label>max</mat-label>
+              <input matInput type="number" [ngModel]="b.max" [disabled]="readOnly"
+                (ngModelChange)="patchBand($any(which), $index, { max: toNumberOrNull($event) })" />
+            </mat-form-field>
+            @if (!readOnly) {
+              <button matIconButton (click)="removeBand($any(which), $index)"><mat-icon>close</mat-icon></button>
+            }
+          </div>
+        }
+        @if (!readOnly) {
+          <button matButton (click)="addBand($any(which))"><mat-icon>add</mat-icon> Faixa</button>
+        }
+      }
+
+      <!-- Grade de células -->
+      @if (matrix().rowBands.length > 0 && matrix().colBands.length > 0) {
+        <div class="section-label">Células ({{ matrix().mode === 'Decision' ? 'desfecho' : 'valor' }})</div>
+        <div class="matrix-grid">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                @for (c of matrix().colBands; track $index) {
+                  <th>{{ c.label || 'col ' + ($index + 1) }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of matrix().rowBands; track $index; let ri = $index) {
+                <tr>
+                  <th class="rowhead">{{ r.label || 'lin ' + (ri + 1) }}</th>
+                  @for (c of matrix().colBands; track $index; let ci = $index) {
+                    <td>
+                      @if (matrix().mode === 'Decision') {
+                        <mat-select [ngModel]="cellAt(ri, ci)" [disabled]="readOnly"
+                          (ngModelChange)="setCell(ri, ci, $event)" class="cell-select">
+                          @for (o of outcomes; track o) {
+                            <mat-option [value]="o">{{ o }}</mat-option>
+                          }
+                        </mat-select>
+                      } @else {
+                        <input type="number" class="cell-input" [ngModel]="cellAt(ri, ci)" [disabled]="readOnly"
+                          (ngModelChange)="setCell(ri, ci, $event)" />
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="hint muted">Faixas: min ≤ valor &lt; max (vazio = aberto). Célula padrão quando nada casa.</p>
+      }
+    }
+
+    @default {
+      <div class="section-label">Configuração (JSON)</div>
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>JSON</mat-label>
+        <textarea matInput rows="10" class="mono" [(ngModel)]="rawJson" [disabled]="readOnly"></textarea>
+      </mat-form-field>
+      <p class="hint muted">
+        Editor visual dedicado para este tipo ({{ kind }}) está no roadmap. Por ora, edite o JSON diretamente.
+      </p>
+    }
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  @if (kind !== 'Start' && !readOnly) {
+    <button matButton (click)="delete()">
+      <mat-icon>delete</mat-icon>
+      Excluir nó
+    </button>
+  }
+  <span class="spacer"></span>
+  <button matButton mat-dialog-close>Fechar</button>
+  @if (!readOnly) {
+    <button matButton="filled" (click)="save()">Salvar</button>
+  }
+</mat-dialog-actions>

@@ -1,0 +1,4469 @@
+===== PÁGINA 1 =====
+ 
+ 
+ 
+ 
+Parametrização em Crivo 4 
+Tutorial 
+v. 5.0 
+===== PÁGINA 2 =====
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+===== PÁGINA 3 =====
+ 
+ 
+© 2013 Crivo TransUnion Sistemas em Informática S.A. 
+Todos os direitos reservados. 
+Versão: 5.0 
+Última atualização: 29 de julho de 2013 
+ 
+Suporte técnico: 
+servicedesk@crivotransunion.com.br  
+ 
+ 
+Endereço: 
+Rua Vergueiro, 2016 – 11º andar 
+São Paulo – SP 
+CEP 04102-000 
+Telefone: (11) 5904-7830 
+www.crivotransunion.com.br  
+===== PÁGINA 4 =====
+Parametrização em Crivo 4 
+ 
+ 
+ 4  
+Proposta do Tutorial: 
+Este tutorial tem como principal objetivo a parametrização de políticas  no Crivo 4,  
+apresentando os recursos necessários para a obtençã o de resultados a partir das coletas e 
+análises efetuadas. 
+ 
+Ícones de referência: 
+ 
+Informação 
+   
+Atenção 
+  
+Importante 
+ 
+ 
+  
+
+===== PÁGINA 5 =====
+Parametrização em Crivo 4 
+ 
+ 
+ 5  
+Sumário  
+ 
+Interfaces do Crivo 4 ................................................................................ ................... 10  
+Administrador do Crivo ............................................................................... ............. 10  
+Configuração de conexões no Administrador Crivo ............................................. 10  
+Utilizando a interface do Administrador Crivo ...................................................... 14  
+Disposição dos elementos na tela ..................................................................... .. 14  
+Utilizando a interface browser  .............................................................................. 19  
+Menu lateral direito ................................................................................. ............. 20  
+Barra de ferramentas ................................................................................. .......... 21  
+Menu Principal ....................................................................................... .............. 21  
+Menu lateral esquerdo ................................................................................ ......... 21  
+Estrutura Corporativa ................................................................................ .................. 23  
+Definições ........................................................................................... .................... 23  
+Criação de centro de custo ........................................................................... ........... 35  
+Usuário .............................................................................................. .................. 36  
+Configurações de Grupo ............................................................................... .......... 41  
+Configuração dos Coletores ........................................................................... ......... 43  
+Configuração Global .................................................................................. .............. 46  
+Integração Workflow .................................................................................. .......... 46  
+Configurações de Login ............................................................................... ........ 46  
+Configurações de parâmetros de senha .............................................................. 46 
+Editor de Políticas .................................................................................. ..................... 48  
+Hierarquia do sistema ................................................................................ .......... 48  
+Critério ............................................................................................. .................... 49  
+Política ............................................................................................. .................... 50  
+Pastas ............................................................................................... ...................... 50  
+Lista de Critérios ................................................................................... ............... 51  
+Versionamento e comparação de critérios ..............................................................  54  
+Revisão de Critérios com Dependência Ascendente ........................................... 55  
+Disposição dos elementos na tela ..................................................................... ...... 58  
+Definição de Regra.................................................................................... .............. 62  
+Regra ................................................................................................ ...................... 62  
+Identificação de Regras .............................................................................. ......... 63  
+Desabilitar/habilitar regra .......................................................................... ........... 63  
+===== PÁGINA 6 =====
+Parametrização em Crivo 4 
+ 
+ 
+ 6  
+Colapsar/expandir regra .............................................................................. ........ 63  
+Regra Inalcançável.................................................................................... .............. 64  
+Inclusão de uma regra ................................................................................ ............. 65  
+Fonte de Informação .................................................................................. ............. 66  
+Implementação dos drivers ............................................................................ ...... 66  
+Produto .............................................................................................. .................. 67  
+Variável .......................................... ................................................... .................. 68  
+Ações ............................................. ................................................... .................. 71  
+Expressões ........................................................................................... ............... 74  
+Funções .............................................................................................. ................. 75  
+Operadores ........................................................................................... ............... 86  
+Constantes ........................................ ................................................... ............... 86  
+Campos ............................................................................................... ................ 87  
+Condições ............................................................................................ ................ 89  
+Comentários em Regras ................................................................................ ...... 90  
+Minhas Variáveis (variáveis definidas pelo usuário) ............................................. 91  
+Substituição de Nulo ................................................................................. ........... 95  
+Pesquisa e seleção ................................................................................... ........... 99  
+Importar e Exportar Critério ......................................................................... ...... 100  
+Análise Individual ................................................................................... ................... 107  
+Coleta à fonte de informação ......................................................................... .... 107  
+Operação ............................................................................................. .............. 107  
+Operação Individual .................................................................................. ......... 107  
+Relatório Operacional: Resultado da(s) Análise(s) ................................................ 110 
+Código da Operação ................................................................................... ....... 111  
+Geração de relatório em formato PDF .................................................................. . 113  
+Relatórios ........................................ ................................................... ...................... 116  
+Auditoria do Crivo ................................................................................... ............... 116  
+Tipos de entidades ................................................................................... ......... 116  
+Histórico de Decisões ................................................................................ ............ 118  
+Relatórios de Negócio ................................................................................ ........... 118  
+Resumo de Análise .................................................................................... ........ 119  
+Utilização das Fontes................................................................................. ........ 119  
+Utilização Crivo ..................................................................................... ............. 120  
+Evolução dos Resultados .............................................................................. .... 121  
+Fluxo de Operações ................................................................................... ....... 122  
+===== PÁGINA 7 =====
+Parametrização em Crivo 4 
+ 
+ 
+ 7  
+Relatório Operacional ................................................................................ ........ 123  
+Relatórios de Infraestrutura ......................................................................... .......... 125  
+Evolução das Atividades .............................................................................. ...... 125  
+Estatística das Coletas .............................................................................. ........ 125  
+Duração das Operações ................................................................................ .... 126  
+Apêndices ............................................................................................ ..................... 129  
+Régua de Condições ................................................................................... .......... 131  
+Ação: Redefine Valor do Campo ........................................................................ ... 134  
+Regras Especialistas ................................................................................. ............ 139  
+Regra Especialista: Campeã x Desafiadora ....................................................... 139  
+Explica Operação ..................................................................................... ............. 144  
+Objeto de Análise .................................................................................... .............. 147  
+Exemplos ............................................................................................. .............. 147  
+Como criar Objetos de Análise ........................................................................ .. 147  
+Tratamento de objetos de análise com disparo em paralelo .............................. 149  
+Disparo em Paralelo .................................................................................. ............ 152  
+Configuração de critério utilizando Disparo em Paralelo .................................... 152  
+Resultado de um critério ............................................................................. .......... 154  
+Operação em Lote................................... ................................................... ........... 157  
+Submissão de Lotes ................................................................................... ........... 157  
+Layout de Lotes ...................................................................................... ........... 157  
+Submissão de Lotes ................................................................................... ....... 160  
+Monitoração de Lotes ................................................................................. ....... 161  
+Exportar parâmetros para Lote ........................................................................ .. 164  
+Configuração dos coletores ........................................................................... ........ 165  
+Configurações ..................................... ................................................... ........... 165  
+Validade .......................................... ................................................... ............... 165  
+Condições de Erro .................................................................................... ......... 166  
+Drivers  para acesso a fontes de informação ...................................................... 169  
+Exportação de Dados .................................................................................. .......... 172  
+Exportação de dados da base Crivo .................................................................. 172  
+Acompanhamento da exportação ...................................................................... 175  
+Listas Especiais ..................................................................................... ............... 177  
+Criação de uma lista especial – CPF/CNPJ ....................................................... 178  
+Criação de uma lista especial – Placa/Chassi .................................................... 179  
+Acompanhamento Listas Especiais ...................................................................... . 184  
+===== PÁGINA 8 =====
+Parametrização em Crivo 4 
+ 
+ 
+ 8  
+Aplicação na Política ................................................................................ ......... 185  
+ 
+===== PÁGINA 9 =====
+ 
+  
+ 
+Interfaces do Crivo 4
+===== PÁGINA 10 =====
+Parametrização em Crivo 4 
+ 
+ 
+10 
+Interfaces do Crivo 4 
+ 
+Administrador do Crivo 
+ 
+O Administrador Crivo  é uma aplicação  cliente/servidor que deve ser instalada na estação 
+de trabalho  para que possa ser utilizada.  
+O usuário do Administrador Crivo pode ser: 
+• Um profissional responsável por configurações gerais , como criação de usuários e 
+grupos, inserção de senhas para acesso a fontes de informação;  
+ 
+• Um parametrizador de regras  de negócio da empresa, responsável pela 
+implantação de políticas  no servidor Crivo. 
+Para detalhes sobre a instalação do Administrador do Crivo, siga o procedimento indicado no 
+e-mail emitido pela área de service desk da Crivo. 
+ 
+Configuração de conexões no Administrador Crivo 
+ 
+Para iniciar o Administrador Crivo, basta clicar duas vezes sobre o atalho criado na área de 
+trabalho: 
+ 
+ 
+Barra de Título 
+ 
+A barra de título da janela do Administrador Crivo contém as seguintes informações: 
+ 
+ 
+• À esquerda:   
+"Administrador do Crivo 4 Versão do Administrador: [ número da versão ]" ;  
+ 
+
+===== PÁGINA 11 =====
+Parametrização em Crivo 4 
+ 
+ 
+11 
+ 
+ 
+• À direita:  O 1º botão, a contar da esquerda, aciona a ajuda ( help ) do Administrador Crivo; 
+os demais controlam a janela ( minimizar , maximizar/restaurar  e fechar ).   
+ 
+No lado direito da janela é exibida a primeira pági na do site  da Crivo na Internet, com 
+informações de interesse geral relativas ao software Crivo e à empresa Crivo. 
+No primeiro acesso ao administrador deve ser config urada uma conexão com o servidor Crivo. 
+Clique no link  "Alterar configurações do servidor " da tela de login: 
+ 
+Verifique com sua equipe de TI as informações solic itadas para o correto preenchimento da 
+caixa “ Configurar Conexão ”: 
+ 
+• Apelido: identificação da configuração de conexão. Sugestões  para o preenchimento do 
+campo Apelido: Produção , Homologação , testes ;  
+• Servidor:  se a rede da sua empresa tem redes segmentadas por  roteadores, e caso a 
+estação de trabalho do parametrizador e o servidor Crivo estejam em segmentos diferentes, 
+pode ser necessário preencher esta configuração (so b orientação da sua área de TI ou 
+infraestrutura de rede);  
+• Porta: verifique com seu departamento de infraestrutura de  rede a necessidade de 
+preenchimento; 
+• Usar SSL: configura uma conexão segura.  
+ 
+
+===== PÁGINA 12 =====
+Parametrização em Crivo 4 
+ 
+ 
+12 
+Botões: 
+ 
+ Limpar - Apaga o conteúdo dos campos, permitindo a criação de uma nova conexão. 
+ Remover - Elimina a conexão que está sendo exibida. 
+ Salvar - Grava o conteúdo dos campos preenchidos, atualizand o a conexão que está 
+sendo exibida. 
+ Importante  
+Para criar uma conexão adicional: Clique primeiro n o botão Limpar  e, após inserir as 
+informações da nova conexão, clique em Salvar .  
+Repita o procedimento para criar outras conexões. 
+ 
+Para configurar o acesso remoto ao servidor de instalação do Crivo, por meio do Administrador 
+local do Crivo 4, clique no link  "Alterar configurações do Proxy " da tela de login: 
+ 
+• Default do usuário: configuração da saída (proxy) previamente parametri zada no 
+equipamento do usuário;  
+• Personalizado: podem ser definidas algumas configurações específi cas (servidor, modos 
+de autenticação, usuário e senha); 
+ 
+
+===== PÁGINA 13 =====
+Parametrização em Crivo 4 
+ 
+ 
+13 
+• Não usar proxy do usuário: quando não for necessária configuração.  
+Botões: 
+ 
+ Cancelar - Apaga a configuração do proxy. 
+ Salvar - Grava o conteúdo dos campos preenchidos, atualizand o a configuração do 
+proxy. 
+ 
+Ao efetuar o primeiro acesso, após informar o usuár io e senha corretos, o Administrador Crivo 
+criará uma pasta chamada Crivo  dentro de Meus Documentos,  no perfil do usuário que 
+efetuou logon ; essa pasta servirá para armazenar informações que  agilizam a operação do 
+Administrador Crivo : 
+ 
+ 
+ 
+Caso a versão do Windows na estação de trabalho est eja em inglês , a pasta Crivo será criada 
+em My Documents , conforme a figura acima.  
+Não há limite de instalações  do Administrador Crivo, apenas deve-se considerar que através 
+do Administrador Crivo pode-se alterar configuraçõe s que afetam o comportamento do Crivo, 
+portanto recomendamos que a disponibilização do Adm inistrador esteja restrita apenas às 
+pessoas que irão executar atividades de parametriza ção de políticas ou configuração de 
+objetos do Crivo, como criação de usuários e grupos.  
+A interface browser  foi projetada para atividades de operação do Crivo , como execução de 
+políticas e geração do relatório operacional. É pos sível ainda restringir os comandos 
+disponíveis na interface, evitando que comandos desnecessários a determinados grupos 
+fiquem disponíveis. 
+ 
+
+===== PÁGINA 14 =====
+Parametrização em Crivo 4 
+ 
+ 
+14 
+ Informação  
+Para ter mais espaço útil na janela do browser , tecle F11 (configura tela cheia) para ocultar os 
+menus e barras de botões do Microsoft Internet Explorer , FireFox ou Chrome . Para retornar 
+ao modo original, tecle F11  novamente. 
+ 
+ 
+Utilizando a interface do Administrador Crivo 
+ 
+O Administrador Crivo  permite ações como: efetuar configurações gerais  no Crivo, criar e 
+editar os critérios que integram as políticas , gerar relatórios  sobre os dados armazenados 
+na base do Crivo, entre outras.  
+Não é possível executar políticas ou critérios no A dministrador Crivo, apenas editá-las ; 
+para essa ação, deve-se utilizar a interface operacional (browser ).  
+ 
+Disposição dos elementos na tela 
+ 
+Login 
+ 
+Para ter acesso ao Menu Principal, deverá ser digit ado o usuário e senha para a conexão com 
+o servidor Crivo, no quadro Login  localizado no canto superior esquerdo da tela. Selecione o 
+servidor Crivo para a conexão , se estiver configurado. Caso não esteja, pode ser configurada 
+uma nova conexão. 
+Etapas para a conexão: 
+• Informar login  e senha;  
+• Clicar no botão "Conectar" ;  
+• Aguardar a conexão com o servidor selecionado. 
+ 
+ 
+
+===== PÁGINA 15 =====
+Parametrização em Crivo 4 
+ 
+ 
+15 
+ 
+Ao efetuar o logon , o Administrador Crivo  apresentará a seguinte tela: 
+ 
+ 
+Crivo Update 
+ 
+Procedimento que deve ser realizado frequentemente, pois atualiza os drivers  que acessam as 
+fontes de informação, para que se adequem a novas c ondições impostas pelas fontes de 
+informação ( layout  desconhecido, por exemplo) e também para acrescent ar novos drivers , ou 
+ainda novos produtos e variáveis em drivers  já existentes. 
+O usuário poderá efetuar uma pesquisa pelos nomes d as fontes de informação, basta utilizar o 
+filtro: 
+ 
+ 
+Barra de Ferramentas 
+ 
+A barra de ferramentas contém botões para funções comuns no Crivo; é sensível ao contexto , 
+ou seja, os botões estarão habilitados ou desabilitados conforme sua função tiver significado na 
+tela apresentada.  
+
+===== PÁGINA 16 =====
+Parametrização em Crivo 4 
+ 
+ 
+16 
+Por exemplo, quando temos um critério aberto para e dição não estão habilitados os botões de 
+importar  e exportar , pois estas funções não estão no contexto da edição de critérios. 
+ 
+ 
+ 
+ 
+Menu Principal 
+ 
+O menu de comandos traz os itens agrupados por categorias: 
+O item Início  volta à tela inicial do Administrador Crivo, reapresentando e atualizando a lista do 
+Crivo Update. 
+Em Configurações  temos os itens: 
+• Estrutura Corporativa:  Permite criar e configurar usuários, grupos e cent ros de custo, 
+além de configurar o perfil dos usuários através dos parâmetros dos grupos. 
+• Configuração dos Coletores:  Permite consultar e modificar a validade das 
+informações da base de dados do Crivo a serem utili zadas em decisões e análises, 
+além do tempo máximo de espera de retorno das fonte s e a quantidade máxima de 
+tentativas para acesso aos produtos das fontes, além da validade da contingência. 
+• Configuração Global: Permite que sejam definidas as configurações de int egração 
+com o Crivo Workflow, login e parâmetros de senha. 
+ 
+ 
+  
+
+===== PÁGINA 17 =====
+Parametrização em Crivo 4 
+ 
+ 
+17 
+Em Políticas  temos o item: 
+ 
+ 
+Por meio da Edição de Políticas  são criados/alterados os critérios que compõem as políticas, 
+bem como a criação/manutenção de pastas para contê-los. 
+No item Ferramentas  constam os itens: 
+• Explica Operação:  Ao informar o código da operação executada, aprese nta-se um 
+relatório passo-a-passo da execução da operação, pe rmitindo a análise do caminho 
+percorrido pelo critério/política para chegar aos resultados que foram apresentados. 
+• Listas Especiais:  Utilizada para gerenciar, importar ou exportar listas de categorias  
+(CPF e CNPJ  ou Chassi e Placa de veículo ) para serem consultadas nas políticas do 
+Crivo. 
+• Acompanhamento Listas Especiais:  Após iniciar a importação ou exportação de uma 
+lista especial, o andamento pode ser acompanhado acessando esta opção do menu. 
+ 
+  
+
+===== PÁGINA 18 =====
+Parametrização em Crivo 4 
+ 
+ 
+18 
+Em Histórico de Decisões  temos: 
+• Relatórios:  Acesso aos relatórios para visualização das inform ações armazenadas na 
+base de dados do servidor Crivo. Há relatórios volt ados para análise de negócio e 
+outros para análise da infraestrutura de TI; 
+ 
+• Exportação:  Opção utilizada para extrair informações armazenad as na base de dados 
+do Crivo, sejam: informações coletadas das fontes de informação, decisões geradas por 
+operações ou parâmetros de entrada utilizados nas a nálises executadas pelo Crivo. 
+Pode-se escolher como formatos de saída de arquivo:  SPSS , SAS  (softwares  
+estatísticos) e Delimitado por Cabeçallho  (que pode ser aberto por programas de 
+planilha eletrônica como o Microsoft Excel  ou  OpenOffice Calc). Uma questão 
+importante a se considerar é o tamanho do arquivo g erado, pois pode estar além da 
+capacidade do programa que irá manipulá-lo. 
+ 
+ 
+Em Monitoração  constam os itens: 
+ 
+
+===== PÁGINA 19 =====
+Parametrização em Crivo 4 
+ 
+ 
+19 
+• Auditoria:  Gera um relatório, baseado em filtros, das ações d os usuários com 
+data/hora, identificação do agente, entidade afetada e ação realizada. 
+ 
+• Diagnóstico:  Em caso de problemas com o servidor Crivo, esta op ção permite gerar 
+arquivos com diversas informações técnicas , com a finalidade de enviá-los à área 
+de suporte da Crivo para análise da causa dos problemas detectados.  
+ 
+Utilizando a interface browser  
+ 
+Na interface browser  são escolhidos e executados os critérios/políticas  associados ao grupo  
+do usuário que efetuou logon . Pode-se acessar o relatório operacional (Históric o), executar 
+operações em lote e também individualmente, no modo interativo. 
+ 
+ 
+ 
+Digite um usuário e senha para ter acesso à interfa ce. A senha pode ser alterada somente 
+nesta tela, através do link  Alterar Senha . 
+ 
+ 
+ 
+  
+
+===== PÁGINA 20 =====
+Parametrização em Crivo 4 
+ 
+ 
+20 
+A tela principal do browser  será então exibida: 
+ 
+ 
+Após selecionar o item Individual  no menu esquerdo, escolha uma política ou critério  para 
+execução; serão exibidos os parâmetros de entrada exigidos  para a execução desse critério 
+ou política. Para executar a operação, clique em Buscar/Executar , no menu do lado direito da 
+tela: 
+ 
+ 
+ 
+O item Buscar/Executar  tem relação com o recurso Busca Operação , que será abordado em 
+outro tópico. Para finalizar a sessão do Crivo, cli que no botão Encerrar (canto superior direito 
+da janela) e voltará à tela de login . 
+ 
+ 
+Também é possível a localização de uma única operação digitando-se o código: 
+ 
+ 
+Menu lateral direito 
+ 
+Do lado direito da tela é exibida a lista de critér ios separados em duas categorias ( pessoa 
+física  e pessoa jurídica ): 
+ 
+
+===== PÁGINA 21 =====
+Parametrização em Crivo 4 
+ 
+ 
+21 
+ 
+Barra de ferramentas 
+ 
+Na parte superior da tela existe uma barra de ferramentas  que tem a mesma finalidade da 
+barra de ferramentas do Administrador Crivo , porém com funções adequadas ao contexto da 
+interface operacional. 
+ 
+ 
+ Atualiza decisão: Após executar uma operação individual de uma polít ica/ critério, esse 
+botão é exibido na barra de ferramentas e permite executar novamente a operação atual, 
+com uma diferença: desta vez será ignorada a configuração da validade da informação, e 
+portanto as coletas serão feitas diretamente nas fo ntes de informação  relacionadas na 
+política/critério. Esse recurso deve ser permitido aos usuários com muita cautela, pois cada vez 
+que o botão for clicado gerará uma nova operação (t arifada pela Crivo) e também uma nova 
+consulta às fontes (caso haja fontes tarifadas rela cionadas na política/critério cada nova 
+execução terá um custo adicional, tarifado pela fonte de informação, por conta desse acesso). 
+O botão somente aparecerá na barra de ferramentas após a execução de uma operação na 
+interface browser , devido ao seu contexto. 
+Menu Principal 
+ 
+Menu lateral esquerdo 
+ 
+ 
+O menu lateral esquerdo exibe quatro itens: 
+• Histórico (permite visualizar o relatório operacional ); 
+• Layout (para visualizar a estrutura necessária de a rquivo de entrada para um 
+lote); 
+• Individual ( execução interativa de uma política/critério ); 
+• Lote (executa um lote de parâmetros de entrada). 
+ 
+
+===== PÁGINA 22 =====
+ 
+  
+ 
+Estrutura Corporativa
+===== PÁGINA 23 =====
+Parametrização em Crivo 4 
+ 
+ 
+23 
+Estrutura Corporativa 
+ 
+Definições 
+ 
+A Estrutura Corporativa  permite e organiza o acesso às seguintes configurações do Crivo:  
+ Criação e alteração de centros de custo, grupos e usuários; 
+ Alteração de perfis dos grupos de usuários, para acesso aos recursos do Crivo;  
+ Associação de políticas/critérios a grupos de usuários ; 
+ Pré -configuração de fontes de informação. 
+ 
+Existem três objetos  distintos na estrutura corporativa:  
+ 
+Esses objetos estão dispostos em uma estrutura de á rvore, sendo o centro de custo o primeiro 
+nível,  os grupos sendo o segundo nível e o usuário como terceiro nível na hierarquia. 
+Não há um limite definido  para a quantidade desses objetos, portanto pode-se  adequar o 
+Crivo à estrutura necessária de cada empresa em rel ação a centros de custo, grupos e 
+usuários. 
+Informação  
+• Na sua empresa, os centros de custo podem represen tar as unidades regionais, filiais 
+ou departamentos; os grupos definem o perfil de ace sso dos usuários, que por sua vez 
+podem ser os mesmos utilizados para autenticação de rede ( login ), desde que utilizem o 
+padrão LDAP  (por exemplo, o Active Directory da Microsoft ).  
+O nome de cada centro de custo pode ter de 2 ( mínimo ) a 50  caracteres ( máximo ), sendo 
+permitidos os seguintes caracteres: 
+ Letras  maiúsculas e minúsculas: A..Z, a..z ; 
+Centro de Custo 
+Grupo 
+Usuário 
+===== PÁGINA 24 =====
+Parametrização em Crivo 4 
+ 
+ 
+24 
+ Números : 0..9 ; 
+ Símbolos : ! @ # $ % ^ & * ( ) _ + - = , . ; / < > : ? \ | [ ] { }   
+Informação  
+• Para identificar os grupos e usuários, os nomes de vem ter de 1 (um) a 50 (cinquenta) 
+caracteres ; 
+• Os nomes de usuários internos do Crivo  (ou seja, usuários não associados com o 
+sistema de autenticação da rede de sua empresa) pod em utilizar todos os símbolos 
+acima exceto “@” e “\ ”, pois estes conflitam com os caracteres utilizado s para a 
+identificação de usuários de rede (quando se usa a opção LDAP  na instalação do 
+servidor Crivo). Por exemplo, usuários de rede no p adrão Microsoft  Active Directory  
+utilizam os seguintes formatos para efetuar o logon : usuário@domínio  ou 
+domínio\usuário . 
+ 
+Centro de Custo 
+Recurso para representação de unidades de negócio d entro do servidor Crivo, tendo como 
+principais finalidades: 
+ Armazenar pré -configurações de fontes de informação  que têm acesso tarifado ou 
+controlado; Essas configurações dependem de cada fo nte de informação, podendo ser: 
+identificação de usuário e senha, método de acesso (protocolo), e mais outras informações 
+técnicas que sejam necessárias . Essas informações nem sempre são as mesmas 
+exigidas  para que se possa acessar a fonte de informação na  forma interativa (por 
+exemplo, via browser ). Verifique com a fonte de informação que será utilizada quais as 
+configurações necessárias para que o Crivo consiga o acesso.  
+ 
+ Possibilitar a emissão de faturas por unidade de ne gócio  representada nos centros de 
+custo. É preciso encaminhar uma solicitação à Crivo  para que seja efetuada essa 
+emissão diferenciada. 
+ 
+É importante frisarmos, na questão do acesso a font es de informação, que o Crivo segue os 
+mesmos caminhos e telas da fonte de informação que um usuário autorizado  seguiria, 
+salvo algumas exceções  como o BACEN . No processo de acesso às informações, o Crivo 
+informa o usuário/senha configurados no centro de c usto correspondente ao grupo no qual o 
+usuário pertence, e recebe a permissão de continuar  (ou não); se a fonte utilizar um elemento 
+de segurança (por exemplo, o captcha ), o Crivo tem a inteligência necessária para responder a 
+esse elemento, eventualmente com alguns erros, e assim por diante, até chegar à informação  
+requerida pela política que estiver em execução no servidor Crivo. 
+
+===== PÁGINA 25 =====
+Parametrização em Crivo 4 
+ 
+ 
+25 
+Só pode haver uma configuração  de determinada fonte de informação em um determina do 
+centro de custo. Portanto, para termos configurações diferentes  para a mesma fonte em um 
+mesmo servidor Crivo, deve -se criar outros centros de custo  e utilizar uma configuração 
+distinta para cada um.  Nesse caso, os usuários e grupos que utilizarão es sas configurações 
+serão necessariamente diferentes também, pois cada usuário  está ligado a um único grupo 
+por vez , e cada grupo  está ligado a um único centro de custo, a cada momento. 
+ 
+ 
+ 
+ 
+Para criar objetos na Estrutura Corporativa deve-se  seguir a estrutura da árvore: Centro de 
+Custo  →Grupo →Usuário . 
+Na barra de ferramentas 
+  
+há um botão para a criação de objetos, 
+ 
+chamado "Novo": 
+ . 
+ 
+Aparecerá uma janela solicitando a identificação do novo Centro de Custo: 
+ 
+ 
+ 
+
+===== PÁGINA 26 =====
+Parametrização em Crivo 4 
+ 
+ 
+26 
+Após clicar em OK , será atualizada a estrutura corporativa  com o novo Centro de Custo: 
+ 
+ 
+ 
+Grupos 
+ 
+Permite agrupar um ou mais usuários em um determinado centro de custo. A configuração do 
+grupo define o perfil dos usuários associados a ele. 
+No grupo temos a possibilidade de definir o perfil dos usuários e acesso a recursos do Crivo: 
+itens  visíveis no Menu Principal  da interface browser , políticas/critérios  que estarão 
+disponíveis  aos usuários do grupo, escopo de pesquisa na geração de relatórios , entre 
+outros.  
+As configurações de perfil podem ser utilizadas par a restringir/liberar acesso aos usuários (por 
+exemplo, pode-se criar um perfil de operador , voltado apenas para a execução de políticas  
+e/ou geração de relatórios, ou um perfil de administrador  do Crivo, com acesso a todos 
+os objetos e configurações). 
+ 
+Informação  
+• Onde houver uma seta ao lado direito do botão habilita/desabilita  de um determinado 
+item, haverá configurações possíveis para esse item que modificam seu funcionamento. 
+ 
+ 
+
+===== PÁGINA 27 =====
+Parametrização em Crivo 4 
+ 
+ 
+27 
+Entende-se como itens para definição de perfil de usuário os seguintes:  
+Guia  browser : 
+Permite ativar ou desativar o acesso aos itens do menu Operação (menu lateral esquerdo) 
+na interface browser : 
+ 
+• Sub-opção: Permitir a escolha do critério para gera r operação: Habilita ou 
+desabilita a possibilidade de escolha da política/c ritério que será utilizada para análise, 
+exibindo (ou não) todos os critérios/políticas asso ciados ao grupo do usuário que 
+efetuou logon  no Crivo. Se essa opção estiver desabilitada, serã o exibidas apenas as 
+opções " Pessoa Física " e " Pessoa Jurídica ", sem listar os critérios. Ao selecionar uma 
+das opções, serão executados todos os critérios/políticas  associados ao tipo 
+escolhido, nesse grupo. 
+ 
+  
+
+===== PÁGINA 28 =====
+Parametrização em Crivo 4 
+ 
+ 
+28 
+Individual 
+ 
+• Sub-opção: Refazer a operação atualizando a coleta: a operação que acabou de ser 
+executada pode ser refeita, clicando-se no botão refazer   da barra de ferramentas. 
+Além de gerar uma nova operação com os mesmos parâm etros de entrada, também 
+são atualizadas as coletas diretamente das fontes d e informação, independentemente 
+das configurações dos coletores para a validade da informação ( ou seja, ao refazer a 
+operação através do botão, além de gerar uma nova o peração as fontes serão 
+novamente consultadas, ignorando-se o cache  do Crivo ). 
+• Sub-opção: Visualizar resposta:  Exibe o texto configurado no item resposta  da ação 
+DEFINE RESPOSTA ; apresenta o resultado de uma política, que pode v ariar de uma 
+única resposta ou um conjunto delas. 
+• Sub-opção: Visualizar limite:  Exibe o valor final acumulado no contador limite . 
+• Sub-opção: Visualizar pontos:  Exibe o valor final acumulado no contador pontos . 
+• Sub-opção: Buscar operação:  Permite que o Crivo procure no banco de dados por 
+operações realizadas no período definido, com os pa râmetros chave informados; a lista 
+resultante é limitada ao máximo de 50 operações. 
+• Sub-opção: Resultado da operação:  Esta configuração controla a visualização do 
+resultado da operação. Caso esteja desabilitada no grupo do usuário que efetuou logon , 
+será exibida a mensagem: “ Conteúdo solicitado não encontrado! ” 
+ Observação  
+Tanto as operações individuais quanto o lote são ex ecutados via API , portanto não é possível 
+habilitar somente a opção “ Lote ”, deve-se também habilitar a opção “ Individual ”.  
+Porém o contrário é possível: podemos disponibiliza r na interface browser  somente a opção 
+“Individual ”, sem o item “ Lote ”. 
+Essa restrição é devido ao fato que cada operação d o lote é executada como uma operação 
+individual. 
+ 
+
+===== PÁGINA 29 =====
+Parametrização em Crivo 4 
+ 
+ 
+29 
+ 
+• Sub-opção: Arquivos de Registros Processados do Lot e: permite ao grupo acesso 
+aos links para download  dos arquivos de lote na interface browser . 
+ 
+ 
+Com a opção desabilitada : 
+ 
+ 
+Com a opção habilitada : 
+ 
+ 
+  
+
+===== PÁGINA 30 =====
+Parametrização em Crivo 4 
+ 
+ 
+30 
+ 
+Interface Administrador Crivo  
+Início  
+ 
+• Sub-opção: Acessar o Crivo Update:  Controla o acesso ao Crivo Update  para a 
+atualização dos drivers  das fontes de informação acessadas pelo Crivo. 
+Configurações →Estrutura Corporativa 
+ 
+
+===== PÁGINA 31 =====
+Parametrização em Crivo 4 
+ 
+ 
+31 
+• Sub-opção: É administrador da Estrutura Corporativa : Quando esta opção está 
+habilitada, o grupo tem acesso à criação/manutenção  de usuários, grupos e centros de 
+custo do servidor Crivo que está sendo acessado. Note que o acesso será total, 
+portanto os usuários que estiverem no grupo que tem  essa permissão devem ter 
+a confiança da empresa quanto ao uso desse privilégio.  
+Caso seja necessário permitir a criação e manutençã o de usuários, grupos e centros de 
+custo específicos utilize as opções abaixo, combina das com a seleção dos elementos na 
+parte inferior da tela: 
+• Sub-opção: Acessar o(s) centro(s) de custo selecion ado(s) : Para manutenção dos 
+centros de custo selecionados na parte inferior da tela. 
+• Sub-opção: Acessar o(s) grupo(s) selecionado(s) : Caso habilitada, esta opção 
+permite a criação e manutenção dos grupos seleciona dos. Se os grupos selecionados 
+pertencerem a centros de custo diferentes, será hab ilitada a visualização desses 
+centros de custo para que se possa acessar os grupos. 
+• Sub-opção: Acessar usuários do(s) grupo(s) selecion ado(s) : Permite ou não a 
+edição das configurações de usuários. Note que, se não tiver permissão para 
+manutenção dos grupos correspondentes, não será pos sível mover usuários de um 
+grupo para outro, pois se trata de modificação de grupo, e não do usuário em si. 
+Configurações →Configuração dos Coletores 
+ 
+• Sub-opção: Global : Altera as configurações globais e de todos os gru pos, referentes 
+aos produtos das fontes de informação. 
+
+===== PÁGINA 32 =====
+Parametrização em Crivo 4 
+ 
+ 
+32 
+• Sub-opção: Escolher Grupos : Permite que seja alterada somente a configuração dos 
+produtos das fontes de informação referente aos grupos. 
+Políticas →Edição de Políticas 
+ 
+• Sub-opção: Definir permissão para execução de crité rios:  Deve estar selecionado 
+para que o grupo possa permitir execução de critérios na interface browser . 
+• Sub-opção: Permitir criação de pastas: Quando selecionado, permite ao usuário 
+organizar os critérios em pastas para restringir o acesso. 
+• Sub-opção: Permitir publicação de critérios: Esta opção torna possível a restrição ou 
+permissão para que o grupo publique os critérios/ políticas. 
+ 
+Observação  
+Um usuário pode associar uma política para execução sem a necessidade de ter permissão de 
+acesso na Estrutura Corporativa. 
+ 
+Observação  
+Quando um usuário criar uma pasta, automaticamente terá garantido acesso a ela. Para as 
+demais pastas, deverá ser liberado o acesso pela Estrutura Corporativa. 
+ 
+
+===== PÁGINA 33 =====
+Parametrização em Crivo 4 
+ 
+ 
+33 
+Início 
+ 
+• Sub-opção: Acesso ao Driver Studio:  Permite que os usuários do grupo possam 
+utilizar a aplicação Driver Studio , que permite a construção de drivers  para bases 
+internas dos clientes. Essa aplicação é utilizada a penas pelos consultores da Crivo, 
+devido às suas características técnicas. 
+Permissões Globais  
+As permissões globais controlam opções de visualiza ção nos relatórios das operações 
+efetuadas no Crivo. 
+ 
+
+===== PÁGINA 34 =====
+Parametrização em Crivo 4 
+ 
+ 
+34 
+• Sub-opção: Habilitar justificativa textual:  Desabilita o bloco “justificativas” no 
+resultado da operação. Aplicada em: Operação e API (comando explain). 
+• Sub-opção: Ver relatórios das fontes no resultado d a operação:  Habilita a 
+visualização no resultado da operação dos relatório s coletados das fontes. Aplicada em 
+Operação e API (comandos loadpdf e report). 
+• Sub-opção: Ver explicação do limite:  Habilita a visualização da explicação da 
+expressão que gerou o limite. Aplicada na API (comando explain). 
+• Sub-opção: Ver explicação dos pontos:  Habilita a visualização da explicação da 
+expressão que gerou os pontos. Aplicada na API (comando explain). 
+• Sub-opção: Visualização Relatório Operacional Compl eto: Permite a exibição, no 
+Relatório Operacional, de todos os critérios utilizados na execução da política. 
+• Sub-opção: Consulta rápida de operação:  Habilita consulta rápida pelo código de 
+operação. 
+• Sub-opção: Habilitar Integração com Workflow:  Informa os parâmetros para acesso 
+à integração com o Crivo Workflow . A configuração passará a vigorar em até 5 
+minutos. Esta permissão possibilitará que o Crivo  forneça ao Crivo Workflow  um 
+código de operação, que servirá como parâmetro de e ntrada para um Processo de 
+Negócio. 
+• Sub-opção: Cancelar lotes de outros usuários: permite cancelar os lotes submetidos 
+por outros usuários do mesmo Grupo ou de Grupos dif erentes, mesmo que estejam 
+alocados em Centros de Custos distintos. 
+• Sub-opção: Ver explicação da resposta:  habilita a visualização da expressão que 
+gerou a resposta no resultado da operação. Aplica e m Operação e API (comando 
+Explain). 
+ 
+• Sub-opção: Ver somente operações do seu grupo:  Permite que o usuário visualize 
+informações de operações realizadas apenas pelo seu grupo . Aplicada em: Explica 
+Operação, Relatórios, Exportação, API, Busca Operação, Layout e Operação. 
+• Sub-opção: Ver somente operações do seu centro de c usto: Permite que o usuário 
+visualize informações de operações realizadas apenas pelo seu centro de cust o.  
+
+===== PÁGINA 35 =====
+Parametrização em Crivo 4 
+ 
+ 
+35 
+Aplicada em: Explica Operação, Relatórios, Exportação, API, Busca Operação, Layout e 
+Operação. 
+Observação  
+Caso não esteja selecionada nenhuma das duas opções  acima, os usuários associados ao 
+grupo terão acesso a todas as operações realizadas no Crivo.  
+ 
+Criação de centro de custo 
+ 
+Para adicionar um grupo ao centro de custo existente, basta selecionar o centro de custo 
+desejado: 
+ 
+ 
+Clique no botão “Novo” na barra de ferramentas para a criação do grupo: 
+ 
+Aparecerá a janela para o preenchimento dos dados p ara o grupo; não se esqueça de 
+selecionar o ícone de grupo antes de clicar no botão OK: 
+ 
+ 
+
+===== PÁGINA 36 =====
+Parametrização em Crivo 4 
+ 
+ 
+36 
+Após a confirmação, será apresentado o grupo criado: 
+ 
+ 
+Usuário 
+ 
+O usuário, no contexto do Crivo, é uma pessoa (ou sistema) que tem acesso ao Crivo.  Pode 
+ser definido um usuário interno , ou seja, com o login  e senha armazenados na base de 
+dados do Crivo , ou pode ser associado um login  e senha já definidos  em um sistema de 
+autenticação de usuários em rede (por exemplo, o Microsoft  Active Directory  – AD, ou outro 
+sistema que use o padrão LDAP ). Este recurso do Crivo permite simplificar a 
+administração de usuários,  pois além de tornar desnecessária a criação de nov as 
+identificações de login /senha para serem lembradas pelos usuários, possibi lita que sejam 
+automaticamente aplicadas as normas de segurança da informação vigentes na empre sa  
+em relação a: padrão de identificação de usuários, complexidade da senha, período de 
+expiração de senha, entre outros. 
+Caso seja associado o login  de rede no Crivo, deve ser informado também o domínio no campo 
+"Nome do usuário" (use os formatos domínio\usuário ou usuário@domínio) e NÃO preencha o 
+campo "senha" (afinal, a senha já está definida  no sistema de autenticação da rede e 
+somente o próprio usuário  tem conhecimento dela). O Crivo então consultará o  sistema de 
+autenticação da rede para validação do usuário info rmado. Para mais informações sobre esse 
+processo, informe-se com o administrador de rede da  sua empresa ou a pessoa responsável 
+pela instalação do Crivo no servidor. De forma gera l, o Crivo deverá ter sido instalado com a 
+opção de consulta ao LDAP  para que o recurso funcione corretamente. 
+ 
+
+===== PÁGINA 37 =====
+Parametrização em Crivo 4 
+ 
+ 
+37 
+ 
+Ao cadastrar um usuário na estrutura corporativa de fine-se o login  e senha, que podem ser os 
+mesmos do seu usuário da rede corporativa de sua em presa, conforme as opções de 
+instalação do servidor Crivo. 
+Para disponibilizar um login aos usuários e senha de acesso, utiliza-se o Grupo. 
+ 
+ 
+A criação do Grupo e do Centro de Custo é obrigatór ia para a inclusão de quantos usuários 
+forem necessários. 
+ 
+ Importante 
+A partir da permissão configurada em “ Configuração Global ”, um usuário pode ser bloqueado. 
+Com a opção “ Bloqueio ” da configuração de usuário é possível desbloquear  ou bloquear 
+manualmente. 
+ 
+A barra de ferramentas disponibiliza o botão Novo  para a criação de usuário: 
+ 
+ 
+ 
+Primeiramente é necessário clicar no botão Novo: 
+ . 
+
+===== PÁGINA 38 =====
+Parametrização em Crivo 4 
+ 
+ 
+38 
+Aparecerá a tela para o preenchimento dos dados para o Usuário: 
+ 
+ 
+Após a confirmação, será apresentado na tela o Usuário criado: 
+ 
+ 
+ 
+Informação  
+Não pode haver dois caracteres de espaço juntos, nem começar ou terminar por espaço, no 
+nome de usuário. 
+ 
+A configuração do usuário consiste em determinar login  e senha de acesso, ou em alguns 
+casos utilizar as configurações de usuário da rede para aproveitar as determinações de 
+segurança. 
+ 
+ Importante 
+A senha não pode conter os caracteres “@” ou “/”. 
+ 
+
+===== PÁGINA 39 =====
+Parametrização em Crivo 4 
+ 
+ 
+39 
+ 
+Caso haja necessidade de incluir novos campos para a configuração do usuário, poderá ser 
+utilizado o recurso Campos Customizados: 
+  
+Este recurso permite ampliar a documentação de cada usuário de acordo com as necessidades 
+de cada empresa. 
+Basta definir o nome do campo, o nome de exibição e  o tamanho para que o mesmo seja 
+demonstrado na tela de configuração. 
+ 
+ 
+ 
+Para validar as modificações deve ser acionado o botão . 
+A opção LDAP  deverá ser marcada somente quando se utilizar um sistema de diretórios LDAP  
+que não for a implementação da Microsoft , o Active Directory . Porém deverá ter sido prevista 
+essa opção no processo de instalação ( setup ) do servidor Crivo. Não é necessário preencher o 
+campo e-mail. 
+Pode ser alterada a senha, a partir de um usuário e xistente. Basta clicar duas vezes na 
+identificação do mesmo. 
+A exclusão de itens deve ser feita da seguinte forma: 
+• Arrastar o Usuário, por exemplo, para o triturador
+  
+localizado no canto inferior 
+ 
+direito da tela;  • 
+ 
+
+===== PÁGINA 40 =====
+Parametrização em Crivo 4 
+ 
+ 
+40 
+• Os itens devem ser excluídos partindo do menor nív el (Usuário, Grupo e Centro de Custo), 
+caso contrário não será permitido. O Crivo exibirá a seguinte mensagem:  
+ 
+Para ter certeza de que o item foi enviado para o triturador, observe os seguintes ícones: 
+   
+ 
+Enviado para o triturador com sucesso. 
+ 
+  
+Não foi inserido no triturador. 
+ 
+Informação  
+Não é possível mover  ou renomear  grupos nesta versão do Crivo. Os usuários podem se r 
+arrastados entre os grupos para que sejam movidos . 
+ 
+ 
+A opção  permite que seja gerado um arquivo no form ato CSV com as 
+informações selecionadas. 
+ 
+ 
+
+===== PÁGINA 41 =====
+Parametrização em Crivo 4 
+ 
+ 
+41 
+Veja um exemplo de relatório gerado a partir da opção “Grupo X Permissões”: 
+ 
+Com a opção  é possível localizar um centro de cust o, grupo ou usuário 
+a partir da digitação de uma palavra. 
+ 
+ 
+Clicando duas vezes sobre o item pesquisado, automa ticamente será aberta a tela 
+correspondente. 
+ 
+Configurações de Grupo 
+ 
+Utilizando duplo-clique sobre o nome do Grupo será possível efetuar as configurações do 
+mesmo. 
+
+===== PÁGINA 42 =====
+Parametrização em Crivo 4 
+ 
+ 
+42 
+As alterações de permissionamento dos usuários são efetivadas através das configurações do 
+grupo. Desta forma, o Crivo fica mais seguro e tamb ém mais fácil para controlar o acesso, 
+conforme tela a seguir: 
+ 
+ 
+Informação   
+Apesar de a tela conter o triturador, ele não estará habilitado para todas as opções. 
+ 
+ Importante  
+• Lembre que as alterações em configurações devem ser gravadas imediatamente , pois a 
+sessão do browser  expira após algum tempo sem utilização da interfac e (por volta de 20 
+minutos, na configuração padrão do servidor IIS ).  
+ 
+  
+
+===== PÁGINA 43 =====
+Parametrização em Crivo 4 
+ 
+ 
+43 
+Os critérios são divididos por pasta, permitindo maior organização e restringindo a visualização 
+dos critérios. 
+ 
+ 
+Por exemplo, cada usuário pode visualizar somente o que criou. Além disso, cada critério pode 
+existir somente uma vez no servidor, mesmo que este ja em pastas diferentes. Portanto, não 
+poderão ter critérios com o mesmo nome. 
+ 
+Informação   
+Se o servidor Crivo foi migrado da versão 3.5 para o Crivo 4 ,  na transferência de critérios eles 
+serão alocados na pasta Geral , pois as permissões no Crivo 3.5  eram para todo o grupo, ou 
+seja,  não estavam restritas a pastas. 
+ 
+ 
+Configuração dos Coletores 
+ 
+Clicando duas vezes sobre o Centro de Custo, aparec erá a página para a configuração das 
+fontes de informação. 
+ 
+ 
+Configurações globais 
+ 
+As configurações são aplicadas para os produtos, at ingindo todas as políticas que os 
+utilizarem, independente do centro de custo, grupo ou usuário. 
+
+===== PÁGINA 44 =====
+Parametrização em Crivo 4 
+ 
+ 
+44 
+ 
+Configurações por Grupo 
+ 
+As configurações globais são aplicadas a todos os g rupos, e são válidas até que sejam 
+definidas configurações específicas para os grupos. 
+ 
+ 
+Na figura a seguir, o ícone em cinza indica que est e grupo tem uma configuração diferente das 
+configurações globais, e em caso de conflito entre parâmetros de um mesmo produto 
+prevalecerá a configuração do grupo. 
+ 
+ 
+ 
+===== PÁGINA 45 =====
+Parametrização em Crivo 4 
+ 
+ 
+45 
+Exemplo: 
+Pode ser interessante, no processamento de determin ado lote, dividir o arquivo original em 
+vários lotes menores, agrupando os registros por pr oduto para otimizar o tempo de coleta das 
+informações das fontes. 
+Considere uma política elaborada para execução de um lote que utiliza, entre outras, uma fonte 
+de informação que possui produtos com consulta em mais de um estado; sabe-se que o tempo 
+de resposta do produto de São Paulo é melhor que o tempo de resposta do produto 
+correspondente de Santa Catarina. O analista respon sável pela execução do lote tomou então 
+a decisão de dividir o arquivo original em arquivos  separados por estado, criou grupos na 
+estrutura corporativa, um para cada estado com temp o de resposta reconhecidamente 
+diferente e definiu um tempo de espera maior para e ste grupo referente que processará o lote 
+referente ao produto de Santa Catarina. 
+ 
+ 
+No Centro de Custo estão listadas todas as fontes d e informação que necessitam de pré-
+configuração no acesso. Para visualizar o detalhe d e cada uma das fontes, basta clicar no 
+botão de expansão do item e aparecerão os campos para preenchimento das informações para  
+acesso, como login  e senha . 
+ 
+Após efetuar as alterações, deve-se gravá-las com o botão . 
+
+===== PÁGINA 46 =====
+Parametrização em Crivo 4 
+ 
+ 
+46 
+Configuração Global 
+ 
+A configuração global está dividida em três partes, sendo elas: 
+ 
+Integração Workflow 
+ 
+A partir desta opção é possível efetuar as configur ações para a interação com o produto Crivo 
+Workflow, determinando algumas configurações. Compr eende basicamente url, nome do 
+processo de negócio, nome de campo, usuário e senha. 
+ 
+ 
+Configurações de Login 
+ 
+Permite que seja definida a quantidade de tentativas incorretas e dias de inatividade. 
+ 
+ 
+Configurações de parâmetros de senha 
+ 
+Esta categoria trata do prazo de alteração da senha , quantidade de caracteres e composição 
+que pode exigir letras maiúsculas e/ou minúsculas, caracteres especiais e caracteres 
+numéricos. 
+ 
+ 
+
+===== PÁGINA 47 =====
+ 
+  
+ 
+Editor de Políticas
+===== PÁGINA 48 =====
+Parametrização em Crivo 4 
+ 
+ 
+48 
+Editor de Políticas 
+ 
+No logotipo da Crivo consta o menu que disponibiliz a a escolha da opção para as Políticas e 
+consequentemente para a Edição de políticas: 
+ 
+ 
+Hierarquia do sistema 
+ 
+O Crivo tem a seguinte hierarquia na definição de uma política: 
+ 
+Observe que os círculos externos incluem os itens dos círculos internos. 
+Uma regra pode conter diversos objetos para determi nar o que será verificado e os retornos 
+que ocorrerão nas diversas situações. 
+
+===== PÁGINA 49 =====
+Parametrização em Crivo 4 
+ 
+ 
+49 
+ 
+ 
+Critério 
+ 
+O critério é uma sequência lógica de regras , projetado para realizar uma análise parcial 
+(específica). Caso seja executado um único critério, esta análi se será também a decisão final, 
+que irá gerar um código de operação. 
+ 
+ 
+ Importante 
+O nome do critério pode conter até 100 caracteres, incluindo os seguintes caracteres especiais: 
+* (asterisco), < (menor que), < (maior que), ? (int errogação), : (dois pontos), | (barra), \ (barra 
+invertida) e / (barra de fração). 
+  
+
+===== PÁGINA 50 =====
+Parametrização em Crivo 4 
+ 
+ 
+50 
+Política 
+ 
+Uma política no Crivo é formada por um ou mais crit érios, tendo como objetivo fornecer uma 
+decisão a partir dos parâmetros de entrada fornecid os. Pode acessar listas especiais 
+armazenadas na base de dados do Crivo ( score  interno / score  veículo ) e também fontes de 
+informação tarifadas, públicas ou controladas. 
+A política pode ser personalizada para as necessida des do modelo de negócio ou do fluxo de 
+análise de crédito/risco de cada empresa. 
+ 
+ 
+ 
+Pastas 
+ 
+Um recurso muito aguardado no Crivo é o isolamento entre políticas que são usadas por 
+diferentes setores de uma empresa que tem um único servidor Crivo. Na versão 3.5, todos os 
+critérios são visualizados por todos os usuários qu e tiverem acesso ao Administrador do Crivo. 
+Caso um setor da empresa não queira que seus critérios possam ser visualizados/alterados por 
+outros administradores do Crivo, a solução seria dedicar um servidor Crivo exclusivo para esse 
+setor. 
+Com as pastas, agora é possível segregar os critéri os/políticas de cada setor de forma que 
+apenas um grupo (ou vários grupos) tenha acesso a d eterminada pasta, protegendo o sigilo 
+das regras desse setor. 
+Por exemplo, em uma empresa em que o servidor Crivo  é utilizado pelos departamento de 
+crédito e por outros departamentos, o departamento de Crédito não quer que outras áreas da 
+empresa possam ver ou alterar os critérios que fazem parte de sua política. 
+
+===== PÁGINA 51 =====
+Parametrização em Crivo 4 
+ 
+ 
+51 
+Para resolver essa questão, podem-se seguir os passos: 
+1. Criar um grupo na Estrutura Corporativa (por exe mplo, "Crédito" ); 
+2. Criar uma pasta chamada "Depto. Crédito" ; 
+3. Configurar as permissões do grupo Crédito para v isualizar a pasta "Depto. Crédito" ; 
+4. Certificar-se que os outros grupos, deste ou de outros centros de custo, não têm 
+permissão para visualizar esta pasta.  
+ 
+ 
+As pastas são apresentadas ao acionar o item "Ediçã o de Políticas", permitindo a criação de 
+novas pastas e critérios dentro delas. 
+ 
+Informação   
+Para maiores informações sobre as premissões em pas tas, veja o tópico Configuração dos 
+Coletores . 
+ 
+O botão  permite criar uma nova pasta, e logo após fica habilitado o botão  para 
+salvar. 
+A pasta pode ser renomeada quando for utilizado o clique com o botão direito do mouse. 
+ 
+Lista de Critérios 
+ 
+Através do editor de políticas é visualizada a lista de critérios que contém políticas e/ou critérios 
+anteriormente gravados pertencentes à determinada pasta. 
+A lista demonstra os respectivos nomes e categorias  (Pessoa Física ou Pessoa Jurídica). O 
+critério pode ser associado ao usuário quando for s elecionado nesta tela ou através da 
+estrutura corporativa. 
+
+===== PÁGINA 52 =====
+Parametrização em Crivo 4 
+ 
+ 
+52 
+Além da lista de critérios, no canto superior direito da tela pode ser acessado o recurso “Explica 
+Operação”. 
+ 
+ 
+Características da lista de critérios 
+ 
+Quando os critérios são gravados, são atualizadas várias informações na lista de critérios:  
+ Ícone de identificação (Tipo: Pessoa Física  ou Pessoa Jurídica ); 
+ Nome (nome do critério); 
+ Data da alteração (data e hora da última atualização); 
+ Grupo  ao qual está associado o critério ; 
+ Outros Grupos aos quais está associado o critério . 
+ 
+ 
+A guia localizada abaixo da barra de ferramentas id entifica a pasta que tem seu conteúdo 
+demonstrado na lista de critérios. É possível abrir  diversos critérios ao mesmo tempo, sendo 
+que cada um deles ficará em uma guia diferente. 
+Um critério pode ser renomeado quando for utilizado  o clique com o botão direito do mouse 
+sobre seu nome. 
+Existem, no Crivo, dois tipos  distintos de critério:  Pessoa Física  e Pessoa 
+Jurídica . 
+ O botão  permite criar um novo critério, e logo ap ós fica habilitado o botão  para 
+salvar. 
+O critério pode ser renomeado quando for utilizado o clique com o botão direito do mouse. 
+Ao criar um critério, deve-se decidir de inicio qua l tipo será o critério, PJ ou  PF ; a visualização 
+dos produtos das fontes de informação será alterada para se adequar ao tipo escolhido.  
+ 
+
+===== PÁGINA 53 =====
+Parametrização em Crivo 4 
+ 
+ 
+53 
+ 
+ 
+Na lista de critérios, utilize o botão direito do mouse  para acessar um menu com cinco opções: 
+ 
+ 
+ 
+Renomear  – permite que o nome do critério selecionado seja alterado. 
+Selecionar dependências  – identifica se o critério possui vínculo com os demais. 
+Permissão para execução – libera ou revoga a permissão para execução dos 
+critérios/políticas para os grupos. 
+Comparar revisões  – demonstra lado a lado duas janelas para a visual ização de revisões 
+selecionadas. 
+Exportar – exporta o critério/política selecionado. 
+ 
+ 
+Na parte inferior da tela podem ser localizadas as revisões e publicações.  
+ 
+ 
+ 
+Utilizando o botão direito do mouse é disponibilizado um menu com quatro opções: 
+ 
+ 
+ 
+Estrutura da política  – demonstra o relatório estruturado da política/critério. 
+Gerar Documentação – cria um arquivo com extensão .txt com o conteúdo do critério/política. 
+Publicar  – publica o critério/política para a utilização. 
+
+===== PÁGINA 54 =====
+Parametrização em Crivo 4 
+ 
+ 
+54 
+Exportar revisão  – exporta a revisão para a utilização em outro local. 
+Editar Observações  – permite a digitação de comentários para a revisã o, que será exibida na 
+coluna de observações. 
+ 
+ 
+ 
+Versionamento e comparação de critérios 
+ 
+O Versionamento  é um recurso que possibilita criar uma revisão com  base nas alterações 
+realizadas em uma determinada política ou critério,  e o armazenamento desta revisão, para 
+que futuramente possa ser gerada uma nova versão de  uma política específica. E o recurso de 
+Comparação  possibilita comparar 02 (duas) revisões de uma mes ma política ou critério para 
+identificar as alterações realizadas. 
+Os recursos de Versionamento e Comparação poderão s er executados no Administrador do 
+Crivo. Para isso você deve acessar ao Menu do Crivo , localizado no canto esquerdo superior 
+da tela inicial do sistema, escolher a opção Política e logo em seguida Edição de Políticas. 
+ 
+Versionamento 
+ 
+• Cria revisões de políticas pré-existentes, sem ter  que executá-la prontamente; 
+• Cria versões revisadas de políticas pré-existentes , sem ter que disponibilizá-las para 
+execução prontamente; 
+• Publica, ou seja, executa uma política apenas quan do necessário ou oportuno. 
+
+===== PÁGINA 55 =====
+Parametrização em Crivo 4 
+ 
+ 
+55 
+ 
+ 
+Revisões: 
+• Revisão: Lista todas as revisões realizadas em um determinado critério; 
+• Nome: Informa o nome do critério; 
+• Data da Edição: Informa a data em que foi realizad a a edição do critério; 
+• Usuário: Informa o usuário responsável pela altera ção. 
+Publicações: 
+• Publicação: Lista todas as publicações realizadas;  
+• Revisão: Informa a revisão correspondente a public ação selecionada. 
+• Nome: Informa o nome do critério publicado; 
+• Data da Edição: Informa a data da publicação da po lítica (critério associado a um 
+grupo); 
+• Usuário: Informa o usuário responsável pela public ação. 
+ 
+Revisão de Critérios com Dependência Ascendente 
+ 
+Para o Crivo “Dependência de Critérios” representa toda a árvore de critérios, ou seja, todos os 
+critérios que chamam e são chamados por um critério ou política específica. 
+Para visualizar as dependências entre os critérios você deve acionar a opção “Selecionar 
+Dependências”, que evidenciará todos os critérios dependentes destacados em azul, conforme 
+figura: 
+ 
+
+===== PÁGINA 56 =====
+Parametrização em Crivo 4 
+ 
+ 
+56 
+No entanto, para o Versionamento, mais especificamente, para a Revisão, a dependência entre 
+critérios tem um caráter diferente do descrito acim a. Para o Versionamento, a relação entre os 
+critérios e políticas dependentes, se constitui apenas entre os critérios dependentes em relação 
+de ascendência, ou seja, apenas são considerados critérios dependentes para uma revisão, os 
+critérios que estão em relação de determinação ascendente com o critério revisado. 
+No momento em que for gerada uma revisão de um critério ou política, que acarretar na revisão 
+de critérios e políticas em relação de ascendência,  o Crivo exibirá uma janela popup contendo 
+o nome do critério revisado e o número da revisão d o critério ou política alterada, assim como 
+também, dos critérios que foram revisados em relação de ascendência. 
+A revisão de um critério que mantém relação de depe ndência com critérios ascendentes, em 
+alguns casos, poderá resultar na invalidação de um critério dependente, ou seja, chamado pelo 
+critério modificado. Este comportamento é previsto pelo Crivo, com vista a equacionar 
+incompatibilidades entre critérios durante a edição de políticas, e consequentemente, garantir a 
+perfeita execução do recurso de Revisão e futuramen te do recurso de Comparação na 
+funcionalidade Edição de Políticas. 
+ 
+Exportação de Revisões 
+ 
+Por meio da funcionalidade Edição de Políticas é po ssível realizar a Exportação de Critérios e 
+Políticas através da opção “Exportar do Crivo” disp onível na Barra de Ferramentas do item 
+Edição de Políticas. Agora, além de exportar políti cas e critérios, você também poderá realizar 
+a exportação de revisões. 
+ 
+Publicação 
+ 
+O processo de publicação de uma política ou critéri o tem como meta permitir ao usuário com 
+perfil de Administrador do Crivo manter o controle sobre qual política disponibilizar para 
+execução. Anterior a essa implementação, ao editar uma política e salvá-la, imediatamente 
+esta já era disponibilizada para ser executada, ou seja, para gerir a análise de negócios de sua 
+empresa. Hoje, com o advento deste novo recurso, há  a possibilidade de criar critérios e 
+políticas, editá-las, gerar revisões destas, e publicá-las apenas quando necessário, ou oportuno 
+para o seu negócio. É importante salientar que este  recurso será executado com êxito apenas 
+por meio de uma política, ou seja, um critério associado a um grupo. 
+ 
+Procedimentos para a publicação: 
+• Na guia “Revisões”, selecione a revisão da polític a que será publicada; 
+• Com o botão direito do mouse acione a opção “Publi car”; 
+• E em seguida, aguarde a confirmação da publicação por meio da mensagem: “Critério 
+“Critério X” publicado com sucesso sob o número de versão X.X”. 
+===== PÁGINA 57 =====
+Parametrização em Crivo 4 
+ 
+ 
+57 
+ Observação 
+São pré-requisitos para o processo de publicação: 
+ - Que o critério esteja associado a um grupo (política); 
+- Que a política esteja válida. 
+ 
+Ao publicar a revisão de uma política é gerada auto maticamente uma Versão desta. Desse 
+modo, apenas serão consideradas Versões, as revisõe s de políticas que forem publicadas. 
+Lembrando que, a criação da Versão de uma política é o último processo a ser realizado pelo 
+novo recurso disponibilizado pelo Crivo e nomeado por Versionamento. 
+ 
+Comparar Revisões 
+ 
+Além de gerar revisões de critérios e políticas, a Edição de Políticas também proporcionará 
+realizar comparações entre revisões. Este recurso i nédito no Crivo 4 tem por objetivo 
+evidenciar a evolução entre as versões de uma mesma  política ou critério, e demonstrar as 
+diferenças existentes entre revisões distintas . Po r meio deste novo recurso o usuário com 
+perfil de Administrador do Crivo poderá comparar re visões de políticas e critérios, e poderá 
+visualizar este resultado diretamente na interface do Administrador do Crivo, por meio de uma 
+janela popup. 
+ 
+Procedimentos para a comparação de revisões: 
+• Clique com o botão direito no critério ou política  selecionada; 
+• Selecione a opção “Comparar Revisões”; 
+• Em seguida será apresentada uma tela contendo dois  combos, nestes serão 
+apresentadas as listas com todas as revisões da pol ítica ou critério selecionado e uma 
+opção abaixo para comparar toda a estrutura de critérios; 
+• Para finalizar, escolha entre comparar revisões de  uma política ou critério selecionado, 
+ou revisões de “Toda a estrutura”. 
+ 
+Resultado da Comparação 
+ 
+Para facilitar a identificação das alterações encon tradas, o Crivo disponibilizará os elementos 
+incluídos de uma revisão para outra destacados em V erde, e os elementos excluídos em 
+Vermelho: 
+
+===== PÁGINA 58 =====
+Parametrização em Crivo 4 
+ 
+ 
+58 
+ 
+O recurso “Comparar Revisões” prima por avaliar ape nas as diferenças existentes entre uma 
+revisão e outra e não avaliar o desempenho das revisões comparadas. 
+ 
+Migração 
+Políticas em execução:  Ao migrar para esta versão do Crivo, com os recurs os de 
+Versionamento e Comparação, a política em execução passará a integrar o frame 
+“Publicações”, no campo Publicação na Edição de Pol íticas, e receberá o número “1” (um), 
+como número de identificação de sua publicação. 
+Políticas e Critérios:  Ao migrar para esta versão do Crivo, com os recursos de Versionamento 
+e Comparação, as políticas ou critérios pré-existentes integrarão o frame “Revisões”, no campo 
+Revisão na Edição de Políticas, e receberão o número “0” (zero) como número de identificação 
+de sua revisão. 
+ 
+Disposição dos elementos na tela 
+ 
+Barra de Ferramentas 
+ 
+ 
+
+===== PÁGINA 59 =====
+Parametrização em Crivo 4 
+ 
+ 
+59 
+Como nas telas detalhadas anteriormente, a barra de  ferramentas continua sensível ao 
+contexto, ou seja, habilita ou desabilita botões de  acordo com os comandos executados na 
+tela. 
+ Observação  
+O Relatório “Estrutura da política” pode ser exportado com o botão . 
+ 
+Triturador 
+ 
+O triturador  é o elemento da interface do Crivo para descarte de objetos , como: regras, 
+ações, filtros, condições, etc.  
+Para descartar um objeto, basta arrastá-lo para sobre o triturador e soltar o  botão do 
+mouse . Ao arrastar um objeto para o triturador, observe se essa operação é permitida, 
+conforme o símbolo indicativo: 
+ - Descarte do objeto é permitido. 
+ - Descarte não é permitido, devido à natureza do objeto ou posição na tela. 
+ 
+ Importante  
+O triturador não é uma lixeira , como a que existe na área de trabalho do Windows;  os objetos 
+arrastados para o triturador são destruídos , não são armazenados para futura recuperação. 
+ 
+Caso seja necessário remover um objeto e recuperá-l o logo depois, arraste-o para a Área de 
+Transferência criando uma cópia, remova com o tritu rador e arraste-o da área de transferência 
+para o local desejado. 
+ 
+Objetos permitidos para descarte: 
+ 
+Estrutura Corporativa 
+Pode-se excluir: Centros de custo, grupos e usuário s. Caso o objeto contenha outros (por 
+exemplo, o centro de custo tem grupos associados, o u o grupo a ser descartado tem usuários 
+associados a ele), deve-se descartar os objetos int ernos antes de poder descartar o objeto 
+maior. 
+
+===== PÁGINA 60 =====
+Parametrização em Crivo 4 
+ 
+ 
+60 
+ 
+Edição de Políticas 
+Pode-se excluir: 
+• Pastas e critérios, desde que os critérios não est ejam associados a grupos; se estiverem, 
+deve-se tirar a associação para então excluí-los.  
+• Regras, variáveis, fontes de informação arrastadas  para regras, objetos de análise, ações, 
+operadores, constantes, funções, regras especialist as e critérios podem ser eliminados 
+usando o triturador.  
+ 
+Exportação, Relatórios e Auditoria 
+Os filtros aplicados são removidos usando o triturador. 
+ 
+Área de Transferência 
+ 
+A Área de Transferência é um recurso que facilita a  replicação de itens, como ações e regras 
+de um critério, dentro do mesmo critério ou em outros critérios. 
+Os itens que forem arrastados para a área de transf erência são COPIADOS, portanto o local 
+de origem não é alterado. Para utilizar um item da área de transferência, basta arrastá-lo para 
+o local desejado, sem limite de repetições dessa ação. 
+Há um limite de 25 itens  que podem estar armazenados ao mesmo tempo na área  de 
+transferência. Caso seja arrastado um item além des se limite, o item mais antigo (ou seja, que 
+foi armazenado há mais tempo) será descartado e o novo item será incluído. 
+Toda regra que for arrastada para a área de transfe rência poderá ser copiada para outro 
+critério, o mesmo ocorre com as ações que poderão ser utilizadas em outras regras. 
+ 
+Basta arrastar a regra e/ou ação desejada para a área de transferência para torná-la disponível 
+para uso em outro critério ou regra. 
+
+===== PÁGINA 61 =====
+Parametrização em Crivo 4 
+ 
+ 
+61 
+ 
+ Observação 
+A área de transferência armazena os itens nela arra stados até que o Administrador do Crivo 
+seja encerrado. Os itens armazenados na área de tra nsferência podem ser descartados por 
+meio do triturador. 
+ 
+Barra Lateral 
+ 
+ 
+A barra lateral do editor de políticas contém todos  os objetos que poderão ser utilizados na 
+construção dos critérios/políticas, cada título arm azena objetos específicos para serem 
+utilizados nas diversas situações. 
+Veja o exemplo a seguir: 
+ 
+
+===== PÁGINA 62 =====
+Parametrização em Crivo 4 
+ 
+ 
+62 
+Definição de Regra 
+ 
+Podemos dizer que uma regra  é um componente de procedimento para obter um dete rminado 
+resultado. No contexto do Crivo, a regra é o componente básico do critério , sendo formada 
+por: uma expressão  que gera uma ou mais condições, sendo que em cada condição 
+podemos incluir uma ou mais ações  a serem executadas com base no resultado obtido. 
+As regras são as principais responsáveis pela corre spondência adequada da política 
+implementada no Crivo com o modelo de negócios da e mpresa, pois serão elas, em última 
+análise, que determinam a qualidade do tratamento d as informações coletadas e/ou fornecidas 
+pelo usuário. 
+Caso a edição de uma regra seja feita por meio da digitação, a regra segue o formato usual 
+de fórmulas em planilhas  eletrônicas , como o Microsoft Excel  ou BrOffice Calc , por exemplo. 
+As regras que compõem um critério podem conter: fon tes de informação, campos, variáveis, 
+ações, entre outros objetos.  
+ 
+Regra 
+ 
+ 
+ 
+Nova Regra - insere uma regra no critério. 
+ 
+Quando é incluída uma nova regra, o Crivo solicita um nome. Se o usuário preferir não nomear, 
+basta confirmar e será dado o nome sugerido pelo Cr ivo. Toda nova regra inicia-se com o 
+status de "inválida", uma vez que ainda é um contei ner vazio, ou seja, depende do 
+estabelecimento da expressão para ser válida ou não. 
+ 
+ Observação 
+Não podem ser inseridas na regra somente  valores do tipo texto, pois não resultarão 
+em direcionamento para verdadeiro ou falso, ao meno s que esteja sendo comparado 
+com algo. 
+ 
+Nova Condição - insere mais uma faixa quando o tipo de expressão o permitir. 
+ 
+Novo Comentário - insere uma área para comentários textuais no critério. 
+ 
+
+===== PÁGINA 63 =====
+Parametrização em Crivo 4 
+ 
+ 
+63 
+ 
+Identificação de Regras 
+ 
+As regras podem ser identificadas para tornar mais fácil a localização e permitir o entendimento 
+de sua finalidade, porém não é obrigatória a digitação de um nome. Caso não seja informado o 
+nome da regra, o Crivo preenche a barra de identificação com o título “Nova Regra”. 
+ 
+ 
+ 
+ 
+Desabilitar/habilitar regra 
+ 
+Algumas vezes é necessário definir uma regra e dura nte um período deixá-la fora de 
+funcionamento para determinada situação. Neste caso , é possível desabilitá-la para que o 
+critério/política não execute as ações ou faça a verificação solicitada na regra. 
+ 
+Para alterar o status de uma regra, ou seja, habili tá-la ou desabilitá-la podem ser utilizados os 
+seguintes botões: 
+Regra desabilitada -   
+ 
+Regra habilitada -   
+ 
+Quando uma regra fica desabilitada, o fluxo de exec ução do critério/política é desviado para 
+dar continuidade à operação. 
+ 
+ 
+ 
+ 
+Colapsar/expandir regra 
+ 
+As regras podem ser colapsadas ou expandidas para m elhorar a visualização na tela, porém 
+este recurso interfere somente na edição de políticas. 
+
+===== PÁGINA 64 =====
+Parametrização em Crivo 4 
+ 
+ 
+64 
+ 
+Ao lado do nome da regra encontram os botões para: 
+ 
+ 
+Colapsar 
+ 
+ 
+ 
+Expandir 
+ 
+ 
+ 
+Regra Inalcançável  
+ 
+Toda vez que for inserida uma regra com resultado l ógico (ou seja, verdadeiro ou falso ) com 
+ações em ambas condições que param o fluxo, o Crivo sinaliza que a próxima regra será 
+inalcançável, nunca será executada . Recomendamos que a interrupção total deva ser 
+declarada somente ao final do fluxo, senão haverá r egras “inúteis”, sem possibilidade de 
+execução.  
+ 
+
+===== PÁGINA 65 =====
+Parametrização em Crivo 4 
+ 
+ 
+65 
+Inclusão de uma regra 
+Para incluir uma nova regra, basta arrastar o eleme nto  para a área do critério que 
+antecede o Retorno Padrão, conforme a figura:  
+ 
+ 
+Será demonstrada na tela uma janela para o preenchimento do nome da regra:  
+ 
+Quando não for alterado, será considerado o nome padrão "Nova Regra".  
+A nova regra terá uma reservada para que sejam adic ionados outros elementos à sua 
+composição:  
+ 
+Note que o Crivo utiliza a cor vermelha no cabeçalho  para sinalizar que a regra está 
+inválida .  
+
+===== PÁGINA 66 =====
+Parametrização em Crivo 4 
+ 
+ 
+66 
+A barra de rolagem lateral  tem por objetivo dar uma visão geral do critério i ndependente do 
+ponto em que o usuário está no fluxo da área de tra balho. A barra permite a navegação 
+rápida para qualquer ponto do critério (ao clicar em um dos traços, o Crivo direciona o 
+critério para a regra desejada e mostra o conteúdo na área de trabalho) e permite que o 
+usuário veja claramente a localização das regras. O s traços em vermelho indicam as regras 
+inconsistentes. 
+ 
+ 
+A regra tem acesso a todos os objetos que podem ser  parte de expressões.  Para utilizar 
+uma variável de fonte de informação em uma regra, o bserve o item abaixo (edição por 
+digitação): 
+ 
+ 
+Fonte de Informação 
+ 
+Implementação dos drivers 
+ 
+A fonte de informação é representada por um driver , que por sua vez é dividido em 
+produtos ; em cada produto localizam-se variáveis de diversos tipos, relativas a cada produto. 
+ 
+===== PÁGINA 67 =====
+Parametrização em Crivo 4 
+ 
+ 
+67 
+ 
+ Observação 
+Fonte de Informação: Órgão ou instituição, público ou privado, que fornece acesso a bases de 
+informações, de forma gratuita ou tarifada. Também são consideradas fontes as bases internas 
+da sua empresa, pois o Crivo acessa essas bases no mesmo formato que as outras fontes de 
+informação. 
+ 
+Exemplos: 
+ Fonte de Informação 
+• Públicas  - SRF, Sintegra, Previdência Social, Protesto, Denatran 
+• Controladas  - SiConsig, EConsig, ConsigWeb 
+• Tarifadas  - ACSP, Serasa, ChequePre, Megadata 
+Produto 
+ 
+ - Produto 
+• Fonte: SRF;  
+• Produtos:  
+o Situação Cadastral do CNPJ; 
+o Simples Nacional; 
+o Consulta Quadro de Sócios e Administradores – PJ, etc. 
+ 
+ Observação 
+Produto: Agrupamento de variáveis para consulta, disponibili zado pelas fontes de 
+informação. Cada fonte pode ter um ou vários produtos disponibi lizados para 
+acesso.  Ressaltamos que é possível que haja informações di sponíveis na fonte de 
+informação que não estejam visíveis no Crivo (por e xemplo, pode haver um novo 
+produto em uma determinada fonte que ainda não tenh a sido coberto pelo Crivo). 
+Sendo necessário o acesso a essas informações, pode -se solicitar à Crivo a 
+adequação do driver  para prever essa nova situação ; entre em contato com a área 
+de Projetos da Crivo  para encaminhamento dessas questões.  
+ 
+  
+
+===== PÁGINA 68 =====
+Parametrização em Crivo 4 
+ 
+ 
+68 
+Variável 
+ 
+ - Variável 
+ 
+A variável , no contexto do Crivo, é um objeto capaz de reter e representar um determinado 
+conteúdo (por exemplo, um nome ou número, que por sua vez po de ser uma quantidade ou 
+um valor monetário). Podemos imaginar as variáveis como caixas com rótulos , sendo que ao 
+referenciar o rótulo  temos acesso ao conteúdo da caixa. 
+Existem duas classes de variáveis  no Crivo: 
+• Variáveis pré-definidas nos drivers , relacionadas a produtos das fontes de 
+informação; 
+• Minhas Variáveis , que podem ser definidas pelo parametrizador Crivo. 
+ 
+Tipos de variáveis 
+ 
+As variáveis, sejam as de driver  ou Minhas Variáveis, têm uma característica que é o TIPO . O 
+tipo define a natureza do conteúdo da variável, ind icando para o Crivo se uma expressão 
+contendo variáveis é válida ou não (válida em termos de produzir um resultado coerente). 
+Por exemplo, não podemos somar  uma variável que contém um nome  com outra variável que 
+contém a quantidade de cheques sem fundo , pois não há sentido em tal expressão, já que o 
+nome é uma sequência de caracteres e a quantidade de cheques é um número; o Crivo "sabe", 
+através dos tipos das variáveis, que não deve tenta r resolver essa expressão e sim indicar um 
+erro. A variável que contém o nome normalmente é do  tipo DISCRETA (TEXTO), e a variável 
+que contém a quantidade de cheques sem fundo geralm ente é do tipo NUMÉRICA; portanto, 
+por serem de tipos diferentes, a expressão não é aceita como válida. 
+Há cinco tipos de variáveis no Crivo: 
+ 
+Tipo Conteúdo 
+Discreta (texto)  Texto 
+(Ex.: nome, razão social, CEP) 
+Existe (lógica)  Verdadeiro/Falso 
+(Ex.: Existe protesto) 
+Numérica  Dígitos utilizados para cálculos ou comparação 
+(Ex.: Valor total de protestos) 
+Lista  Texto, limitado a uma lista pré-definida 
+(Ex.: Status do CPF) 
+Data  Datas válidas 
+(Ex.: Data de abertura da empresa) 
+ 
+
+===== PÁGINA 69 =====
+Parametrização em Crivo 4 
+ 
+ 
+69 
+Identificação visual de tipos de variáveis 
+ 
+ 
+• Numérica:  % de semelhança de Razão social; 
+ 
+• Discreta (texto):  Logradouro; 
+ 
+• Data:  Data de abertura; 
+ 
+• Existe (lógica): Erro na consulta ; 
+ 
+
+===== PÁGINA 70 =====
+Parametrização em Crivo 4 
+ 
+ 
+70 
+• Lista: Status do CNPJ.  
+ 
+Para adicionar a fonte de informação na regra, bast a arrastar a  
+para o ícone  contido na regra.  
+Selecionar a fonte, o produto, a variável, etc.  
+ 
+  
+ 
+A regra estará definida, porém não executará ação alguma.  
+ 
+Então será necessário incluir as ações a serem exec utadas, arrastando os elementos da 
+categoria "Ações".  
+ 
+
+===== PÁGINA 71 =====
+Parametrização em Crivo 4 
+ 
+ 
+71 
+Ações 
+ 
+Após construir a expressão da regra  com os objetos e comparações, devem ser definidas as 
+ações  que retornarão os resultados do critério. Normalme nte as expressões resultam em 
+verdadeiro  ou falso , e as ações correspondentes podem ser aplicadas em cada resultado. 
+ 
+Adiciona à justificativa 
+ 
+Exibe na área de justificativas do relatório o text o informado na ação, SEM interromper a 
+execução do critério . Pode haver várias ações Adiciona à justificativa  distribuídas entre as 
+regras dos critérios, com a finalidade de informar mais detalhes ao usuário sobre o processo de 
+decisão. 
+ 
+Define justificativa 
+ 
+Funciona de forma similar à ação Adiciona à justificativa , porém seu efeito é de um 
+"apagador ", pois faz o Crivo ignorar todas as justificativas  adicionadas até o momento no 
+relatório, substituindo-as pelo texto definido na a ção; isto é possível porque o relatório é 
+montado e exibido somente após o término da execuçã o da política, não apresentando os 
+resultados parciais obtidos durante a execução. 
+ 
+
+===== PÁGINA 72 =====
+Parametrização em Crivo 4 
+ 
+ 
+72 
+ 
+Contadores: pontos e limite 
+ 
+O Crivo oferece dois recursos importantes para trab alhar com contagem dentro dos critérios, 
+que são os pontos e limite. Não há diferença entre os dois, embora eles possam acumular 
+valores diferentes simultaneamente. 
+Por exemplo, em uma política é possível utilizar o contador de pontos  para um modelo de 
+scoring, enquanto o contador de limite  pode ser usado para determinar o limite final do cartão 
+de crédito do cliente em análise. 
+ 
+ 
+ 
+Há dois contextos  no uso de pontos e limite:  
+• Alteração dos valores através das ações:  
+o Adiciona aos pontos; 
+o Define pontos; 
+o Adiciona ao limite; 
+o Define limite. 
+ 
+• Retorno dos valores acumulados através do resultad o do critério, por exemplo na regra: 
+=[Criterio Atual;Pontos]   será retornado o valor atual do contador de ponto s. Para 
+verificar o valor atual do contador de limite, utilize =[Criterio Atual;Limite]  
+ 
+Ação: Adicionar aos pontos 
+ 
+Permite que a contagem dos pontos  até o momento da execução desta ação seja 
+aumentada ou diminuída , dependendo do valor ou expressão numérica indicad a na 
+configuração da ação resultar em um número positivo ou negativo.  
+ 
+ 
+Ação: Define pontos 
+ 
+Funciona de forma similar à ação Soma pontos , porém o valor ou resultado da expressão 
+numérica indicada será o novo total dos pontos, a p artir da execução desta ação. A pontuação 
+anterior será desconsiderada. 
+ 
+
+===== PÁGINA 73 =====
+Parametrização em Crivo 4 
+ 
+ 
+73 
+Exemplo de soma de pontos ao longo das regras  de um critério: 
+ 
+ 
+ 
+Ação: Adicionar ao limite 
+ 
+Permite que a contagem de limite  até o momento da execução desta ação seja aumentada 
+ou diminuída , dependendo do valor ou expressão numérica indicad a na configuração da ação 
+resultar em um número positivo ou negativo.  
+ 
+Ação: Define limite 
+ 
+Funciona de forma similar à ação Soma limite , porém o valor ou resultado da expressão 
+numérica indicada será o novo total dos pontos, a p artir da execução desta ação. A pontuação 
+anterior será desconsiderada. 
+ 
+Delega a decisão a 
+ 
+A ação Delega a decisão a  permite que se execute outro critério a partir do critério atual 
+(critério em execução no momento), mas a resposta final (decisão)  passa a ser 
+responsabilidade do critério que foi chamado. 
+Quando é executada a ação, o critério é chamado, ex ecutado e o Crivo não retorna ao critério 
+anterior, cabendo ao critério que foi chamado, a responsabilidade da resposta final (decisão). 
+ 
+
+===== PÁGINA 74 =====
+Parametrização em Crivo 4 
+ 
+ 
+74 
+ 
+ 
+ 
+ 
+ 
+ 
+Expressões 
+ 
+Em algumas situações será necessário criar expressõ es no editor de políticas utilizando o 
+modo gráfico, porém estas expressões serão compostas por diversos objetos. 
+  
+
+===== PÁGINA 75 =====
+Parametrização em Crivo 4 
+ 
+ 
+75 
+Para ilustrar o resultado visual de uma expressão, foi criado um exemplo com o uso dos 
+seguintes objetos (função, campo, variável de driver, operador, constante de número): 
+ 
+Funções 
+ 
+As funções do Crivo são muito semelhantes às do Microsoft  Excel: realizam um procedimento 
+específico a partir de parâmetros de entrada e reto rnam um resultado;  podem ser 
+utilizadas em regras e nas variáveis definidas pelos usuários.  
+ 
+Tanto nas regras quanto nas variáveis, após digitar  o sinal de igual “=“ aparecerá uma lista 
+com todas as funções e o texto de ajuda correspondente no lado direito.  Desta forma, é 
+possível conhecer os argumentos  (parâmetros da função) e a descrição de funcioname nto da 
+função. Pode-se utilizar, além de sequências litera is (“abcdef”) e números, variáveis – Minhas 
+Variáveis, variáveis de fontes de informação – como  também Meus Campos (campos definidos 
+pelo usuário). 
+Funções Lógicas 
+ 
+ 
+As funções lógicas têm como característica comum ef etuar comparações entre os 
+argumentos  e retornar VERDADEIRO  ou FALSO , conforme o resultado da função. 
+
+===== PÁGINA 76 =====
+Parametrização em Crivo 4 
+ 
+ 
+76 
+ 
+Exemplos de funções lógicas: E( ), OU(), É.NULO() 
+Nome em Português  E( ) 
+Nome em Inglês  AND( ) 
+Sintaxe  ([Expressão_Lógica1]; [Expressão_Lógica2]; ...) 
+Definição 
+Retorna VERDADEIRO  caso todos os argumentos informados 
+resultem verdadeiros, e FALSO  caso pelo menos um dos 
+argumentos informados resulte falso.  
+Descrição da sintaxe 
+[Expressão_Lógica]- Tipo LÓGICO: Expressões com ope radores 
+relacionais que resultem em valores lógicos (VERDAD EIRO ou 
+FALSO). 
+Detalhamento da função 
+Os argumentos devem resultar em valores lógicos, ou  seja, 
+VERDADEIRO ou FALSO. Como a especificação da função  E() 
+exige que TODAS as expressões devam resultar em 
+VERDADEIRO, para que a função retorne VERDADEIRO, o  Crivo 
+utiliza um método de avaliação conhecido como SHORT-CIRCUIT : 
+ao se encontrar uma expressão que resulte em FALSO,  
+imediatamente é interrompida a avaliação e é retorn ado FALSO 
+como resultado final da função E(). 
+Expressões de texto e itens vazios serão ignorados. 
+Se os argumentos não resultarem em valores lógicos,  será 
+retornado um erro. 
+ 
+  
+===== PÁGINA 77 =====
+Parametrização em Crivo 4 
+ 
+ 
+77 
+OU( ) 
+ 
+Nome em Português  OU( ) 
+Nome em Inglês  OR( ) 
+Sintaxe  ([Expressão_Lógica1]; [Expressão_Lógica2]; ...) 
+Definição 
+Retorna VERDADEIRO caso algum argumento seja 
+VERDADEIRO, e retorna FALSO apenas se todos os argu mentos 
+resultarem FALSO.  
+Descrição da sintaxe 
+[Expressão_Lógica]- Tipo LÓGICO: Expressões com ope radores 
+relacionais que resultem em valores lógicos (VERDAD EIRO ou 
+FALSO). 
+Detalhamento da função 
+Os argumentos devem resultar em valores lógicos, ou  seja, 
+VERDADEIRO ou FALSO. Como AO MENOS UMA expressão 
+deve resultar em VERDADEIRO para que a função retor ne 
+VERDADEIRO, o Crivo utiliza um método de avaliação conhecido 
+como SHORT-CIRCUIT : ao se encontrar uma expressão que 
+resulte em VERDADEIRO, imediatamente é interrompida  a 
+avaliação e é retornado VERDADEIRO como resultado f inal da 
+função OU(). 
+Expressões de texto e itens vazios serão ignorados. 
+Se os argumentos não resultarem em valores lógicos,  será 
+retornado um erro. 
+ 
+ 
+ 
+  
+
+===== PÁGINA 78 =====
+Parametrização em Crivo 4 
+ 
+ 
+78 
+Na figura abaixo temos um exemplo de expressão  utilizando a função E() : 
+ 
+É.NULO( ) 
+Nome em Português  É.NULO( ) 
+Nome em Inglês  ISNULL( ) 
+Sintaxe  (Expressão_Lógica / variável / campo) 
+Definição Retorna VERDADEIRO ou FALSO, conforme o resultado d e uma 
+expressão ou o valor de uma variável seja ou não nulo.  
+Descrição da sintaxe Expressão (Tipo: qualquer): Expressão cujo resultad o será 
+analisado como nulo  ou não nulo . 
+Detalhamento da função Esta função é útil quando o parametrizador escolhe o tratamento 
+de nulo manual para uma variável ou campo. 
+ 
+Argumento aceito pela função É.NULO() : 
+ 
+Funções de Texto 
+ 
+As funções de texto podem retornar sequências de texto  ou valores numéricos , 
+dependendo da finalidade. 
+ 
+Exemplos: CONCATENAR(), EXT.TEXTO(), NORMALIZAR(), SUBSTITUIR(), 
+DISTANCIATEXTO(), SEMELHANÇAENDEREÇO() 
+ 
+  
+
+===== PÁGINA 79 =====
+Parametrização em Crivo 4 
+ 
+ 
+79 
+CONCATENAR() 
+ 
+Nome em Português  CONCATENAR 
+Nome em Inglês  CONCATENATE 
+Sintaxe  (Texto1;Texto2;Texto3;...) 
+Definição Combina duas ou mais sequências de texto em uma úni ca 
+sequência. 
+Descrição da sintaxe Texto1;Texto2;Texto3;... (Tipo de cada item: texto) : Cada item 
+pode ser uma sequência de texto ou números. 
+Detalhamento da função 
+Devemos utilizar  " "  (aspas duplas + espaço + aspas duplas) para 
+separar com espaços as sequências, senão a função juntará todas 
+as sequências. 
+Exemplo no retorno da análise: 
+ Sequências originais: Logradouro: "AV AFONSO PENA", número: 
+"1212", complemento: "SALA 318". 
+Concatenação simples:   "AV AFONSO PENA1212SALA 318" 
+(junção das sequências: logradouro, número, complemento). 
+Concatenação utilizando “ “:  "AV AFONSO PENA 1212 SALA 
+318 (junção das sequências: logradouro, " ", número , " ", 
+complemento). 
+ 
+ 
+ 
+ 
+ Observação 
+Quando se utiliza a função CONCATENAR, o valor numérico com texto “” resulta em 
+um texto.  
+  
+
+===== PÁGINA 80 =====
+Parametrização em Crivo 4 
+ 
+ 
+80 
+EXT.TEXTO( ) 
+ 
+Nome em Português  EXT.TEXTO 
+Nome em Inglês  MID 
+Sintaxe  (Texto_Principal,Posição_Inicial,Qtdade_Caracteres) 
+Definição 
+Retorna uma subsequência de caracteres no tamanho 
+especificado, iniciando em uma dada posição da sequ ência 
+principal.  
+Descrição da sintaxe 
+Texto_Principal (Tipo: texto): Sequência que contém  a 
+subsequência a extrair. 
+Posição_Inicial (Tipo: numérico): Posição do primei ro caractere da 
+subsequência. Por exemplo, na sequência ABCD, a 
+subsequência  CD inicia na posição 3. 
+Qtdade_Caracteres:  Quantidade de caracteres da sub sequência; 
+no exemplo anterior, a subsequência CD tem Qtdade_C aracteres 
+= 2. 
+Detalhamento da função 
+Caso o argumento Posição_Inicial seja MAIOR que o t amanho 
+total da sequência principal, a função retornará um a sequência 
+vazia (). 
+Se Posição_Inicial for MENOR que o tamanho total da  sequência 
+principal, mas o valor de Posição_Inicial somado a 
+Qtdade_Caracteres  for MAIOR que o tamanho total da  sequência 
+principal, a função retornará apenas os caracteres que houverem 
+até o final da sequência; por exemplo, se executarm os a função 
+EXT.TEXTO("ABCD";3,5), será retornada a sequência "CD". 
+Se o valor de Posição_Inicial for menor que 1, será  retornado um 
+erro, assim como no caso de Qtdade_Caracteres ser negativo. 
+ 
+ 
+  
+
+===== PÁGINA 81 =====
+Parametrização em Crivo 4 
+ 
+ 
+81 
+NORMALIZAR( ) 
+ 
+Nome em Português  NORMALIZAR 
+Nome em Inglês  NORMALIZE 
+Sintaxe  (Texto_A_Modificar) 
+Definição 
+Na função NORMALIZAR: 
+ 
+Os caracteres <br>¡ ¢ £ ¥ ¨ ª ² ³ ´ ¸ ¹ º ¼ ½ ¾ ¿ Æ Ð × Þ ß æ ð ÷ 
+serão transformados em "?". 
+ 
+Já os caracteres 
+ 
+À Á Â Ã Ä Å Ç È É Ê Ë Ì Í Î Ï Ñ Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ý à á â ã ä å 
+ç è é ê ë ì í î ï ñ ò ó ô õ ö ø ù ú û ü ý  
+ 
+serão substituídos, respectivamente, pelos caracteres 
+ 
+ A A A A A A C E E E E I I I I N O O O O O O U U U U Y a a a a a 
+a c e e e e i i i i n o o o o o o u u u u y. 
+ 
+Descrição da sintaxe Texto_A_Modificar (Tipo: texto): Sequência de carac teres que se 
+quer normalizar. 
+Detalhamento da função   
+ 
+ 
+ 
+  
+
+===== PÁGINA 82 =====
+Parametrização em Crivo 4 
+ 
+ 
+82 
+SUBSTITUIR( ) 
+ 
+Nome em Português  SUBSTITUIR 
+Nome em Inglês  SUBSTITUTE 
+Sintaxe  (Texto_Principal;Texto_Anterior;Texto_Novo;[Ocorrência]) 
+Definição 
+Esta função identifica, no argumento Texto_Principal, o argumento 
+Texto_Anterior e troca esta sequência pelo argument o 
+Texto_Novo; Esta função é adequada para uma substit uição 
+baseada em um padrão, sem necessidade de saber a po sição da 
+sequência dentro da sequência principal. Para situa ções onde a 
+substituição deve ser feita a partir de uma posição  definida, 
+verifique a função EXT.TEXTO().  
+Descrição da sintaxe 
+Texto_Principal (Tipo: texto): Sequência principal na qual 
+Texto_Anterior será substituído por Texto_Novo. 
+Texto_Anterior (Tipo: texto): Subsequência a ser lo calizada e 
+substituída. 
+Texto_Novo (Tipo: texto): Subsequência a substituir. 
+Ocorrência (Tipo: numérico):  Argumento opcional. C aso seja 
+informado, será considerada apenas a ocorrência ind icada de 
+Texto_Anterior. Se não for informado, serão trocada s todas as 
+ocorrências de Texto_Anterior na sequência principal. 
+ 
+Detalhamento da função   
+ 
+ 
+ 
+Exemplo de funções aninhadas: 
+ 
+  
+
+===== PÁGINA 83 =====
+Parametrização em Crivo 4 
+ 
+ 
+83 
+DISTANCIATEXTO( ) 
+ 
+Nome em Português  DISTANCIATEXTO 
+Nome em Inglês  STRING DISTANCE 
+Sintaxe  (Texto1; Texto2) 
+Definição 
+Retorna um valor decimal entre 0 e 1 (que, multipli cado por 100, é 
+a porcentagem) que indica a diferença entre duas se quências de 
+texto. 
+Descrição da sintaxe Texto1; Texto2 (Tipo: texto): São as sequências de texto a 
+comparar. 
+Detalhamento da função 
+A função DISTANCIATEXTO() é útil para estabelecer c ritérios de 
+comparação de nomes, por exemplo. A partir da porce ntagem de 
+diferença, é possível definir níveis de comparação entre as duas 
+sequências de texto. 
+ 
+A porcentagem retornada pela função DISTANCIATEXTO( ) é 
+dependente do número de caracteres das sequências q ue estão 
+sendo avaliadas. O algoritmo implementado na função  é o 
+"distância Levenshtein", que faz uma avaliação "int eligente" dos 
+caracteres, buscando a maior equivalência possível entre as 
+sequências. Mais informações em:  
+http://pt.wikipedia.org/wiki/Distância_Levenshtein . 
+ 
+Exemplos:  Comparando “TEXTO” e “texto” retorna 0 (0% de 
+diferença); comparando “TEXTO” e “FRASE” retorna 1 (100% de 
+diferença). 
+ 
+ 
+ 
+
+===== PÁGINA 84 =====
+Parametrização em Crivo 4 
+ 
+ 
+84 
+ 
+ 
+SEMELHANÇAENDEREÇO() 
+Nome em Português SEMELHANÇAENDEREÇOV3 
+Nome em Inglês ADDRSIMILARITYV3 
+Sintaxe  (Endereço1; Endereço2) 
+Definição 
+Retorna um valor decimal entre 0 e 1 (que, multipli cado por 
+100, é a porcentagem) que indica a similaridade ent re dois 
+endereços. 
+Descrição da sintaxe Endereço1; Endereço2 (Tipo: texto): São os endereço s a 
+comparar. 
+Detalhamento da 
+função 
+A função SEMELHANÇAENDEREÇOV3 permite que os 
+endereços a serem comparados não estejam no mesmo 
+formato. 
+Exemplo: Av. Paulista, 900  e PAULISTA, AV. 900  
+retornam 100% de semelhança. 
+Esta função utiliza um algoritmo que: 
+1. Avalia várias opções de isolamento dos elementos  
+de um endereço nas sequências informadas, tais 
+como: tipo de logradouro, logradouro, número e 
+complemento. 
+2. As opções geradas internamente são avaliadas e 
+será utilizada a opção que mais se adequou ao 
+formato desses elementos (pode ser eleita uma 
+opção diferente para cada sequência informada). 
+3. As sequências são avaliadas e o percentual de 
+semelhança é definido. 
+
+===== PÁGINA 85 =====
+Parametrização em Crivo 4 
+ 
+ 
+85 
+ 
+ 
+ 
+Funções de Data e Hora 
+ 
+Estas funções utilizam argumentos de data e hora e retornam datas ou valores numéricos. 
+ 
+ 
+Segue um exemplo de aplicação: 
+ 
+ 
+  
+
+===== PÁGINA 86 =====
+Parametrização em Crivo 4 
+ 
+ 
+86 
+Operadores 
+ 
+Elementos de cálculo ou comparação, geralmente utilizados em alguns tipos de regras.  
+ 
+Operadores Relacionais: 
+ 
+Denominação Símbolo 
+MAIOR QUE > 
+MENOR QUE < 
+MAIOR OU IGUAL >= 
+MENOR OU IGUAL <= 
+COMPARAÇÃO == 
+DIFERENTE DE <> 
+ 
+ 
+Constantes 
+ 
+As constantes têm por objetivo permitir a inserção de números ou literais em expressões dentro 
+de regras. 
+
+===== PÁGINA 87 =====
+Parametrização em Crivo 4 
+ 
+ 
+87 
+ 
+ 
+A Constante de Texto  pode ser usada em expressões que envolvam objetos como variáveis 
+discretas ou outras constantes de texto. 
+A Constante de Número  é utilizada com objetos do tipo: variáveis numéric as, números ou 
+cálculos que resultem em números. 
+ 
+Como inserir uma constante em uma expressão: 
+1. Arraste o tipo apropriado de constante (texto ou  número) para a expressão; aparecerá o 
+operador de adição ("+") apenas como indicação, pod endo ser trocado a qualquer 
+momento; 
+2. Caso não queira utilizar o operador atual, arras te um operador para entre a constante e o 
+outro objeto.  
+ 
+Campos 
+ 
+Através do item "Campos " podem ser criados campos para digitação de dados e utilizados em 
+regras. Para criar um novo campo, utilizar a barra lateral. 
+ 
+Nesta tela deve ser fornecido o nome do campo, tama nho, valor padrão, tipo e definir se o 
+campo será obrigatório ou oculto. 
+
+===== PÁGINA 88 =====
+Parametrização em Crivo 4 
+ 
+ 
+88 
+ 
+Os atributos com borda vermelha  são obrigatórios na criação do campo. 
+O campo  configurado como obrigatório  deverá ser preenchido na tela de análise, ou o Cri vo 
+não permitirá a execução da política. 
+O campo  configurado como oculto  é útil quando houver integração do Crivo com outro 
+sistema  (integração passiva, usando API CreditTalk) e o ca mpo for necessário para 
+passagem de parâmetros  – por exemplo, um código interno do sistema  – porém pode não 
+ser desejável que apareça na tela de análise  para o usuário que acionar interativamente a 
+política na interface browser . 
+ 
+Disposição de campos 
+ 
+A caixa "Disposição de Campos", localizada à direit a na tela do Editor de Políticas, permite 
+alterar a ordem de apresentação (disposição) dos ca mpos na tela de operação apresentada 
+pelo browser:  
+ 
+ 
+ 
+Ao clicar sobre “Disposição de Campos”, aparecerão os campos definidos para os drivers 
+utilizados no critério e os que estiverem referenciados em critérios abaixo deste, além daqueles 
+que forem criados pelo usuário.  
+
+===== PÁGINA 89 =====
+Parametrização em Crivo 4 
+ 
+ 
+89 
+ 
+ 
+Disposição de produtos 
+ 
+Clicando na opção “Disposição dos produtos”, poderão ser visualizados todos os produtos que 
+foram utilizados no critério/política para que os m esmos sejam ordenados de maneira 
+personalizada. O resultado pode ser observado no relatório de análise. 
+ 
+Basta arrastar os produtos não ordenados para a caixa de disposição dos produtos. 
+ 
+Condições 
+ 
+As condições podem ser inseridas desde que haja uma  regra utilizando uma variável do tipo 
+numérica, permitindo que sejam definidas faixas de valores para a tomada de decisões 
+diferenciadas. 
+
+===== PÁGINA 90 =====
+Parametrização em Crivo 4 
+ 
+ 
+90 
+ 
+Para inserir uma nova condição, basta arrastá-la pa ra a lista de condições sobre o ícone 
+idêntico e será solicitado o valor a ser estabelecido para a nova condição. 
+Quando se utiliza uma variável do tipo lista e não se tenha definido um valor, os valores farão 
+parte das condições e poderão ser definidas ações para cada valor.  
+ 
+ 
+Comentários em Regras 
+ 
+O recurso de comentários em regras permite document ar a finalidade de cada regra, para que 
+outras pessoas – inclusive o próprio autor das regr as – possam compreender não só o porquê 
+da elaboração da regra, mas também o resultado espe rado na execução e outras informações 
+que possam ajudar no entendimento do objetivo no critério.  
+O comentário pode ser incluído em qualquer elemento  para explicar a utilidade ou inserir 
+observações pertinentes. 
+Para incluir um comentário, basta arrastar o  sobre  o objeto a ser 
+comentado. 
+ 
+ 
+
+===== PÁGINA 91 =====
+Parametrização em Crivo 4 
+ 
+ 
+91 
+Digite o texto e escolha a cor de fundo: 
+ 
+Aparecerá um elo ligando o comentário ao elemento, e poderá ser reposicionado a qualquer 
+momento quando arrastado para outro elemento. 
+ 
+Minhas Variáveis (variáveis definidas pelo usuário) 
+ 
+Este recurso permite ao parametrizador criar nomes  (ou “caixas”) identificando o 
+armazenamento de informações, para serem utilizadas  no critério no qual estão 
+definidas ; o conteúdo  das variáveis pode ser tanto informações  coletadas de fontes  de 
+informação quanto expressões de cálculo  ou sequências de caracteres . Por exemplo, é 
+possível criar uma variável do tipo discreta (texto ) dentro de um critério que extraia uma parte 
+de outra variável discreta (que pode ser uma variáv el de fonte de informação) e então elaborar 
+uma regra para comparar com outras informações. 
+Regras de criação  de variáveis em “Minhas Variáveis”: 
+ O nome de uma “ Minha Variável ” pode ter mais de 200 caracteres; 
+ A variável pode assumir valores ou sequências de c aracteres, dependendo do tipo que será 
+atribuído ( discreta, existe, numérica, lista e data ); 
+ Não há um limite fixo para a quantidade de variáve is definidas em um critério; 
+ As variáveis definidas em um critério só são reconhecidas nesse mesmo critério , não 
+podendo ser transportadas ou utilizadas em outros c ritérios. Caso se tente redefinir uma 
+variável em cada outro critério da política, ela nã o preservará o conteúdo definido nos 
+outros critérios. 
+
+===== PÁGINA 92 =====
+Parametrização em Crivo 4 
+ 
+ 
+92 
+ 
+A expressão para uma variável  é muito semelhante  às expressões  usadas nas regras  para 
+construção de um critério, porém utiliza-se a opção " Minhas variáveis ":  
+ 
+A variável pode ser editada como na versão 3.5 do C rivo, ou pode ser criada uma regra 
+utilizando os recursos gráficos e depois transferir para a variável.  
+Para criar uma variável, selecione o item "Minhas Variáveis " e clique no botão . Em 
+seguida forneça o nome da variável: 
+ 
+ 
+A expressão é digitada da mesma forma que em uma regra, com as mesmas teclas de atalho. 
+É possível utilizar funções, variáveis de fontes de informação, campos e outras variáveis: 
+ 
+
+===== PÁGINA 93 =====
+Parametrização em Crivo 4 
+ 
+ 
+93 
+ 
+Área de pré-execução 
+ 
+A área de pré-execução é visualizada automaticament e quando um novo critério/política é 
+criada. 
+ 
+ 
+Detalhamento dos ícones:  
+ - Início do fluxo do critério em questão;  
+- Encerramento do fluxo do critério em questão;  
+ - Este botão ativa uma regra ou o item em que estiver contido;  
+- Este botão desativa uma regra ou o item em que estiver contido.  
+ 
+
+===== PÁGINA 94 =====
+Parametrização em Crivo 4 
+ 
+ 
+94 
+ 
+ 
+  Parâmetros chave não informados:  Caso esteja habilitada, essa opção permite que a 
+política seja executada mesmo que os parâmetros de entrada obrigatórios (marcados com um 
+asterisco “*”) para este critério não sejam informados. 
+Exemplo:  Em uma política de análise de pessoa física, podem os ter um critério que analise 
+especificamente a condição de multas do proprietári o de um veículo, e para isso colete a 
+variável 
+[Detran;Pesquisa de Pontos (Nova CNH) / SP - PF;Quantidade - Total de infrações 
+Para este produto específico, os parâmetros de entr ada obrigatórios são: CNH e CPF; caso 
+não esteja disponível a informação da CNH, a políti ca inteira não poderia prosseguir, pois o 
+Crivo exige que todos os parâmetros obrigatórios se jam preenchidos para a execução da 
+política.  
+Porém, se for habilitado o recurso em questão, s erá retirada a obrigatoriedade dos 
+parâmetros requeridos neste critério , e assim a política poderá ser executada mesmo sem a 
+informação da CNH. É claro que a obrigatoriedade do parâmetro não é apenas uma 
+formalidade, ele é realmente necessário para a cons ulta  à fonte de informação; se não for 
+informado, o critério que depende desse parâmetro n ão será executado . Em lugar do 
+retorno desse critério será exibida a mensagem conf igurada para Resposta  (padrão : “Política 
+sem parâmetros para execução”), e retornados os pon tos, limite e sistema conforme 
+configurados. 
+
+===== PÁGINA 95 =====
+Parametrização em Crivo 4 
+ 
+ 
+95 
+Importante  
+Caso esse recurso seja habilitado no critério principal da política, todos os parâmetros dos 
+critérios abaixo deste terão a obrigatoriedade retirada ; verifique, portanto, quais os critérios 
+adequados para ativar esse recurso e utilize apenas nestes critérios. 
+ 
+  Erro na execução:  A execução do critério/política será interrompida , e estas respostas 
+serão apresentadas, quando ocorrerem situações de exceção , como erros em cálculos 
+matemáticos  (por exemplo, divisão por zero) ou uma variável cujo tratamento de erro foi 
+configurado para manual , porém não foi inserida uma regra  na sequência apropriada para 
+previnir a situação. 
+   Valores padrão:  Permite alterar as respostas-padrão do critério, acionadas quando não 
+houver a execução de uma ação do tipo " Define Resposta ", das que estiverem configuradas 
+nas regras do critério. 
+Por exemplo, ao elaborar um critério que verifica o s casos possíveis do status  do CNPJ  e 
+passamos como parâmetro de entrada,  na execução deste critério, um CNPJ que possui o 
+status " Suspensa "; porém não foi prevista uma regra para verificaçã o desse status específico 
+no critério, conforme abaixo: 
+Regra 1:  Verifica se o status do CNPJ é " Regular " 
+Regra 2:  Verifica se o status do CNPJ é " Cancelado " 
+Regra 3:  Verifica se o status do CNPJ é " CNPJ Inexistente " 
+Regra 4:  Verifica se o status do CNPJ é " Baixada " 
+Regra 5:  Verifica se o status do CNPJ é " Inapta " 
+Regra 6:  Verifica se o status do CNPJ é " Empresa não cadastrada " 
+Regra 7:  Verifica se o status do CNPJ é " Nula " 
+Nesse caso, não será apresentada nenhuma das respos tas relacionadas nas regras, e o Crivo 
+então apresentará a mensagem configurada em Respost a; se não for alterada a mensagem, 
+será utilizado o texto " Resposta padrão ". Recomendamos que esse texto seja alterado para 
+"Situação não prevista ", que explicará melhor o que ocorreu na execução deste critério. 
+ 
+Substituição de Nulo 
+ 
+Conceito de nulo no contexto do Crivo 
+ 
+A ocorrência de nulo  no Crivo pode ser descrita da seguinte forma: cons idere uma situação 
+onde, ao solicitar informações para uma fonte, é possível que a variável por “algum motivo” não 
+
+===== PÁGINA 96 =====
+Parametrização em Crivo 4 
+ 
+ 
+96 
+seja pontuada. Neste caso, o conteúdo para essa var iável é nulo. O nulo então é a ausência 
+de informação , o que não deve ser confundido  com retorno de informação do tipo: 0 (zero) 
+para variáveis numéricas ou "" (texto vazio) para variáveis discretas. 
+Exemplo prático:  Ao acessar a variável [SRF;Situação Cadastral do CNPJ;Status do 
+CNPJ], passando como parâmetro um determinado CNPJ , poderá ocorrer o nulo  ao tentar 
+preencher (, por exemplo, a variável de data de abe rtura ou a razão social da empresa, além 
+do próprio CNPJ . 
+Como a ocorrência de nulo é uma situação não desejada  ao consultar uma fonte de 
+informação, o Crivo exige que o parametrizador se p reocupe com o tratamento do nulo, ou 
+seja, para a situação em que ocorrer o nulo, qual a  ação que o Crivo deve tomar para que seja 
+substituído adequadamente o nulo. 
+Resumindo: Uma vez ocorrida a situação de nulo em u ma determinada variável, deve ter sido 
+previsto o procedimento que o Crivo deve executar  para substituir o nulo por alguma 
+informação que permita à política continuar o seu p rocessamento. A substituição de nulo  
+consiste então em preencher cada variável que retor nou nulo  por um conteúdo pré-
+determinado. A substituição pode ser AUTOMÁTICA ou MANUAL .  
+Na tabela a seguir, as ações são tomadas na substituição configurada para automático.  
+ 
+TIPO Descrição da Ação 
+Data Caso a fonte não retorne conteúdo para uma variável  tipo data, o Crivo considerará o 
+instante da operação, ou seja, a data da execução da política/critério. 
+Discreta ou  Lista Comparações em fórmula com a variável resultarão em  falso. Significa que, se houver 
+referência dessa variável em uma expressão (por exe mplo, [SRF;Situacao Cadastral do 
+CPF; Nome] == “Fulano Beltrano”), o resultado será sempre falso para a expressão. 
+Existe O nulo é substituído por Falso. 
+Numérica O nulo é substituído por 0 (zero). 
+Meus Campos ou  
+Minhas Variáveis 
+Seguirá as regras acima, conforme o tipo resultante do campo ou variável que foi criada. 
+ 
+Conforme a tabela, caso o parametrizador opte pelo tratamento automático em determinada 
+variável do tipo data , o Crivo substituirá a ocorrência de nulo pelo instante da execução da 
+operação . A princípio pode parecer uma substituição inofensiva, sem maiores considerações a 
+fazer. No entanto,  vamos imaginar que a variável DATA em questão sign ifique a seguinte 
+informação: " Data do último cheque sem fundos ". Caso essa informação não esteja 
+disponível na fonte consultada, deve-se considerar como ausência de informação e nenhuma 
+conclusão pode ser tirada nesse caso; porém, com a substituição automática ativada, a 
+informação preenchida na variável será a data do in stante da execução da política. Se houver 
+uma regra no critério que faz a análise abaixo: 
+Se  " Data do último cheque sem fundos " for maior que 01/01/2009, retornar a resposta  
+”Restrição - Cheque sem fundos”. 
+===== PÁGINA 97 =====
+Parametrização em Crivo 4 
+ 
+ 
+97 
+Supondo que o instante de execução da operação foi "12:40:00 23/10/2009", então o conteúdo 
+da variável será “23/10/2009”, e pela comparação na regra será declarada uma restrição de 
+cheque sem fundos  para a análise, quando na verdade nada se poderia afirmar, pois não 
+houve retorno dessa informação da fonte. 
+Como visto, a substituição automática pode gerar re sultados não desejados. Caso não se 
+queira utilizar a substituição automática , pode-se optar pela substituição manual,  
+desmarcando  a variável na janela de substituição de nulo no cr itério. Nesse caso, o 
+parametrizador fica então responsável pela criação de uma regra específica , nesse critério, 
+que previna a ocorrência de nulo na variável em que stão, utilizando a função É.NULO() . Como 
+a inserção dessa regra  é de responsabilidade do parametrizador , se não for colocada no 
+critério na posição correta e durante o processamen to do critério ocorrer nulo nesta variável, a 
+política terá sua execução interrompida com a mensa gem " Erro na política ", ou a mensagem 
+que tenha sido alterada nos Valores padrão. 
+A configuração da substituição de nulo é crítica  para a execução das políticas no Crivo, 
+pois podem ser alteradas as respostas  dos critérios, e provavelmente a decisão final, em 
+função da ocorrência ou não de nulos  que não tenham sido adequadamente previstos. Por 
+esse motivo, a definição do modo de substituição de nulo é obrigat ória ao gravar o 
+critério . 
+Após analisar cada variável utilizada no critério e  decidir pela substituição de nulo automática 
+ou manual, deve-se preencher o valor para a substit uição de nulo, que simboliza o seguinte 
+compromisso: o parametrizador assume a responsabili dade de ter verificado qual a 
+substituição adequada a cada variável referenciada no critério, e concorda com as 
+substituições automáticas que o Crivo fará, caso tenha optado por alguma. 
+ 
+
+===== PÁGINA 98 =====
+Parametrização em Crivo 4 
+ 
+ 
+98 
+ Importante  
+Na substituição automática de nulo, as variáveis nu méricas e discretas devem ter um 
+conteúdo padrão fixado , para que na ocorrência de nulo elas assumam esse conteúdo.  
+Exemplo: 
+Para a substituição de nulo manual, é necessário criar uma regra específica utilizando a função 
+lógica “É.NULO”, logo depois da regra de erro no ac esso a fonte. Caso não seja inserida tal 
+regra, e ocorrer uma situação de nulo, a execução d o critério retornará a mensagem "Erro na 
+política" . 
+Na figura abaixo, foi considerada a substituição automática para a variável “Erro na 
+consulta”, e substituição manual para a variável Data – Emissão do comprovante : 
+ 
+Deverá ser desmarcado somente o que for substituiçã o no modo manual. No exemplo, é a 
+variável Data – Emissão do comprovante. 
+No relatório ficará identificada a resposta definid a na ação, demonstrando a ocorrência de 
+retorno nulo.  
+
+===== PÁGINA 99 =====
+Parametrização em Crivo 4 
+ 
+ 
+99 
+ 
+ 
+Pesquisa e seleção 
+ 
+ 
+A opção “Substituir na Expressão” permite que seja alterado um conteúdo por outro na 
+política/critério. 
+ 
+As opções “Selecionar Regras” e “Deselecionar Regras” marcam ou desmarcam as regras para 
+que seja efetuada alguma operação com as mesmas. 
+ Ao lado da opção para habilitar ou desabilitar regra será selecionada ou não a regra 
+a partir do comando. 
+ 
+
+===== PÁGINA 100 =====
+Parametrização em Crivo 4 
+ 
+ 
+100 
+Importar e Exportar Critério 
+ 
+Backup de critério / Política: 
+Os critérios não poderão ter nomes iguais, mesmo qu e estejam em pastas diferentes, contudo 
+poderão ser exportados e importados com nome diferente.  
+Na barra de ferramentas estão disponíveis os botões  para realizar as operações 
+.  
+Gera uma cópia de segurança do critério (NomeCriter io.crv) que pode ser restaurada no 
+servidor Crivo. 
+ 
+Exportar Critério 
+ 
+Exporta - Exporta um critério do Administrador. 
+ 
+Clicando no botão  será demonstrada a tela para ini ciar o processo de exportação: 
+ 
+
+===== PÁGINA 101 =====
+Parametrização em Crivo 4 
+ 
+ 
+101 
+ A lista demonstrará todas as pastas com os respectivos critérios que o usuário tem acesso:  
+ 
+É possível selecionar as dependências para preservar os vínculos entre critérios e política.  
+Devem ser selecionados os critérios desejados e cli car no botão Próximo para avançar uma 
+tela.  
+ 
+Na próxima etapa é visualizado o conteúdo: 
+ 
+
+===== PÁGINA 102 =====
+Parametrização em Crivo 4 
+ 
+ 
+102 
+Para a exportação pode ser gerada em arquivo único ou separada por pasta. 
+ 
+Após clicar no botão  aparecerá a mensagem de confi rmação da exportação:  
+ 
+Aparecerá um resumo com os critérios a serem exportados: 
+ 
+ 
+Após a conclusão a exportação gera um arquivo com a extensão .CRV que fica criptografado e 
+não pode ser aberto como um documento de texto, poderá ser visualizado somente pelo Crivo. 
+Em seguida ocorre a exibição da mensagem de conclusão:  
+Quando houver dependência de critérios, todos serão  exportados. Além disso, os níveis ficam 
+nos arquivos, não são criadas pastas como no Crivo 3.5. 
+
+===== PÁGINA 103 =====
+Parametrização em Crivo 4 
+ 
+ 
+103 
+ 
+Importar Critérios 
+ 
+ 
+Importa - Importa um critério para o Administrador. 
+Na importação de um critério deve ser selecionada uma pasta e seguidos os procedimentos:  
+Clicar no botão  e ficará disponível o assistente d e importação. Poderá ser secionada a 
+versão do Crivo para a importação: 
+ 
+O primeiro passo é selecionar o arquivo a ser importado.  
+ 
+Na lista de arquivos é possível escolher somente os que tiverem extensão compatível.  
+
+===== PÁGINA 104 =====
+Parametrização em Crivo 4 
+ 
+ 
+104 
+ 
+Clicar no botão "Próximo" e será permitida a escolh a de um ou todos os critérios para a 
+importação.  
+ 
+Quando o nome do arquivo a ser importado for igual a um critério existente, será solicitada a 
+alteração para que seja feita a importação. 
+ 
+
+===== PÁGINA 105 =====
+Parametrização em Crivo 4 
+ 
+ 
+105 
+ 
+Logo após, clicar no botão " Próximo " e será visualizada a mensagem para iniciar a 
+importação.  
+ 
+Basta confirmar e aguardar a finalização da importação.  
+ 
+ 
+
+===== PÁGINA 106 =====
+ 
+  
+ 
+Análise Individual 
+===== PÁGINA 107 =====
+Parametrização em Crivo 4 
+ 
+ 
+107 
+Análise Individual 
+ 
+Coleta à fonte de informação 
+ 
+Ocorre quando o Crivo acessa uma fonte de informaçã o – em um determinado produto – e 
+obtém (coleta) as informações solicitadas para uso em análises e/ou decisões. Ao referenciar, 
+em uma regra, uma variável de produto de fonte de i nformação (por exemplo, a variável Erro 
+na consulta  do produto Situação Cadastral do CPF  da fonte de informação SRF ), o Crivo irá 
+coletar também os dados das outras variáveis que fa zem parte do produto acessado, 
+armazenando as informações no banco de dados do Cri vo e disponibilizando os conteúdos 
+para a política em execução.  
+ 
+ Observação 
+Durante a execução de uma política ou de um critéri o, as fontes de informação são 
+acessadas uma única vez por produto ; por exemplo, se na primeira regra de um critério 
+referenciamos a variável Erro na consulta de um produto, todas as v ariáveis desse 
+produto, dessa fonte de informação, são coletadas e  disponibilizadas para uso  – se for 
+referenciada outra variável do mesmo produto, mais à frente na sequência de regras, o Crivo 
+não precisará acessar novamente a fonte de informação. 
+ 
+ 
+Operação 
+ 
+O conceito de operação pode ser definido como a ver ificação de um aspecto específico  na 
+política parametrizada no Crivo, como a situação cadastral do CNPJ  de um fornecedor na 
+Receita Federal, ou a comparação do endereço informado  com o endereço cadastrado no 
+SINTEGRA, entre outras. A operação normalmente é um critério elaborado para o bter um 
+RESULTADO PARCIAL  que irá contribuir para a decisão final  na execução da política. 
+ 
+Operação Individual 
+ 
+Após a elaboração de uma política/critério, poderão  ser executadas as operações individuais 
+ou em lote para a coleta de informações.  
+
+===== PÁGINA 108 =====
+Parametrização em Crivo 4 
+ 
+ 
+108 
+ 
+Ao selecionarmos o item Operação Individual no menu  principal será exibida a tela Operações, 
+do lado direito da tela são demonstrados os critéri os/políticas associados ao grupo do usuário 
+atual, dependendo da configuração efetuada para o g rupo. Quando os critérios/políticas estão 
+associados ao grupo, aparecerão separados por tipo pessoa jurídica ou pessoa física.  
+Para executar uma operação, basta selecionar no menu a opção "Operação Individual".  
+  
+Automaticamente aparecerão os critérios/políticas disponibilizados para o usuário.  
+  
+ Observação 
+Quando um critério estiver desabilitado, significa que não existem objetos de entrada. 
+ 
+Em outras palavras, não foi inserida uma fonte de i nformação que tenha campo obrigatório 
+para a operação, ou um campo criado pelo usuário que permita a digitação de dados. 
+Devem ser digitados os dados necessários para a exe cução da operação, ou seja, devem ser 
+preenchidos os campos obrigatórios.  
+
+===== PÁGINA 109 =====
+Parametrização em Crivo 4 
+ 
+ 
+109 
+ 
+ 
+Depois de selecionar um critério/política na catego ria desejada e digitar os dados, basta 
+executar. Também é possível buscar uma análise já executada. 
+ 
+ 
+Com a opção excluir, pode ser retirada da tela uma política/critério selecionada por engano. 
+ 
+ 
+Os campos para preenchimento na tela de análise podem ser dos seguintes tipos: 
+Parâmetro -chave: Os dados solicitados nos parâmetros-chave sã o imprescindíveis  para que 
+ocorra a coleta de informações  e consequente obtenção de resposta adequada  na 
+execução da política; o parâmetro-chave quando solicitado, é sempre necessário, porém nem 
+sempre obrigatório  – algumas fontes de informação podem recusar a con sulta ou fornecer 
+respostas alternativas caso não seja informado algum parâmetro-chave (ex. DETRAN , no caso 
+de código do RENAVAM  para carros novos). 
+Parâmetro obrigatório: Sinalizado por um asterisco vermelho  colocado ao lado esquerdo do 
+campo, seu preenchimento é necessário para que se possa prosseguir na execuç ão da 
+política ; a obrigatoriedade pode ser devido à característica da fonte de informação ou devido a 
+uma configuração específica, caso seja um campo cri ado pelo parametrizador ( Meus 
+Campos ).  
+Campo opcional : O não preenchimento destes campos não impede a execução da política. 
+  
+
+===== PÁGINA 110 =====
+Parametrização em Crivo 4 
+ 
+ 
+110 
+Relatório Operacional: Resultado da(s) Análise(s) 
+ 
+O relatório Resultado das Análises é o retorno do C rivo para o processamento da política, de 
+forma visual.  
+ 
+O relatório de análise completo está dividido em três seções: 
+ 
+
+===== PÁGINA 111 =====
+Parametrização em Crivo 4 
+ 
+ 
+111 
+• Dados da Operação : Mostra o servidor em que foi executada a operação , código da 
+operação, data e horário da execução e identificação do usuário que efetuou a operação. 
+• Campos e parâmetros informados : Mostra os parâmetros de entrada,  nomes de 
+critérios utilizados na execução da política;  
+• Resultados : pontos e limite (caso tenham sido marcados para exibição) e resposta final; 
+• Justificativas: Mostra as informações referentes a: regra que originou a resposta final 
+(Justificativa da resposta) , Justificativa dos pontos, Justificativa do limite ; Justificativa 
+das regras  (Adiciona à justificativa , Define justificativa) e Justificativa Variáveis (que 
+exibe o valor calculado das variáveis) . 
+• Relatório das Fontes : Mostra as informações retornadas das fontes de in formação, 
+conforme solicitadas na política/critério. 
+ Observação 
+• Para repetir a operação, basta clicar no botão  qu e utiliza os parâmetros de entrada e 
+gera um novo código de operação. 
+ 
+Código da Operação 
+ 
+ 
+Código que faz a identificação de uma decisão. Cada  decisão gera um único código de 
+operação, não existindo repetições dentro de um mesmo servidor Crivo. 
+• 
+O código da operação é formado por 7 caracteres (que podem ser: letras maiúsculas e 
+minúsculas, números e alguns símbolos especiais). A soma das operações realizadas 
+no mês compõe a tarifação do Crivo, para emissão da fatura. • 
+ • 
+Uma definição formal de operação pode ser expressa como: Cada operação é 
+caracterizada por parâmetros de entrada de mesmo tipo, não repetidos. 
+Caso seja necessário localizar rapidamente uma oper ação por meio do código, pode ser 
+utilizado o campo na parte superior direta da tela: 
+ 
+ 
+Importante  
+O CNPJ e inscrição estadual são parâmetros de PJ, m as CPF do sócio da empresa é 
+parâmetro de PF. 
+
+===== PÁGINA 112 =====
+Parametrização em Crivo 4 
+ 
+ 
+112 
+ 
+  
+ 
+Pode-se consultar diretamente o relatório de uma op eração, basta acessar a opção  Histórico 
+no menu: 
+Informe o código da operação e clicar no botão Executar . Será exibido o relatório da operação, 
+com o nível de detalhe conforme o perfil do usuário. 
+ 
+ 
+Relatório exibido através da busca por código de operação: 
+ 
+ 
+ 
+
+===== PÁGINA 113 =====
+Parametrização em Crivo 4 
+ 
+ 
+113 
+O Relatório das Fontes é preenchido com os dados co letados das fontes de informação 
+referenciadas no critério/política. 
+Outro exemplo de relatório de análises: 
+ 
+ 
+ 
+Geração de relatório em formato PDF 
+ 
+Após o término de execução da operação estará habil itado o botão  na Barra de 
+ferramentas , que gera um arquivo em formato padrão PDF - que p oderá ser aberto com um 
+leitor de PDF, como o Adobe Reader , por exemplo: 
+Ao selecionar o botão, será aberta uma janela que permite exibir ou salvar o relatório; o arquivo 
+recebe como nome “Saida” (pode ser alterado). 
+O arquivo será exibido no programa de tratamento de  arquivos PDF que estiver previamente 
+instalado na estação de trabalho (normalmente, o Adobe Reader ). 
+
+===== PÁGINA 114 =====
+Parametrização em Crivo 4 
+ 
+ 
+114 
+ 
+ 
+ 
+
+===== PÁGINA 115 =====
+ 
+  
+ 
+Relatórios
+===== PÁGINA 116 =====
+Parametrização em Crivo 4 
+ 
+ 
+116 
+Relatórios 
+ 
+Auditoria do Crivo 
+ 
+  
+Registra as ações de criação, alteração e exclusão,  incluindo o usuário, data e hora da ação, 
+qual foi a ação executada e qual entidade foi afetada. 
+ 
+ 
+Tipos de entidades 
+ 
+Driver (mecanismo de consulta) 
+É através do mecanismo de consulta que o Crivo aces sa as informações do produto escolhido 
+em uma determinada fonte de informação. É alterada toda vez que acontece uma mudança 
+de comportamento e/ou apresentação das informações pela fonte , através de uma nova 
+versão (release) do Crivo, ou por meio do recurso Crivo Update , no Administrador Crivo. 
+Regional (centro de custo) 
+Registra alterações de configuração de um determina do Centro de Custo. Por exemplo, 
+gravação de usuário e senha para uma determinada fonte de informação. 
+Grupo 
+Registra alterações de configuração de um determina do grupo. Por exemplo, autorização para 
+utilizar um critério. 
+
+===== PÁGINA 117 =====
+Parametrização em Crivo 4 
+ 
+ 
+117 
+Usuário 
+Registra alterações de configuração de um determina do usuário. Por exemplo, mudança de 
+senha do usuário. 
+Critério 
+Registra a criação e/ou alteração de um determinado  critério. Por exemplo, mudança do nome 
+da política em uso. 
+Configuração de driver 
+Registra alterações na "Configuração dos coletores" . Por exemplo, mudança de prazo de 
+validade de um determinado produto. 
+Configuração da central (Administrador) 
+Registra as alterações que são decorrentes da grava ção de critérios, pois estas podem gerar 
+mudanças nas configurações de um determinado Grupo.  Por exemplo, mudança de nome de 
+um critério. 
+ 
+É possível imprimir os registros com o botão  local izado na barra de ferramentas. Em 
+seguida aparecerá a janela: 
+ 
+Todos  – imprime todos os registros encontrados. 
+Páginas  – imprime apenas os registros das páginas selecionadas. 
+
+===== PÁGINA 118 =====
+Parametrização em Crivo 4 
+ 
+ 
+118 
+Página atual  – imprime apenas os registros visualizados na página atual. 
+ 
+ 
+Histórico de Decisões 
+ 
+Relatórios de Negócio 
+ 
+  
+ 
+Filtra as decisões por Código de Operação, Período,  Estrutura Corporativa, Critério utilizado, 
+Lote e Decisões, individualmente ou combinados uns com os outros e gera relatórios. 
+A tela disponibiliza alguns filtros para gerar relatórios a partir das operações efetuadas.  
+ Observação 
+A visualização máxima de registros (operação) evita  que o Crivo consuma os 
+recursos de servidor excessivamente para gerar um r elatório.  Isto pode diminuir o 
+desempenho do servidor para o atendimento de outras  funções, como por exemplo, a 
+execução de uma operação. Atualmente limitada em 500 registros. 
+
+===== PÁGINA 119 =====
+Parametrização em Crivo 4 
+ 
+ 
+119 
+ 
+Resumo de Análise 
+ 
+Informa todos os resultados obtidos nas operações r ealizadas conforme o filtro aplicado, 
+mostrando o percentual e as ocorrências em análises  e em decisões, de cada resposta 
+encontrada. 
+ 
+ 
+Utilização das Fontes 
+ 
+Mostra quantas informações foram obtidas diretamente da fonte, quantas foram reutilizadas do 
+banco de dados do Crivo e quantos erros de acesso ocorreram no momento da análise, 
+separados por fonte acessada e produtos utilizados. Clicando sobre os números sublinhados, o 
+Crivo mostrará um Relatório de Análises das respectivas operações. 
+ 
+
+===== PÁGINA 120 =====
+Parametrização em Crivo 4 
+ 
+ 
+120 
+Este relatório pode ser visualizado em formato gráfico, basta clicar no botão : 
+ 
+ Observação 
+A configuração de validade em Configuração dos Cole tores interfere diretamente neste 
+relatório. 
+ 
+Utilização Crivo 
+ 
+Informa o número de operações, decisões e análises realizadas no Crivo. 
+ 
+
+===== PÁGINA 121 =====
+Parametrização em Crivo 4 
+ 
+ 
+121 
+Clicando em uma fatia do gráfico será apresentado um gráfico derivado com os dados somente 
+do centro de custo selecionado. 
+ 
+ 
+Evolução dos Resultados 
+ 
+Gera um gráfico para acompanhar o desempenho de resultados da carteira (ou amostra) 
+escolhida.  
+ 
+
+===== PÁGINA 122 =====
+Parametrização em Crivo 4 
+ 
+ 
+122 
+Fluxo de Operações 
+ 
+Apresenta o critério editado graficamente, com a quantidade e percentual de operações 
+executadas para cada decisão. 
+ 
+ 
+ 
+  
+
+===== PÁGINA 123 =====
+Parametrização em Crivo 4 
+ 
+ 
+123 
+Para visualizar o relatório textual com os resultados obtidos nas operações executadas, basta 
+clicar no botão . Conforme demonstrado a seguir: 
+ 
+ 
+Relatório Operacional 
+ 
+O relatório operacional permite a consulta das oper ações executadas por meio do 
+Administrador do Crivo. 
+ 
+ 
+Coluna Servidor – Identifica qual o servidor que ex ecutou a operação quando o Crivo está 
+configurado para utilizar o recurso NLB. 
+Em linhas gerais, o NLB (Network Load Balancing) é o balanceamento da utilização da rede 
+que redireciona o tráfego por caminhos alternativos , a fim de descongestionar os acessos aos 
+servidores. O NLB pode funcionar de duas formas: 
+Hardware – Appliance; 
+Software – NLB Windows Server. 
+  
+
+===== PÁGINA 124 =====
+Parametrização em Crivo 4 
+ 
+ 
+124 
+Veja um exemplo de funcionamento: 
+ 
+ 
+  
+
+===== PÁGINA 125 =====
+Parametrização em Crivo 4 
+ 
+ 
+125 
+Relatórios de Infraestrutura 
+ 
+Evolução das Atividades 
+ 
+Informações de infraestrutura sobre funcionamento do servidor Crivo. 
+Apresenta um gráfico com os horários de pico de utilização do Crivo na empresa. 
+ 
+ 
+Estatística das Coletas 
+ 
+Este relatório é muito importante para o acompanham ento da coleta em fontes de informação, 
+apresentando por driver e produto as seguintes informações: 
+• Coletas online  - coletas feitas diretamente à fonte de informação;  
+• Coletas offline  - coletas efetuadas no banco de dados do Crivo, co nforme as 
+configurações em Configuração dos coletores (Validade);  
+• Coletas Contingência  - coletas que resultariam  em erro na consulta, mas foram 
+localizadas no banco de dados do Crivo, conforme as  configurações em Configuração 
+dos coletores (Contingência);  
+• Coletas com Erro  - Quando não foi possível obter as informações da fonte.  
+
+===== PÁGINA 126 =====
+Parametrização em Crivo 4 
+ 
+ 
+126 
+ 
+ 
+Duração das Operações 
+ 
+Após um período de utilização do Crivo, pode ser ve rificada a duração das operações 
+efetuadas. A montagem do relatório é baseada nos filtros aplicados. 
+ 
+  
+
+===== PÁGINA 127 =====
+Parametrização em Crivo 4 
+ 
+ 
+127 
+Os códigos de operações permitem o acesso ao relató rio da operação executada, conforme 
+demonstrada abaixo: 
+  
+ 
+ 
+
+===== PÁGINA 128 =====
+ 
+  
+ 
+Apêndices
+===== PÁGINA 129 =====
+Parametrização em Crivo 4 
+ 
+ 
+129 
+Apêndices 
+ 
+===== PÁGINA 130 =====
+ 
+  
+ 
+Régua de Condições
+===== PÁGINA 131 =====
+Parametrização em Crivo 4 
+ 
+ 
+131 
+Régua de Condições 
+ 
+A Régua de Condições  é um recurso utilizado para variáveis do tipo lista  ou para determinar 
+resultados específicos a faixas de valores. 
+Na sugestão a seguir será aplicado o recurso sem ac esso a fontes de informação, somente 
+com dados fornecidos por digitação. 
+Siga os passos: 
+• Criar um critério para PF; 
+• Definir um campo; 
+• Criar uma regra utilizando a régua de condições e definindo as ações. 
+ 
+Utilização da régua: 
+Neste exemplo, inicialmente deve ser adicionada uma regra e adicionado o campo criado. 
+ 
+Definir as faixas de valores para cada categoria, adicionando as novas condições. 
+ 
+Basta arrastar a Nova Condição para o ícone idêntico na regra. 
+ 
+Regra com as mensagens para o usuário: 
+Criar uma regra para determinar uma resposta diferenciada às categorias. 
+
+===== PÁGINA 132 =====
+Parametrização em Crivo 4 
+ 
+ 
+132 
+ 
+Visualização dos resultados: 
+Após salvar e disponibilizar para uso o critério po derão ser efetuadas as operações individuais 
+e verificados os resultados. 
+ 
+ 
+ 
+
+===== PÁGINA 133 =====
+ 
+  
+ 
+ 
+Ação: Redefine Valor do 
+Campo
+===== PÁGINA 134 =====
+Parametrização em Crivo 4 
+ 
+ 
+134 
+Ação: Redefine Valor do Campo 
+ 
+Esta ação é um novo recurso do Crivo 4 que permite a modificação de conteúdo de 
+campos durante  a execução da política, de forma que os campos red efinidos possam 
+ser utilizados em novas coletas em fontes de inform ação que os aceitem, tornando a 
+política mais flexível e adequada às regras de negócio da empresa. 
+Uma das formas de utilização dessa ação é quando qu eremos consultar uma fonte de 
+informação, mas não temos todos os campos-chave par a efetuar essa consulta; porém 
+temos os parâmetros para consultar uma outra fonte de informação, e uma das 
+variáveis de retorno da consulta dessa outra fonte é justamente o parâmetro que 
+precisamos para efetuar a consulta da primeira fonte. 
+ 
+Exemplo: 
+1) Construímos uma regra com a variável a ser utili zada da fonte de informação. 
+Neste exemplo usamos a variável " Erro na consulta ", com o único objetivo de 
+ativar a coleta das variáveis do produto "Situacao Cadastral do CPF" , da fonte 
+SRF : 
+ 
+ 
+2) Arrastamos a ação " Redefine Valor do Campo " do menu lateral para a área 
+"Senão"  da regra. 
+
+===== PÁGINA 135 =====
+Parametrização em Crivo 4 
+ 
+ 
+135 
+ 
+ 
+ 
+Aparecerá então uma janela onde será possível escolher: 
+• A origem do campo  – de qual critério (o atual ou abaixo deste) será escolhido o 
+campo que terá seu valor modificado (ou redefinido );  
+• O nome do campo  propriamente dito.  
+
+===== PÁGINA 136 =====
+Parametrização em Crivo 4 
+ 
+ 
+136 
+ 
+ 
+Após a configuração dos parâmetros da ação Redefine Valor do Campo , este campo 
+pode ser utilizado em uma nova coleta, bastando para isso ser criada uma nova regra 
+onde acessamos, por exemplo, a fonte Tribunal de Justiça SP: 
+ 
+ 
+ 
+O que demonstramos:  
+• Tínhamos a necessidade de consultar a fonte Tribunal de Justiç a SP , porém 
+só estava disponível o CPF da pessoa , e não estávamos confiantes na 
+informação do nome da pessoa, por estar incompleto ( por exemplo: Nome: 
+Pedro, CPF: 01234567890); 
+• Criamos então uma regra onde acessamos a SRF, e a partir do CPF 
+obtivemos o nome oficial  correspondente àquele CPF; 
+• Redefinimos o campo Nome para que pudesse ser utilizado na nova coleta , 
+dessa vez no Tribunal de Justiça SP, para o qual o nome é campo-chave; 
+• Se a coleta for bem sucedida (variável Erro na Consulta retornou falso), 
+teremos acesso às informações  nas variáveis do produto consultado . 
+ 
+
+===== PÁGINA 137 =====
+Parametrização em Crivo 4 
+ 
+ 
+137 
+O relatório Resultado das Análises: 
+ 
+Quando são coletadas informações de uma fonte, serão armazenadas as variáveis 
+solicitadas e as outras contidas no produto . Com a ação " Redefine valor do 
+campo " podem ser reutilizadas nas consultas todas as var iáveis coletadas. A partir do 
+mesmo critério pode ser consultada outra fonte de i nformação com a variável 
+redefinida. 
+ 
+
+===== PÁGINA 138 =====
+ 
+   
+ 
+Regras Especialistas
+===== PÁGINA 139 =====
+Parametrização em Crivo 4 
+ 
+ 
+139 
+Regras Especialistas 
+ 
+As regras especialistas existem para facilitar operações que são realizadas frequentemente, de 
+forma que o usuário não necessite construir uma reg ra a partir do zero e possa configurar 
+alguns parâmetros para personalizar o funcionamento da regra. 
+   
+ 
+Há regras especialistas específicas para cada tipo de critério (PF ou PJ): 
+ 
+      
+Regra Especialista: Campeã x Desafiadora 
+ 
+Esta regra especialista permite o balanceamento de execução entre critérios, conforme a 
+porcentagem indicada na expressão. Os termos "Campeã" e "Desafiadora" remetem à seguinte 
+situação: Há uma política que está em produção no s ervidor Crivo, e que atende 
+adequadamente às necessidades das regras de negócio da empresa, no momento; no entanto, 
+
+===== PÁGINA 140 =====
+Parametrização em Crivo 4 
+ 
+ 
+140 
+como a concorrência no mercado é incessante foi pro posta uma outra política, derivada da 
+atual porém com alterações que a tornariam mais ade quada a alguns casos específicos. A 
+política atual chamamos de "campeã", e a política proposta chamamos de "desafiadora".  
+ 
+Para entendermos melhor o funcionamento da regra po demos recorrer ao processamento de 
+lotes. Neste caso, serão realizadas várias coletas e poderemos, com um número razoável de 
+operações, verificar se a regra desafiadora demonst ra (ou não) melhor adequação que a 
+campeã - para o objetivo fixado. 
+ 
+ 
+Por exemplo, vamos supor que exista em sua política  um critério chamado Comparação de 
+Endereço, que utiliza a função SEMELHANÇAENDEREÇO() . Você quer colocar em ambiente 
+de produção um novo critério, com a mesma finalidad e, porém utilizando a função 
+DISTANCIATEXTO() ; como não tem certeza que o novo critério será mel hor que o anterior 
+quando for utilizado com dados reais para produção, esta regra especialista pode ajudar: 
+
+===== PÁGINA 141 =====
+Parametrização em Crivo 4 
+ 
+ 
+141 
+ 
+1) Define-se o percentual de balanceamento a ser ad otado; a sugestão é 50% (0,5), mas pode 
+ser alterado. Caso seja definida a regra =ALEATÓRIO >= 0,1  (10%), significaria que, quando a 
+função ALEATÓRIO retornar um valor maior ou igual a  0,1 será delegada a decisão para o 
+critério definido em ENTÃO , caso contrário será delegada a decisão para o cri tério definido em 
+SENÃO . 
+ 
+
+===== PÁGINA 142 =====
+Parametrização em Crivo 4 
+ 
+ 
+142 
+ 
+ 
+ 
+
+===== PÁGINA 143 =====
+ 
+   
+ 
+Explica Operação
+===== PÁGINA 144 =====
+Parametrização em Crivo 4 
+ 
+ 
+144 
+Explica Operação 
+ 
+O recurso "Explica Operação", disponível no Adminis trador Crivo, permite a visualização dos 
+passos de execução de uma operação já efetuada, pos sibilitando um entendimento do 
+processo de decisão dessa operação, bem como audita r o processo de tomada de decisão, 
+uma operação por vez. 
+ 
+Para exibir o " Explica Operação " deve-se informar o código da operação em questão;  caso 
+não seja conhecido, o código pode ser obtido a part ir dos relatórios do item " Histórico de 
+Decisões " na interface browser . 
+No Administrador Crivo abra o a opção Explica Operação do item Ferramentas no menu: 
+ 
+ 
+O conteúdo do " Explica Operação " será exibido no editor de texto instalado na esta ção de 
+trabalho que suporte o formato RTF (por exemplo, o Microsoft  Word ou Wordpad).  
+ 
+ 
+ 
+Observe que há a identificação da operação no início do texto (código da operação, data e hora 
+da execução, usuário com o qual foi processada a política/critério). 
+ 
+
+===== PÁGINA 145 =====
+Parametrização em Crivo 4 
+ 
+ 
+145 
+ 
+ 
+No caso de haver algum campo oculto contido no crit ério/política, será demonstrado na área 
+“Campos da Operação”. 
+As revisões do critério/política também podem ser visualizadas neste relatório. 
+ Observação 
+• Com as teclas de atalho <CTRL> F, podem ser localizadas palavras no texto do relatório. 
+ 
+
+===== PÁGINA 146 =====
+ 
+   
+ 
+Objeto de Análise
+===== PÁGINA 147 =====
+Parametrização em Crivo 4 
+ 
+ 
+147 
+Objeto de Análise 
+ 
+O objeto de análise é um recurso que permite chamar  (encadear) critérios em uma política no 
+Crivo.  
+Lembramos que já existe outro recurso que permita r ealizar um encadeamento com a 
+expressão:  
+ 
+=[nome do critério;retorno] 
+ 
+Porém, dessa forma, só é possível referenciar critérios que sejam do mesmo t ipo da 
+política , PJ ou PF. Para encadear critérios de tipo diferen te da política, ou utilizar parâmetros 
+de entrada de mesmo tipo com conteúdo diferente, temos o objeto de análise . 
+ 
+Exemplos 
+ 
+• Análise de uma empresa: Caso sejam considerados os  sócios, sejam eles pessoas físicas 
+ou jurídicas; 
+• Análise de um seguro onde temos dados da transport adora (PJ) e dos motoristas (PF). 
+Formalmente, pode-se dizer que o objeto de análise permite incluir em uma mesma política 
+mais elementos de um conjunto de parâmetros de mesm o tipo (ou parâmetros de tipo 
+diferente).  
+Para cada elemento adicional  (PF ou PJ) é gerada outra operação , além da operação 
+principal  da política. 
+ 
+ Observação 
+Uma política não poderá conter somente regras que utilizem objet os de análise , é 
+necessário algum parâmetro de entrada na política que irá gerar a operação principal.  
+ 
+Como criar Objetos de Análise 
+ 
+Primeiro passo:   
+Considere o objeto de análise já no planejamento da  política , para saber quantos e quais 
+serão precisos. Um mau planejamento, ou sua ausênci a, pode levar a usos desnecessários 
+desse recurso. 
+
+===== PÁGINA 148 =====
+Parametrização em Crivo 4 
+ 
+ 
+148 
+ 
+ Importante  
+Os objetos de análise só podem ser definidos e referenciados no primeiro nível da 
+política , ou seja, no critério principal; se forem utilizad os nos demais níveis ocorrerá uma 
+mensagem de erro  ao associar a política ao grupo do usuário. 
+ 
+ 
+Segundo passo:   
+1. Acesse a interface Administrador Crivo – Editor de Políticas; 
+2. Abra um critério  existente ou crie um objeto de análise através do item Objetos de 
+Análise ; 
+3. Escolha a opção Novo Objeto de Análise . 
+ 
+O passo acima apenas criou um nome para referência , o objeto não está completamente 
+funcional ainda. Adicione uma Regra e arraste o obj eto de análise para criar o ponto de 
+chamada do mesmo: 
+ 
+ 
+O objeto de análise aparecerá então na seção de disparo sequencial . 
+ 
+ 
+  
+
+===== PÁGINA 149 =====
+Parametrização em Crivo 4 
+ 
+ 
+149 
+Tratamento de objetos de análise com disparo em paralelo 
+ 
+• Através da caixa Disparo em Paralelo  é possível configurar os objetos de análise e 
+fontes de informação para que sua execução seja feita em paralelo; 
+• Através da caixa Disparo Sequencial,  de cada objeto de análise, é possível configurar 
+quais as fontes relacionadas ao critério/política deverão ser disparadas.  
+ 
+A ativação dos objetos de análise na caixa Disparo Sequencial  causa sua execução em 
+paralelo, mas não implica que as coletas a serem re alizadas também ocorram em paralelo. 
+Para que isso aconteça, deve-se ativar na caixa Disparo em Paralelo  quais coletas irão 
+ocorrer nessa modalidade. 
+ 
+As coletas serão iniciadas simultaneamente, independentes das regras que definem o fluxo 
+da decisão; isso significa que, caso tenha sido det erminado no critério que um produto da 
+fonte Serasa só seria acessado após um resultado po sitivo da Receita Federal e 
+Previdência Social, ao habilitar o Disparo em Paralelo  todas as fontes serão coletadas, 
+porém estes dados podem não ser utilizados. Os reto rnos da política 
+{Limite|Pontos|Resposta|Sistema}  seguirão o fluxo determinado pelo parametrizador; da 
+mesma forma os objetos de análise também serão exec utados, mesmo que a política 
+principal pare antes da sua chamada. 
+ 
+Quando for utilizado um objeto de análise , aparecerá a identificação do objeto na 
+interface browser:  
+ 
+Para configurar uma fonte ou objeto de análise para  coleta simultânea é necessário clicar duas 
+vezes na descrição de quantidade de produtos, apare cerá uma janela, basta arrastar da caixa 
+"Disparo Sequencial" para a caixa "Disparo em Paralelo". 
+ 
+
+===== PÁGINA 150 =====
+Parametrização em Crivo 4 
+ 
+ 
+150 
+ 
+Para que o objeto de análise seja disparado em paralelo, deve-se utilizar o duplo clique sobre o 
+nome do mesmo. Desta forma, aparecerá uma janela so mente para os objetos contidos no 
+critério e/ou política. 
+ 
+ Importante  
+Cada objeto de análise utilizado  durante a execução da política gera uma operação 
+adicional,  além da operação da política, chamada operação principal.  
+O objeto deve ser definido no nível mais alto da po lítica, ou seja, no critério principal. Caso 
+esteja em outra posição na política, será apresenta do erro no nome do critério na Caixa de 
+Ferramentas, bem como no critério principal da política referenciada. 
+ 
+
+===== PÁGINA 151 =====
+ 
+   
+ 
+Disparo em Paralelo
+===== PÁGINA 152 =====
+Parametrização em Crivo 4 
+ 
+ 
+152 
+Disparo em Paralelo 
+ 
+O Crivo, por padrão, executa as coletas de dados ne cessárias à análise de forma sequencial, 
+na mesma ordem do fluxo de execução da política que  for aplicada, pontuando as variáveis 
+correspondentes aos produtos que serão analisadas n as regras. Isso determina que o tempo 
+total da operação seja definido pelo somatório dos tempos de coleta. Assim, em casos onde há 
+muitas fontes a coletar, o tempo necessário para se concluir uma análise pode ser considerado 
+excessivo. 
+O recurso Disparo em Paralelo  tem por objetivo permitir que as coletas necessári as à análise 
+de uma política possam ocorrer simultaneamente, que r sejam fontes externas ou internas, 
+otimizando o tempo gasto para uma tomada de decisão . O tempo total de coleta será 
+determinado pelo tempo da coleta mais lenta, ou sej a: se houver o disparo de 3 (três) coletas 
+em paralelo e estas tenham os tempos 1 (um) segundo , 1 (um) segundo e 15 (quinze) 
+segundos, o tempo total da coleta será de 15 (quinz e) segundos. Como o tempo total será 
+determinado pela duração da coleta mais lenta, será  importante ajustar adequadamente os 
+valores na tela do item do Menu Configurações  Configuração dos Coletores ; para tanto 
+poderão ser usadas como referência as informações o btidas no relatório Estatística das 
+Coletas . Quando se trata de objetos de análise, estes têm tratamento diferenciado, como 
+segue abaixo. 
+Deve-se planejar com muito cuidado o uso desse recurso: 
+Vantagens 
+Otimização do tempo de coleta. 
+Desvantagens 
+Coletas desnecessárias poderão ocorrer, acarretando: 
+1. Aumento do consumo de espaço em disco  no banco de dados; 
+2. Maior alocação de banda de rede; 
+3. O custo financeiro para acesso às fontes pagas  será sempre o máximo, 
+independentemente do fluxo de análise definido na política. 
+ 
+Configuração de critério utilizando Disparo em Paralelo 
+ 
+Na interface Administrador Crivo está disponível a caixa "Disparo em Paralelo" e "Disparo 
+Sequencial" no critério/política que estiver em edi ção. Nestas caixas são encontradas as 
+seguintes informações: 
+Caixa "Disparo em Paralelo" 
+1. Todos os "Drivers" e respectivos "Produtos" que o "critério" atual chama; 
+2. Todos os "Drivers" e respectivos "Produtos" dos "critérios" que estão hierarquicamente 
+abaixo deste "critério"; 
+3. Todos os "Objetos de análise" e os respectivos " critérios" utilizados por eles. 
+===== PÁGINA 153 =====
+Parametrização em Crivo 4 
+ 
+ 
+153 
+Caixa "Disparo Sequencial" 
+1. Todos os "Drivers" e respectivos "Produtos" que o "critério" utilizado pelo "Objeto de 
+Análise" chama; 
+2. Todos os "Drivers" e respectivos "Produtos" dos "critérios" que estão hierarquicamente 
+abaixo do "critério" utilizado pelo "Objeto de Análise"; 
+Por ser apenas mais uma opção na aplicação "Adminis trador do Crivo", não é necessário 
+reescrever as regras da política, mas somente adaptá-las ao novo recurso, se desejado. 
+Para configurar uma fonte ou objeto de análise para  coleta simultânea é necessário clicar duas 
+vezes na descrição de quantidade de produtos, apare cerá uma janela, basta arrastar da caixa 
+"Disparo Sequencial" para a caixa "Disparo em Paralelo". 
+ 
+ 
+ 
+Podemos observar quais drivers  e produtos serão acionados para coleta em paralelo  das 
+informações por eles gerenciadas: 
+• Driver " Denatran ", os produtos "CNH PF"; 
+• Driver " Receita Federal ", o produto "Situação Cadastral do CPF";  
+• Driver " Sintegra ", o produto "Consulta Pública ao Cadastro por CPF"; 
+• Driver " Detran ", o produto "Pesquisa Multas - SP - PF". 
+
+===== PÁGINA 154 =====
+Parametrização em Crivo 4 
+ 
+ 
+154 
+Além dos Objetos de análise terão sua execução realizada: 
+• Objeto de análise " Objeto de Análise1 " utilizando o critério " Verificar CNPJ Sintegra ". 
+ 
+ 
+ 
+Resultado de um critério 
+ 
+No editor de políticas foi adicionado um grupo de o bjeto denominado “ Resultado de um 
+critério ”: 
+ 
+Este objeto deve ser utilizado quando for necessári o referenciar um outro critério/política  no 
+atual. 
+ 
+
+===== PÁGINA 155 =====
+Parametrização em Crivo 4 
+ 
+ 
+155 
+ 
+ 
+
+===== PÁGINA 156 =====
+ 
+   
+ 
+Operação em Lote
+===== PÁGINA 157 =====
+Parametrização em Crivo 4 
+ 
+ 
+157 
+Operação em Lote 
+ 
+Submissão de Lotes 
+ 
+O Crivo possui um recurso, denominado operação em lote,  para que várias análises possam 
+ser processadas de forma automática. Os parâmetros de entrada devem ser fornecidos em 
+arquivo, no qual há colunas com identificação dos n omes dos parâmetros, e cada linha do 
+arquivo corresponde a uma análise a ser processada. Há três fases distintas a considerar: 
+• Verificação do layout e montagem do arquivo com re gistros para processamento;  
+• Processamento do arquivo de lote ( Submissão  do lote);  
+• Monitoração  do processamento e verificação de eventuais erros. 
+ 
+Layout de Lotes 
+ 
+O Crivo apresenta como deve ser o arquivo para o en vio do lote de acordo com a política, ou 
+políticas, associadas ao grupo do usuário que constará no arquivo. 
+O layout pode ser visualizado em dois formatos: 
+• Excel (.xls) 
+• Delimitado com cabeçalho 
+As opções para lotes estão localizadas no menu principal da interface browser : 
+ 
+Verificação do layout  do lote  
+Além da visualização normal do layout  do lote, temos as seguintes alterações no Crivo 4: 
+• Não é apresentada a visualização automática de tod os os critérios associados ao grupo 
+do usuário; é necessário clicar em “Layout”, escolher um critério/política no menu 
+auxiliar à direita da tela e então será exibido o layout  correspondente;  
+• Por questões de segurança, não é possível processar um lote em nome de outro 
+usuário ; caso seja informado um arquivo de lote que conten ha o nome do usuário 
+diferente do que estiver utilizando o Crivo, será informada a ocorrência dessa situação;  
+• O layout  do lote pode ser exportado diretamente para um arq uivo , poupando o 
+trabalho de copiar e colar as informações do cabeça lho, através de um botão na barra 
+de ferramentas.  
+
+===== PÁGINA 158 =====
+Parametrização em Crivo 4 
+ 
+ 
+158 
+As colunas que estiverem em vermelho  são obrigatórias, determinadas pelos parâmetros 
+obrigatórios da política em questão. Já as colunas em preto  são os parâmetros opcionais, 
+cuja ausência não impede a execução das análises. 
+ 
+ 
+ 
+Formato Delimitado com cabeçalho: Também conhecido como formato CSV , tem como 
+característica principal a separação entre os campos por um caractere determin ado , 
+normalmente a vírgula (,) , daí o nome do formato, Comma Separated Values  – CSV. No Crivo, 
+o caractere para delimitar os campos é o ponto-e-vírgula (;) .  
+Os arquivos CSV podem ser editados em qualquer proc essador de texto , pois não têm 
+caracteres especiais de formatação; também pode ser  utilizado um programa de planilha 
+eletrônica, como o Microsoft  Excel  ou o BrOffice Calc . 
+ 
+ 
+ 
+
+===== PÁGINA 159 =====
+Parametrização em Crivo 4 
+ 
+ 
+159 
+Formato Excel (.xls):  Formato compatível com a planilha eletrônica, não está disponível para 
+a versão 64 bits do Crivo.  
+ 
+ 
+O layout pode ser exportado para um arquivo nos for matos disponíveis para ser completado 
+com os dados a coletar e depois submetido. 
+Após selecionar o formato desejado, basta clicar no  botão .  Em seguida aparecerá a 
+mensagem para abrir ou gravar o arquivo no local de preferência. 
+ 
+ 
+ 
+
+===== PÁGINA 160 =====
+Parametrização em Crivo 4 
+ 
+ 
+160 
+Submissão de Lotes 
+ 
+O lote pode ser submetido imediatamente, ou agendad o para execução em data posterior e 
+horário determinado. 
+ 
+ 
+Clique na opção '' Operação em Lote '' , será exibida uma tela com os lotes já processados e que 
+permite informar a pasta onde está o arquivo de lot e a ser processado, bem como a 
+identificação do lote (obrigatório). 
+ 
+ 
+ 
+Localizar o arquivo de lote: 
+ 
+
+===== PÁGINA 161 =====
+Parametrização em Crivo 4 
+ 
+ 
+161 
+Após localizar e selecionar o arquivo, clique em . 
+O lote permanecerá em espera até que inicie o processamento. 
+ 
+ 
+ 
+ Observação 
+O usuário responsável pela submissão do arquivo de lote  necessita ter a política associada 
+ao seu grupo, deve ter permissão para os itens de processamento e m lote do Menu , 
+quando a submissão for feita via interface browser . 
+ 
+Monitoração de Lotes 
+ 
+Durante o processamento do lote é possível acompanh ar o progresso através da coluna 
+Status. A qualquer momento durante o processamento o lote pode ser interrompido, clicando 
+no link Cancelar. 
+ 
+ 
+Ao término das operações em lote aparecerão os resu ltados nas colunas (enviados, 
+processados e inválidos). Basta clicar no número de  registros inválidos para abrir o arquivo de 
+erros. 
+ 
+  
+
+===== PÁGINA 162 =====
+Parametrização em Crivo 4 
+ 
+ 
+162 
+Arquivo de erros 
+ 
+O arquivo de erros serve para relacionar quais regist ros apresentaram problemas  no 
+processamento do lote. As mensagens de erro indicam qual o parâmetro  que não estava 
+adequado com o esperado pela política. 
+ 
+ 
+Exemplo de arquivo  com justificativa dos erros dos parâmetros que não foram processados: 
+ 
+ 
+ 
+Uma outra forma de processar o arquivo de lote é movimentá-lo diretamente para a pasta  
+<drive>\Program Files\Crivo\Lote\Inbox 
+
+===== PÁGINA 163 =====
+Parametrização em Crivo 4 
+ 
+ 
+163 
+do servidor Crivo, de forma manual ou automática . Esse método de submissão de arquivos 
+para processamento em lote é muito útil por permiti r que seja feito um agendamento do 
+processamento , sem que haja necessidade do usuário ter que acion ar interativamente a 
+interface browser. 
+ 
+ Importante  
+• O formato do arquivo para movimentação deve  ser CSV , não é aceito o formato XLS ; 
+• O arquivo deve ter a seguinte estrutura  no nome: identificação.usuário .csv, onde: 
+• Identificação : Texto descrevendo a finalidade do arquivo ; por exemplo , pode ser o nome 
+da política com a qual será processado o lote; 
+• Usuário:  Nome do usuário do Crivo  com o qual será processado o lote. Deve ser o 
+mesmo nome de usuário  que consta na coluna do arquivo. 
+ 
+ Informação  
+Pode ser criado um compartilhamento de rede no servidor Crivo – com as devidas 
+configurações  – para a pasta Inbox,  permitindo que um programa possa movimentar o 
+arquivo de lote diretamente para o compartilhamento. 
+  
+ 
+ 
+ 
+
+===== PÁGINA 164 =====
+Parametrização em Crivo 4 
+ 
+ 
+164 
+Exportar parâmetros para Lote 
+ 
+Este recurso permite que se possa gerar um arquivo com os parâmetros de entrada  
+originais com os quais foi processado um determinado lote, de acordo com o filtro indicado. 
+No Administrador do Crivo, uma das opções disponíve is no item do menu "Histórico de 
+Decisões" é a "Exportação": 
+ 
+ 
+ 
+Utilizando filtro por lote obtém-se os dados para c ompor o arquivo de parâmetros 
+. 
+Após acionar o botão de exportação, será visualizad a a mensagem de confirmação do 
+processo. 
+ 
+ 
+Através da tela de acompanhamento da exportação poderá ser identificado o arquivo gerado. 
+ 
+ 
+
+===== PÁGINA 165 =====
+Parametrização em Crivo 4 
+ 
+ 
+165 
+ 
+De acordo com os filtros selecionados  serão exportados os parâmetros para o lote  em um 
+arquivo compactado que contém os dados no formato TXT. 
+Configuração dos coletores 
+ 
+Configurações 
+ 
+O item Configuração dos Coletores  permite que o parametrizador configure  os 
+seguintes parâmetros das fontes de informação , por produto: 
+ Validade da informação 
+ 
+ Condições de Erro 
+• Tentativas 
+• Espera 
+• Validade da Contingência 
+ 
+Validade 
+ 
+A configuração da Validade da informação tem por ob jetivo permitir ao cliente o acesso 
+a dois recursos: 
+• Possibilitar a reutilização de informações já cole tadas pelo Crivo em novas 
+decisões da política. Como vantagem pode-se citar a  possibilidade de reduzir 
+custos de acesso a fontes tarifadas, pois uma consu lta já paga pode vir a ser 
+reaproveitada, sem precisar efetuar uma nova consul ta à fonte de informação; 
+mesmo no caso de fontes públicas ou controladas, po de ser interessante utilizar 
+essa funcionalidade com fontes instáveis ou de acesso demorado.  
+ 
+Exemplo  
+As regras de negócio de uma determinada empresa permitem que, uma vez consultado o 
+status do CPF de uma pessoa, a informação obtida é válida por 15 dias, não sendo necessário 
+atualizá-la dentro desse período. Caso seja utilizado para consulta o produto Situação 
+Cadastral do CPF  da fonte SRF  (Receita Federal), a Validade  da informação coletada, que 
+deve ser informada em minutos , pode ser configurada conforme abaixo: 
+ 15 dias x 1.440  = 21.600 minutos  
+Por que multiplicar os dias por 1440? A Validade, conforme indica o cabeçalho, considera o 
+valor informado em minutos (em uma hora temos 60 minutos, portanto em um dia temos 60 x 
+24 = 1.440 minutos ); bastante atenção no preenchimento dessa configuração, portanto: se for 
+
+===== PÁGINA 166 =====
+Parametrização em Crivo 4 
+ 
+ 
+166 
+colocado o valor 15, com a intenção de marcar a validade para 15 dias , o Crivo irá interpretar 
+esse valor como 15  minutos.  
+Para um período menor que 1 dia, por exemplo 4 horas, basta multiplicar a quantidade de 
+horas por 60: 
+ 4 horas x 60 minutos = 240 minutos 
+ 
+ 
+ 
+Condições de Erro 
+ 
+Em um contexto diferente, temos as Condições de Err o no acesso às fontes de informação: 
+tratam do comportamento do Crivo na ocorrência de e rros de acesso, que podem ocorrer por 
+diversos motivos. Pode-se configurar o número de tentativas , o tempo de espera  e a 
+Contingência  no caso de esgotar algum desses itens: 
+ 
+ 
+ 
+ 
+Tentativas 
+ 
+O número máximo de Tentativas determina que, nesse determinado produto, caso 
+ocorram situações de erro que levem o Crivo a tenta r repetidamente o acesso, ele 
+tentará até o limite indicado; se for ultrapassada essa quantidade, será registrado que 
+não foi possível obter a informação (através da var iável Erro na Consulta, que 
+
+===== PÁGINA 167 =====
+Parametrização em Crivo 4 
+ 
+ 
+167 
+armazenará o valor VERDADEIRO  - esta variável está disponível em todos os 
+produtos). A quantidade de tentativas vem configurada, por padrão, como 3 (três). 
+ 
+ Importante  
+O valor mais adequado para o número de tentativas deve ser analisado 
+constantemente, acompanhando o uso do produto e da fonte de informação.  
+ 
+Espera 
+ 
+A Espera significa o tempo que o Crivo irá esperar antes de desistir do acesso ao 
+produto da fonte de informação. O valor (em segundo s) vem configurado por padrão 
+como 30. O valor mais adequado também pode ser obti do com base nas informações 
+do relatório Estatísticas da Coleta, referenciado na caixa acima. 
+ 
+ Importante  
+Mesmo que tenha se esgotado o limite do tempo de Es pera configurado, isso não 
+permite concluir que a fonte de informação esteja n ecessariamente indisponível; é 
+possível que, por diversas razões, esteja apenas co m um tempo de resposta superior 
+ao configurado no Crivo. Recomendamos, novamente, a companhar o comportamento 
+do número de tentativas e tempo de acesso aos produ tos no relatório Estatísticas da 
+Coleta.  
+ 
+ 
+Validade da Contingência 
+ 
+Será abordada agora a configuração Validade da Contingência , que tem um contexto a ser 
+apresentado para se entender sua finalidade; considere a situação abaixo: 
+ 
+
+===== PÁGINA 168 =====
+Parametrização em Crivo 4 
+ 
+ 
+168 
+A Validade está configurada em 2.880 minutos, ou se ja, dois dias; a Validade da Contingência, 
+por sua vez, está com o valor 5.760 minutos, equiva lente a quatro dias. Neste caso, ao 
+executar uma política ou critério que faça coleta e m variáveis do produto Situação Cadastral 
+do CPF , o Crivo irá seguir estes passos: 
+1. Será verificada a base de dados do Crivo, dentro  do período estipulado em Validade (neste 
+caso, 2.880 minutos = 2 dias, a partir do momento d a execução da política); se a 
+informação solicitada já foi coletada em operações anteriores dentro do período, será usada 
+no processo de decisão; 
+2. Se não foi localizada a informação dentro do per íodo configurado, o Crivo tentará então 
+acessar a fonte de informação para coletar as variá veis do produto referenciado; caso 
+obtenha êxito, as informações serão disponibilizadas para o processo de decisão; 
+3. Se mesmo assim não conseguir, seja devido ao esg otamento do número de tentativas ou 
+do tempo de espera, normalmente a ação seguinte ser ia configurar como VERDADEIRA a 
+variável Erro na Consulta para o produto e retornar  às regras do critério; mas neste caso 
+está configurada a Validade da Contingência, com va lor maior que a Validade; o Crivo irá 
+então, ao invés de retornar o erro na consulta , buscar novamente  na sua base de dados 
+a informação solicitada , porém utilizando o valor da Contingência como período . Caso 
+encontre a informação, esta será usada para prosseg uimento do processo de decisão. Se 
+não encontrar novamente, então será configurada a v ariável erro na consulta com o valor 
+VERDADEIRO . 
+ 
+Observação  
+Por que a Validade da Contingência deve ser maior  que a Validade? Lembrando-se da 
+sequência de passos acima, verifique que, se o valo r da contingência for igual ou 
+menor  que o valor da validade, não terá nenhum efeito; a  busca já terá sido feita no 
+passo 1, e refazê-la com o mesmo período ou menor n ão localizará informação 
+adicional na base de dados. 
+ 
+ Importante  
+Lembre-se que o uso da Validade e da Validade da Contingência dev em estar 
+aderentes às regras de negócio da sua empresa ; há situações onde pode ser 
+preferível o aproveitamento de informações “antigas ”  para a decisão ao invés de 
+retornar um erro de consulta, em outras situações pode ser melhor o aviso de erro  
+no acesso.  
+ 
+
+===== PÁGINA 169 =====
+Parametrização em Crivo 4 
+ 
+ 
+169 
+A coluna “ Ativação do Relatório ” deve estar selecionada para que se torne possível visualizar 
+o relatório original da fonte de informação. 
+ 
+ 
+ 
+As configurações são aplicadas para os produtos, at ingindo todas as políticas que os 
+utilizarem, independente do centro de custo, grupo ou usuário. 
+ 
+ 
+ 
+Drivers  para acesso a fontes de informação 
+ 
+O Crivo consulta uma fonte de informação através de  um componente denominado driver . Os 
+drivers  são os mecanismos responsáveis por: acessar a font e de informação, requisitar os 
+dados necessários às variáveis do produto em questã o e “preencher” (utiliza-se também o 
+termo pontuar ) com esses dados as variáveis definidas no produto. 
+Um driver  típico do Crivo executa as seguintes funções: 
+ Disponibiliza os campos de configuração  para acesso a fonte de dados;   
+ Disponibiliza os campos para os parâmetros de entra da , sejam estes obrigatórios , 
+chave  ou opcionais ; 
+ Obtém os dados relativos ao produto solicitado na fonte de informação, considerando 
+as configurações e os parâmetros de entrada fornecidos; 
+ Processa os dados retornados  e os disponibiliza para o Crivo nas variáveis, que  por sua 
+vez podem ser utilizadas pela política ou critério,  e também utiliza o retorno para gerar o 
+relatório da fonte (seção verde do Relatório das Análises), após a conclusão da operação. 
+ 
+
+===== PÁGINA 170 =====
+Parametrização em Crivo 4 
+ 
+ 
+170 
+A configuração do driver , no que diz respeito ao tempo de espera e número d e tentativas, é 
+feita no item Configuração dos Coletores , onde é possível mudar as configurações de cada 
+produto dos drivers  disponíveis no servidor Crivo. 
+ 
+Procedimento para configuração de comportamento de um driver :  
+ 
+1. No Menu Configurações, clicar em Configurações dos Coletores ; 
+2. Selecionar na barra lateral a fonte a ser utiliz ada; 
+3. Localize o produto a ser utilizado; 
+4. Informar o período da Validade, em minutos, ou zero  para desativar o recurso; 
+5. Informar a quantidade de tentativas adequada; 
+6. Informar o tempo de espera adequado; 
+7. Se for interessante  utilizar o recurso, informar o período (em minutos ) para a Validade da 
+Contingência; 
+8. Clicar no botão ; 
+9. Aguardar a confirmação da gravação. 
+ 
+ 
+ 
+ 
+
+===== PÁGINA 171 =====
+ 
+   
+ 
+Exportação de Dados
+===== PÁGINA 172 =====
+Parametrização em Crivo 4 
+ 
+ 
+172 
+Exportação de Dados 
+ 
+A exportação de dados extrai informações de parâmetros, consultas e decisões já 
+realizadas , (armazenadas no banco de dados interno do Crivo) para verificação ou para 
+utilização dessas informações em outro aplicativo. Por exemplo, uma planilha eletrônica ou um 
+software estatístico. 
+ 
+A exportação pode ser feita de duas formas: 
+ 
+• Interativa , utilizando o browser ; 
+• Manual , utilizando a linha de comando do Windows ( modo texto ).  
+ 
+Exportação de dados da base Crivo 
+ 
+A exportação está disponível no Administrador Crivo, abaixo do título "Histórico de Decisões": 
+ 
+ 
+ 
+Primeiramente devem ser configurados os parâmetros do Filtro de Decisões  para que sejam 
+exportados apenas os dados necessários. Pode ser de finido o período entre datas , e dentro 
+desse período pode-se ainda especificar os elemento s da Estrutura Corporativa, Critério, Lote, 
+Decisões e número máximo de análises (registros) nesta configuração. 
+ 
+
+===== PÁGINA 173 =====
+Parametrização em Crivo 4 
+ 
+ 
+173 
+ 
+ 
+A tela de exportação segue o formato da geração de relatórios, permitindo a especificação do 
+filtro para definir o escopo da exportação:  
+ 
+ 
+ 
+Após definir os Filtros de Decisões, clicar em Exportação . 
+ 
+Exporta todas as informações relacionadas (informações provenientes dos relatórios das fontes 
+consultadas, parâmetros de entrada e decisões tomadas) para outras ferramentas. Os formatos 
+disponíveis para a exportação são: 
+ 
+  
+• SPSS  - Formato compatível com o software estatístico SP SS, utilizado em análises 
+preditivas. Na exportação são gerados os arquivos Crivo.sps, Dicionario.txt e SPSS.txt. 
+ 
+
+===== PÁGINA 174 =====
+Parametrização em Crivo 4 
+ 
+ 
+174 
+ 
+• Delimitado com cabeçalho  - Exporta os dados no padrão CSV (Comma Separated 
+Values), formato utilizado para a transferência de informações entre aplicativos. As 
+planilhas eletrônicas (Microsoft Excel, BROffice, O penOffice, etc.) trabalham 
+diretamente com esse formato , por exemplo. O delim itador utilizado pelo Crivo para o 
+arquivo .CSV é o ";" (ponto e vírgula). 
+ 
+ 
+ 
+• SAS  - Formato compatível com o software estatístico SA S, utilizado em diversas áreas 
+para análise de dados. Durante a exportação são ger ados os arquivos SCRIPT.txt e 
+SAS.txt. 
+ 
+ 
+Ao escolher um dos formatos, o Crivo iniciará a exportação dos dados solicitados ; 
+dependendo da abrangência dos parâmetros configurad os no Filtro de Decisões esta ação 
+pode demandar várias horas para a conclusão. É muito importante que seja considerado o 
+impacto dessa atividade no desempenho do servidor C rivo , principalmente em relação ao 
+tempo de resposta do banco de dados, pois pode have r uma concorrência pelos recursos da 
+máquina entre a exportação e o uso do Crivo pelos usuários. 
+É recomendável, portanto, que a exportação seja executada em horários de baixa 
+utilização  dos recursos necessários ao Crivo, em especial os recursos relacionados ao banco 
+de dados. 
+ 
+
+===== PÁGINA 175 =====
+Parametrização em Crivo 4 
+ 
+ 
+175 
+Acompanhamento da exportação 
+ 
+ 
+ 
+Exibe uma lista das exportações já executadas, send o que a exportação em processo fica na 
+primeira linha da tabela, com a opção Cancelar  disponível. Este recurso pode ser utilizado, 
+caso seja necessário interromper a execução da exportação. 
+ 
+Ao final da exportação as opções exibidas são: 
+Cancelar  - Elimina a visualização da exportação na tela de acompanhamento, não está 
+relacionada aos arquivos gerados na execução da tarefa, apenas tem efeito visual. 
+Nome do arquivo  - Exibe a janela com os links para baixar os arqui vos gerados na 
+exportação. 
+ 
+
+===== PÁGINA 176 =====
+ 
+    
+ 
+Listas Especiais
+===== PÁGINA 177 =====
+Parametrização em Crivo 4 
+ 
+ 
+177 
+Listas Especiais 
+ 
+Este recurso do Crivo permite que sejam administrad as listas especiais , que podem ser 
+utilizadas no mesmo formato que as fontes de informação disponíveis nos drivers . 
+O acesso às Listas Especiais importadas para o Crivo é realizado pelo menu a seguir: 
+ 
+ 
+Pode ser selecionado o tipo de lista desejada e pes quisar os registros, além de exibir todos ou 
+não. 
+Exemplo 1: Sua empresa possui clientes que já foram aprovados  em análises anteriores, seja 
+pelo Crivo ou através de outros meios; esses client es poderiam então compor 
+uma lista VIP , na opção CPF/CNPJ , cujos integrantes não teriam que seguir 
+novamente todo o processo de análise da política, c onsumindo recursos do 
+
+===== PÁGINA 178 =====
+Parametrização em Crivo 4 
+ 
+ 
+178 
+servidor Crivo e talvez novas consultas em fontes t arifadas; afinal,  seu perfil já é 
+conhecido.  
+Exemplo 2:  Pode-se utilizar a lista Placa/Chassi  para manter no Crivo um cadastro de 
+chassis  que foram objeto de furto/roubo; caso algum desses chassis seja 
+fornecido no processo de análise , poderia ser identificado imediatamente, 
+acionando uma resposta adequada da política. 
+Criação de uma lista especial – CPF/CNPJ 
+ 
+Primeiro passo:   
+Elabore um arquivo do tipo somente texto (extensão TXT)  com o seguinte layout : 
+CPF/CNPJ;Mensagem;Categoria 
+Onde: 
+CPF/CNPJ: Campo obrigatório , aceita apenas números de CNPJ ou  CPF, sem máscara 
+(traços ou pontos); 
+Mensagem:  Campo texto opcional , funciona também como parâmetro de busca; 
+Categoria:  Campo numérico obrigatório , limitado em 9 (nove) dígitos. É o principal 
+parâmetro de busca , pois permite menos ambiguidade que o campo Mensagem. 
+ 
+ Observação  
+• O caractere ponto-e-vírgula ( ;) representa um delimitador de campos, portanto não 
+pode ser usado como parte do conteúdo de um campo; 
+• Não pode haver espaços em branco antes ou depois  dos delimitadores de campos; 
+• As linhas em branco (mesmo que estejam somente no final do arquivo) serão consideradas 
+como registros com erro ; 
+• Não há um cabeçalho para o arquivo , com o nome dos campos: simplesmente inicie o 
+arquivo com o primeiro registro. 
+ 
+Para a montagem do arquivo de layout , recomendamos a utilização do editor de textos 
+Notepad++  (lê-se “ notepad plus plus ”, é um software que não requer aquisição de licenç a de 
+uso; pode ser feito download  de diversos sites na Internet), por permitir a vis ualização de 
+caracteres de controle, como alimentação de linha ( LF  - line feed ) e retorno de carro ( CR  - 
+carriage return ). 
+Observe o arquivo abaixo, preparado para importação  no Score  Interno  utilizando o 
+Notepad++ : 
+
+===== PÁGINA 179 =====
+Parametrização em Crivo 4 
+ 
+ 
+179 
+ 
+ 
+O mesmo arquivo, agora corrigido: 
+ 
+ 
+ 
+Criação de uma lista especial – Placa/Chassi 
+ 
+ 
+O mesmo procedimento acima pode ser seguido para a lista Placa/Chassi , porém o layout  do 
+arquivo deve seguir o formato abaixo: 
+P;Placa/Chassi;Mensagem;Categoria 
+ou 
+C;Placa/Chassi;Mensagem;Categoria 
+O arquivo de 
+Lista Especial 
+deve ser 
+separado por 
+===== PÁGINA 180 =====
+Parametrização em Crivo 4 
+ 
+ 
+180 
+Onde: 
+P / C (letra maiúscula): Identifica  o campo seguinte como placa (P)  ou chassi (C)  de 
+veículo; 
+Placa:  Campo alfanumérico, funciona também como parâmetro de busca,  limitado em 7 
+caracteres ; 
+ou 
+Chassi:  Campo alfanumérico funciona também como parâmetro de busca,  limitado em 17 
+caracteres ; 
+Mensagem:  Campo texto opcional , funciona também como parâmetro de busca ; 
+Categoria:  campo numérico obrigatório , limitado em 9 (nove) dígitos. 
+ 
+Exemplo de lista de registros para Score  Veículo: 
+ 
+ 
+ 
+Segundo passo:   
+Faça a importação do arquivo para o Crivo 
+ 
+As Listas Especiais são acessadas através da interf ace Administrador, abaixo do título 
+"Ferramentas ". 
+  
+
+===== PÁGINA 181 =====
+Parametrização em Crivo 4 
+ 
+ 
+181 
+Ao clicar sobre o botão , apresenta-se um assistent e:  
+ 
+Pode ser definido um nome para a identificação da importação que será efetuada. 
+Clique no botão “ Próximo ”. 
+ 
+Localize o arquivo para a importação. 
+ 
+Selecione qual o tipo de substituição necessária e clique no botão “ Importar ”. 
+
+===== PÁGINA 182 =====
+Parametrização em Crivo 4 
+ 
+ 
+182 
+Aguarde a mensagem de confirmação. 
+ 
+A importação será iniciada e o acompanhamento deve ser realizado na opção de menu 
+correspondente. 
+ 
+ 
+Para exportação da lista inteira: 
+Ao clicar sobre o botão , apresenta-se um assistent e:  
+ 
+Escolha o tipo de exportação, indique o nome para i dentificação e clique no botão 
+“Próximo ”. 
+
+===== PÁGINA 183 =====
+Parametrização em Crivo 4 
+ 
+ 
+183 
+ 
+Indique a categoria a ser exportada, ou deixe em br anco para exportar todas, e clique 
+em “ Próximo ”. 
+ 
+Confirme a exportação. 
+ 
+ 
+ 
+A exportação será iniciada. 
+ 
+ 
+
+===== PÁGINA 184 =====
+Parametrização em Crivo 4 
+ 
+ 
+184 
+ Observação  
+Ao importar um arquivo texto com itens, cuidado com  a opção "Substitui todas as 
+mensagens":  
+• Se estiver marcada, essa opção fará com que todos os registros existentes 
+sejam apagados  e só haverá na lista os registros que vierem do arquivo texto; 
+• Se estiver desmarcada, os registros importados ser ão mesclados à lista existente; 
+• É interessante concentrar as listas especiais em u m único responsável para cada 
+servidor Crivo, para evitar a perda de informações que deveriam permanecer na 
+lista; 
+• Ao clicar em um número de CPF/CNPJ, pode-se editar  as informações desse 
+registro. 
+ 
+Acompanhamento Listas Especiais 
+ 
+ 
+Nesta opção é possível acompanhar o andamento da im portação e/ou exportação de listas 
+especiais. A partir de uma lista poderão ser verificados os status, a identificação das listas, tipo, 
+data e horário de início e término e arquivo gerado. 
+ 
+
+===== PÁGINA 185 =====
+Parametrização em Crivo 4 
+ 
+ 
+185 
+Os arquivos são gerados em formato zip, e podem conter os erros ocorridos (logs) ou a 
+lista exportada. 
+ 
+Aplicação na Política 
+ 
+Para tornar mais eficiente a execução da política, recomenda-se que as Listas 
+Especiais sejam verificadas já no início do critério. 
+ 
+ 
+ 
+Pode ser utilizada a régua de condições para várias listas a serem verificadas de uma só vez: 
+   
+Ou uma regra para cada caso separadamente: 
+ 
+ 
+
+===== PÁGINA 186 =====
+Parametrização em Crivo 4 
+ 
+ 
+186 
+ Observação  
+• Para exportar a lista para um arquivo texto , escolha a opção " Exportação" no 
+Assistente. 
+• Ao importar um arquivo texto com itens, cuidado co m a opção "Substitui todas as 
+mensagens":  
+• Se estiver marcada, essa opção fará com que todos os registros existentes na lista do 
+score interno ou veículo sejam apagados  e só permanecerão na lista os registros que 
+foram importados do arquivo texto; 
+• Se estiver desmarcada, os registros importados ser ão adicionados à lista existente. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

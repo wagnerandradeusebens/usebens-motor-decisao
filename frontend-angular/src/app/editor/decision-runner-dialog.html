@@ -1,0 +1,95 @@
+<h2 mat-dialog-title>Testar decisão</h2>
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="full">
+    <mat-label>Referência da proposta</mat-label>
+    <input matInput [(ngModel)]="reference" />
+  </mat-form-field>
+
+  <div class="section-label">Campos da proposta</div>
+  @for (f of fields(); track $index) {
+    <div class="field-row">
+      <mat-form-field appearance="outline" class="key">
+        <mat-label>campo</mat-label>
+        <input matInput [ngModel]="f.key" (ngModelChange)="setField($index, { key: $event })" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="type">
+        <mat-label>tipo</mat-label>
+        <mat-select [ngModel]="f.type" (ngModelChange)="setField($index, { type: $event })">
+          @for (t of fieldTypes; track t.value) {
+            <mat-option [value]="t.value">{{ t.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      @if (f.type === 'boolean') {
+        <mat-form-field appearance="outline" class="val">
+          <mat-label>valor</mat-label>
+          <mat-select [ngModel]="f.value" (ngModelChange)="setField($index, { value: $event })">
+            <mat-option value="true">verdadeiro</mat-option>
+            <mat-option value="false">falso</mat-option>
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" class="val">
+          <mat-label>{{ f.type === 'date' ? 'aaaa-mm-dd' : 'valor' }}</mat-label>
+          <input matInput [ngModel]="f.value" (ngModelChange)="setField($index, { value: $event })" />
+        </mat-form-field>
+      }
+      <button matIconButton (click)="removeField($index)" aria-label="Remover">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  }
+  <button matButton (click)="addField()"><mat-icon>add</mat-icon> Campo</button>
+
+  @if (running()) {
+    <mat-progress-bar mode="indeterminate" class="run-bar" />
+  }
+  @if (error(); as err) {
+    <div class="error-box"><mat-icon>error_outline</mat-icon>{{ err }}</div>
+  }
+
+  @if (result(); as r) {
+    <div class="result">
+      <div class="row spread">
+        <strong class="outcome" [class]="r.outcome">{{ r.outcome }}</strong>
+        <span class="muted">pontos: {{ r.score }} · limite: {{ r.limit }}</span>
+      </div>
+      @if (r.error) {
+        <div class="error-box"><mat-icon>error_outline</mat-icon>{{ r.error }}</div>
+      }
+      @if (r.justifications.length > 0) {
+        <div class="block">
+          <div class="section-label">Justificativas</div>
+          <ul>
+            @for (j of r.justifications; track $index) {
+              <li class="muted">{{ j }}</li>
+            }
+          </ul>
+        </div>
+      }
+      @if (outputEntries(r).length > 0) {
+        <div class="block">
+          <div class="section-label">Parâmetros de saída</div>
+          @for (o of outputEntries(r); track o.key) {
+            <div class="row spread out"><code>{{ o.key }}</code><span>{{ o.value }}</span></div>
+          }
+        </div>
+      }
+      <div class="block trace">
+        @for (t of r.trace; track t.sequence) {
+          <div class="trace-step">
+            <div class="seq">#{{ t.sequence }} · {{ t.nodeLabel }}</div>
+            @if (t.result) { <div class="mono">{{ t.result }}</div> }
+            @if (t.message) { <div class="muted small">{{ t.message }}</div> }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button matButton mat-dialog-close>Fechar</button>
+  <button matButton="filled" (click)="run()" [disabled]="running()">
+    {{ running() ? 'Executando…' : 'Executar decisão' }}
+  </button>
+</mat-dialog-actions>
